@@ -133,6 +133,9 @@ callback on Base Sepolia.
   above), so that proposal is not mirrored; the owner can still vote through `castVote()`.
 - **Delay.** The mirrored vote lands after Reactive has seen the `k`-th vote and delivered the callback. A trusted
   vote cast in the last moments of the voting period can be too late; VoteMirror then emits `Skipped(NotActive)`.
+- **A lowered threshold is not applied to past votes.** `setThreshold` takes effect on the next trusted vote; a
+  proposal whose recorded votes already meet the new threshold is mirrored only if another trusted voter votes the
+  same way. The owner can vote on it directly with `castVote()`.
 - **First agreement wins.** Votes cannot be changed in OpenZeppelin Governor, so VoteMirror mirrors the first side
   that reaches `k` and ignores later votes.
 - **Only standard `VoteCast`.** `VoteCastWithParams` and Governors that are not OpenZeppelin-compatible are not
