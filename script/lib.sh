@@ -21,6 +21,10 @@ IFS=',' read -r -a VOTER_KEY_LIST <<< "$VOTER_KEYS"
 OWNER=$(cast wallet address --private-key "$PRIVATE_KEY")
 VOTERS=()
 for key in "${VOTER_KEY_LIST[@]}"; do VOTERS+=("$(cast wallet address --private-key "$key")"); done
+# A voter delegates to itself, which would replace the owner's delegation to VoteMirror.
+for voter in "${VOTERS[@]}"; do
+  [ "$voter" != "$OWNER" ] || { echo "PRIVATE_KEY must not be one of VOTER_KEYS" >&2; exit 1; }
+done
 
 # json <file> <key>: read a top-level string from a JSON file.
 json() { python3 -c "import json,sys; print(json.load(open(sys.argv[1]))[sys.argv[2]])" "$1" "$2"; }
