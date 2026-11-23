@@ -31,9 +31,12 @@ LASNA_FROM=$(cast block-number --rpc-url "$LASNA_RPC")
 BASE_FROM=$(cast block-number --rpc-url "$BASE_SEPOLIA_RPC")
 
 echo "proposal:       $PROPOSAL_ID"
-echo "propose tx:     $(send "$BASE_SEPOLIA_RPC" "$PRIVATE_KEY" "$GOVERNOR" "propose(address[],uint256[],bytes[],string)" "[$TOKEN]" "[0]" "[$CALLDATA]" "$DESCRIPTION")"
+# Assigned before printing so that a failed transaction stops the script instead of being hidden by echo.
+PROPOSE_TX=$(send "$BASE_SEPOLIA_RPC" "$PRIVATE_KEY" "$GOVERNOR" "propose(address[],uint256[],bytes[],string)" "[$TOKEN]" "[0]" "[$CALLDATA]" "$DESCRIPTION")
+echo "propose tx:     $PROPOSE_TX"
 if [ "$MODE" = skip ]; then
-  echo "skip tx:        $(send "$BASE_SEPOLIA_RPC" "$PRIVATE_KEY" "$MIRROR" "setSkipped(uint256,bool)" "$PROPOSAL_ID" true)"
+  SKIP_TX=$(send "$BASE_SEPOLIA_RPC" "$PRIVATE_KEY" "$MIRROR" "setSkipped(uint256,bool)" "$PROPOSAL_ID" true)
+  echo "skip tx:        $SKIP_TX"
 fi
 
 # ProposalState.Active is 1.
