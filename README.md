@@ -61,6 +61,7 @@ Design decisions:
 | DemoGovernor | Base Sepolia (84532) | [`0x69c34B596DB8CC39b68067b9d0B391D75616bc14`](https://sepolia.basescan.org/address/0x69c34B596DB8CC39b68067b9d0B391D75616bc14) |
 | DemoToken | Base Sepolia (84532) | [`0xc5D993C7DF3107a02943b4368794AA524e94B686`](https://sepolia.basescan.org/address/0xc5D993C7DF3107a02943b4368794AA524e94B686) |
 
+The three Base Sepolia contracts are source-verified on [Blockscout](https://base-sepolia.blockscout.com/address/0x7266da930e9aDb5F028c09991275b0d88744F194?tab=contract).
 MirrorReactive and DemoToken share an address because each was the deployer's first transaction on its chain. Lasna
 addresses and transactions can be looked up on the [Lasna explorer](https://lasna.reactscan.net/).
 
@@ -91,6 +92,20 @@ Base Sepolia callback proxy was rejecting Reactive's own relayer with `NotAuthor
 at 09:51 UTC and was over by 21:00 UTC), so those three callbacks reverted at the proxy, for example
 [`0x95062c16…`](https://sepolia.basescan.org/tx/0x95062c166bebb0181c09097b8c14975200b6b7cae449772c114eb979335ee1ad),
 and were not delivered again afterwards. Those three proposals closed without a mirrored vote.
+
+### Run shown in the demo video
+
+The [demo video script](docs/video-script.md) was recorded against a later run of the same three scripts on
+2026-11-23, so the video shows these transactions rather than the ones in the table above.
+
+| Step | Loop 1: For | Loop 2: Against | Loop 3: Skip |
+| --- | --- | --- | --- |
+| Proposal (Base Sepolia) | [`0x3cccc41e…`](https://sepolia.basescan.org/tx/0x3cccc41e9afff31987539028a07054ae50e578410f5cd768a1f5cc902e8bfeb5) | [`0xade9981b…`](https://sepolia.basescan.org/tx/0xade9981ba4e6b0401d7c7775b231cf5e22952044b8042a87ef5c12878e79334f) | [`0xab99e78c…`](https://sepolia.basescan.org/tx/0xab99e78c48c7139d20a8877cb2b5ba4c4a60f76e5428d7f615e1cbde01db6ee6), skipped by the owner in [`0xf0185623…`](https://sepolia.basescan.org/tx/0xf01856232945a50c26ccdb24b589cea7227a920fd7495f4332c5ecda4fca63d7) |
+| `VoteCast` by trusted voter 1 (Base Sepolia) | [`0x3b713d45…`](https://sepolia.basescan.org/tx/0x3b713d45df3c564d1e76239f2b8861e9f94731f1e79d8d4b32beb64b69615405) | [`0xfe197e57…`](https://sepolia.basescan.org/tx/0xfe197e57e3fcb89460532e5f9c3d8e399fab7688d79bf18337afede2909f4413) | [`0x25abfc8d…`](https://sepolia.basescan.org/tx/0x25abfc8d43df74fc7857adfde3af23481284040dbb2f2b5be81ad581b8432448) |
+| `VoteCast` by trusted voter 2 (Base Sepolia) | [`0xd98742ac…`](https://sepolia.basescan.org/tx/0xd98742ac63ab225c257861e4bc6bcaae286f69cc27d8ad0f5d84da08e34396f0) | [`0xbcacb56c…`](https://sepolia.basescan.org/tx/0xbcacb56c42f68d20a369a6049e8bbbf10db4a842c4701192c3f61d18fd42e7e6) | [`0x2fdab52b…`](https://sepolia.basescan.org/tx/0x2fdab52b1af95c98dfe5508d3c0fc53bbd3ac9d61c779d3f6009401ebfe26f7c) |
+| `react()`, `MirrorRequested` (Lasna) | `0xabf3f0c3def5945f666c6a1e20752f72bbdee59d0ebc9c3bd7f6bc11cbb3ef88` | `0xab321eb64f8caae48b9012954b52152b48be7f4c77370ac902141290ad3d67f8` | `0x37ac9c127eb6bbfd87d239aa9108ad920b490517c13cb597b7edfd6e1f7a4172` |
+| Callback into VoteMirror (Base Sepolia) | [`0x82de1a45…`](https://sepolia.basescan.org/tx/0x82de1a45482c4270bdbc0f0f20ceef8975e7e5c767a6a9c7d3d4d16362490731) | [`0x3d3c6b5e…`](https://sepolia.basescan.org/tx/0x3d3c6b5ecc8dbeac753993bd91f3bd13d2180b82ae5e3da9dec64b9f16341576) | [`0x1f73751b…`](https://sepolia.basescan.org/tx/0x1f73751b1b406e631dbc36470705ef6c356bcd76a68292e8bb53f9bbaf3a4715) |
+| Result | `Mirrored`: For | `Mirrored`: Against | `Skipped(SkippedByOwner)`: no vote |
 
 ## Run it yourself
 
