@@ -13,7 +13,9 @@ TOKEN=$(json "$DEPLOYMENT" demoToken)
 GOVERNOR=$(json "$DEPLOYMENT" demoGovernor)
 REACTIVE=$(json "$DEPLOYMENT" mirrorReactive)
 MIRROR=$(json "$DEPLOYMENT" voteMirror)
-THRESHOLD=$(json "$DEPLOYMENT" threshold)
+# Read from the contract: the owner may have changed it since deployment.
+THRESHOLD=$(cast call "$REACTIVE" "threshold()(uint256)" --rpc-url "$LASNA_RPC" | cut -d' ' -f1)
+[ "$THRESHOLD" -le "${#VOTER_KEY_LIST[@]}" ] || { echo "threshold is $THRESHOLD but VOTER_KEYS has ${#VOTER_KEY_LIST[@]} keys" >&2; exit 1; }
 
 # Both payers must be funded and free of debt, otherwise the network silently stops serving them.
 REACTIVE_DEBT=$(cast call "$SYSTEM_CONTRACT" "debt(address)(uint256)" "$REACTIVE" --rpc-url "$LASNA_RPC" | cut -d' ' -f1)
