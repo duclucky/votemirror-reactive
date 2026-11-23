@@ -13,9 +13,14 @@ TOKEN=$(json "$DEPLOYMENT" demoToken)
 GOVERNOR=$(json "$DEPLOYMENT" demoGovernor)
 REACTIVE=$(json "$DEPLOYMENT" mirrorReactive)
 MIRROR=$(json "$DEPLOYMENT" voteMirror)
-# Read from the contract: the owner may have changed it since deployment.
+# Read from the contract: the owner may have changed the threshold or the trusted list since deployment.
 THRESHOLD=$(cast call "$REACTIVE" "threshold()(uint256)" --rpc-url "$LASNA_RPC" | cut -d' ' -f1)
-[ "$THRESHOLD" -le "${#VOTER_KEY_LIST[@]}" ] || { echo "threshold is $THRESHOLD but VOTER_KEYS has ${#VOTER_KEY_LIST[@]} keys" >&2; exit 1; }
+TRUSTED_KEYS=() TRUSTED_VOTERS=()
+for i in "${!VOTERS[@]}"; do
+  [ "$(cast call "$REACTIVE" "isTrusted(address)(bool)" "${VOTERS[$i]}" --rpc-url "$LASNA_RPC")" = true ] || continue
+  TRUSTED_KEYS+=("${VOTER_KEY_LIST[$i]}") TRUSTED_VOTERS+=("${VOTERS[$i]}")
+done
+[ "$THRESHOLD" -le "${#TRUSTED_KEYS[@]}" ] || { echo "threshold is $THRESHOLD but VOTER_KEYS has ${#TRUSTED_KEYS[@]} trusted voters" >&2; exit 1; }
 
 # Both payers must be funded and free of debt, otherwise the network silently stops serving them.
 REACTIVE_DEBT=$(cast call "$SYSTEM_CONTRACT" "debt(address)(uint256)" "$REACTIVE" --rpc-url "$LASNA_RPC" | cut -d' ' -f1)
@@ -46,8 +51,8 @@ until [ "$(cast call "$GOVERNOR" "state(uint256)(uint8)" "$PROPOSAL_ID" --rpc-ur
 
 STARTED=$(date +%s)
 for i in $(seq 0 $((THRESHOLD - 1))); do
-  LAST_VOTE_TX=$(send "$BASE_SEPOLIA_RPC" "${VOTER_KEY_LIST[$i]}" "$GOVERNOR" "castVoteWithReason(uint256,uint8,string)" "$PROPOSAL_ID" "$SUPPORT" "trusted voter $((i + 1))")
-  echo "VoteCast tx $((i + 1)):  $LAST_VOTE_TX  (${VOTERS[$i]})"
+  LAST_VOTE_TX=$(send "$BASE_SEPOLIA_RPC" "${TRUSTED_KEYS[$i]}" "$GOVERNOR" "castVoteWithReason(uint256,uint8,string)" "$PROPOSAL_ID" "$SUPPORT" "trusted voter $((i + 1))")
+  echo "VoteCast tx $((i + 1)):  $LAST_VOTE_TX  (${TRUSTED_VOTERS[$i]})"
 done
 
 # scan <rpc> <from block> <address> <topic1> <event signatures...>: print "tx hash, block, event" of the first matching
