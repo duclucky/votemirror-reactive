@@ -57,11 +57,13 @@ Design decisions:
 | Contract | Chain | Address |
 | --- | --- | --- |
 | MirrorReactive | Reactive Lasna (5318007) | `0xc5D993C7DF3107a02943b4368794AA524e94B686` |
-| VoteMirror | Base Sepolia (84532) | [`0x7266da930e9aDb5F028c09991275b0d88744F194`](https://sepolia.basescan.org/address/0x7266da930e9aDb5F028c09991275b0d88744F194) |
-| DemoGovernor | Base Sepolia (84532) | [`0x69c34B596DB8CC39b68067b9d0B391D75616bc14`](https://sepolia.basescan.org/address/0x69c34B596DB8CC39b68067b9d0B391D75616bc14) |
-| DemoToken | Base Sepolia (84532) | [`0xc5D993C7DF3107a02943b4368794AA524e94B686`](https://sepolia.basescan.org/address/0xc5D993C7DF3107a02943b4368794AA524e94B686) |
+| VoteMirror | Base Sepolia (84532) | [`0x7266da930e9aDb5F028c09991275b0d88744F194`](https://base-sepolia.blockscout.com/address/0x7266da930e9aDb5F028c09991275b0d88744F194) |
+| DemoGovernor | Base Sepolia (84532) | [`0x69c34B596DB8CC39b68067b9d0B391D75616bc14`](https://base-sepolia.blockscout.com/address/0x69c34B596DB8CC39b68067b9d0B391D75616bc14) |
+| DemoToken | Base Sepolia (84532) | [`0xc5D993C7DF3107a02943b4368794AA524e94B686`](https://base-sepolia.blockscout.com/address/0xc5D993C7DF3107a02943b4368794AA524e94B686) |
 
-The three Base Sepolia contracts are source-verified on [Blockscout](https://base-sepolia.blockscout.com/address/0x7266da930e9aDb5F028c09991275b0d88744F194?tab=contract).
+Source verification: the three Base Sepolia contracts on Blockscout (the links above), MirrorReactive on
+[Sourcify](https://sourcify.dev/server/v2/contract/5318007/0xc5D993C7DF3107a02943b4368794AA524e94B686) (exact match),
+which is the verifier Reactive uses for Lasna.
 MirrorReactive and DemoToken share an address because each was the deployer's first transaction on its chain. Lasna
 addresses and transactions can be looked up on the [Lasna explorer](https://lasna.reactscan.net/).
 
@@ -158,3 +160,7 @@ callback on Base Sepolia.
 - **Gas must be kept topped up.** Both contracts pay for their own reactions and callbacks and stop being served if
   they run into debt; `coverDebt()` settles it.
 - **Not audited.** Demo code for a hackathon, testnet only.
+
+## License
+
+[MIT](LICENSE)
