@@ -41,40 +41,43 @@ until [ "$(cast call "$GOVERNOR" "state(uint256)(uint8)" "$PROPOSAL_ID" --rpc-ur
 
 STARTED=$(date +%s)
 for i in $(seq 0 $((THRESHOLD - 1))); do
-  echo "VoteCast tx $((i + 1)):  $(send "$BASE_SEPOLIA_RPC" "${VOTER_KEY_LIST[$i]}" "$GOVERNOR" "castVoteWithReason(uint256,uint8,string)" "$PROPOSAL_ID" "$SUPPORT" "trusted voter $((i + 1))")  (${VOTERS[$i]})"
+  LAST_VOTE_TX=$(send "$BASE_SEPOLIA_RPC" "${VOTER_KEY_LIST[$i]}" "$GOVERNOR" "castVoteWithReason(uint256,uint8,string)" "$PROPOSAL_ID" "$SUPPORT" "trusted voter $((i + 1))")
+  echo "VoteCast tx $((i + 1)):  $LAST_VOTE_TX  (${VOTERS[$i]})"
 done
 
-# scan <rpc> <cursor var> <address> <topic1> <event signatures...>: look for the first matching log from the
-# cursor block on, in windows small enough for public RPCs, and move the cursor. Prints "tx hash event".
+# scan <rpc> <from block> <address> <topic1> <event signatures...>: print "tx hash, block, event" of the first matching
+# log, looking in windows small enough for public RPCs.
 scan() {
-  local rpc=$1 cursor_var=$2 address=$3 topic=$4; shift 4
-  local from=${!cursor_var} latest to event tx
+  local rpc=$1 from=$2 address=$3 topic=$4; shift 4
+  local latest to event hit
   latest=$(cast block-number --rpc-url "$rpc")
   while [ "$from" -le "$latest" ]; do
     to=$((from + 199 < latest ? from + 199 : latest))
     for event in "$@"; do
-      tx=$(cast logs --rpc-url "$rpc" --from-block "$from" --to-block "$to" --address "$address" --json "$event" "$topic" |
-        python3 -c "import json,sys; l=json.load(sys.stdin); print(l[0]['transactionHash'] if l else '')")
-      [ -n "$tx" ] && { echo "$tx ${event%%(*}"; return; }
+      hit=$(cast logs --rpc-url "$rpc" --from-block "$from" --to-block "$to" --address "$address" --json "$event" "$topic" |
+        python3 -c "import json,sys; l=json.load(sys.stdin); print(l[0]['transactionHash'], int(l[0]['blockNumber'], 16)) if l else None")
+      [ -n "$hit" ] && { echo "$hit ${event%%(*}"; return; }
     done
     from=$((to + 1))
   done
-  printf -v "$cursor_var" %s "$from"
 }
+timestamp() { cast block "$2" --rpc-url "$1" -f timestamp; }
 TOPIC_ID=$(cast to-uint256 "$PROPOSAL_ID")
-REACT_TX="" CALLBACK=""
+REACT="" CALLBACK=""
 while [ $(($(date +%s) - STARTED)) -lt "$WAIT_SECONDS" ]; do
-  [ -n "$REACT_TX" ] || REACT_TX=$(scan "$LASNA_RPC" LASNA_FROM "$REACTIVE" "$TOPIC_ID" "MirrorRequested(uint256 indexed,uint8,uint256)")
-  CALLBACK=$(scan "$BASE_SEPOLIA_RPC" BASE_FROM "$MIRROR" "$TOPIC_ID" "Mirrored(uint256 indexed,uint8,uint256)" "Skipped(uint256 indexed,uint8,uint8)")
-  [ -n "$CALLBACK" ] && break
+  [ -n "$REACT" ] || REACT=$(scan "$LASNA_RPC" "$LASNA_FROM" "$REACTIVE" "$TOPIC_ID" "MirrorRequested(uint256 indexed,uint8,uint256)")
+  [ -n "$CALLBACK" ] || CALLBACK=$(scan "$BASE_SEPOLIA_RPC" "$BASE_FROM" "$MIRROR" "$TOPIC_ID" "Mirrored(uint256 indexed,uint8,uint256)" "Skipped(uint256 indexed,uint8,uint8)")
+  [ -n "$REACT" ] && [ -n "$CALLBACK" ] && break
   sleep 3
 done
-CALLBACK_TX=${CALLBACK%% *} RESULT=${CALLBACK##* }
-REACT_TX=${REACT_TX%% *}
+read -r REACT_TX _ _ <<<"$REACT"
+read -r CALLBACK_TX CALLBACK_BLOCK RESULT <<<"$CALLBACK"
 
 echo "react() tx:     ${REACT_TX:-not seen within ${WAIT_SECONDS}s} (Lasna, MirrorRequested)"
 if [ -n "$CALLBACK_TX" ]; then
-  echo "callback tx:    $CALLBACK_TX (Base Sepolia, $RESULT, $(($(date +%s) - STARTED))s after the first vote)"
+  LAST_VOTE_BLOCK=$(cast receipt "$LAST_VOTE_TX" blockNumber --rpc-url "$BASE_SEPOLIA_RPC")
+  DELAY=$(($(timestamp "$BASE_SEPOLIA_RPC" "$CALLBACK_BLOCK") - $(timestamp "$BASE_SEPOLIA_RPC" "$LAST_VOTE_BLOCK")))
+  echo "callback tx:    $CALLBACK_TX (Base Sepolia, $RESULT, ${DELAY}s after the last trusted vote)"
 else
   echo "callback tx:    not delivered within ${WAIT_SECONDS}s"
 fi
