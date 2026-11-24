@@ -5,8 +5,9 @@ independent audit** and the project remains unaudited. Scope: `src/VoteMirror.so
 demo token and Governor, the deploy and demo scripts, and the live testnet deployment in
 [`deployments/testnet.json`](../deployments/testnet.json), at commit `0c4c215`.
 
-Nothing was changed on chain and no contract source was changed. The findings below describe the code as deployed;
-the fixes are for a future deployment.
+The findings below describe the first deployment (commit `0c4c215`). A second pass and the fixes followed; the
+"Status" section says what was done about each finding in the contracts that are deployed now. Line numbers in
+the findings refer to commit `0c4c215`.
 
 ## Result
 
@@ -26,20 +27,76 @@ No critical or high severity issue. One medium, four low, six informational.
 | I-5 | Info | Scripts pass private keys on the command line; one `.env` holds every demo key |
 | I-6 | Info | Floating pragma; CI actions pinned by tag |
 
+## Status after the fixes
+
+| # | Status | What changed |
+|---|--------|--------------|
+| M-1 | Mitigated, not removable | The charge is made by Reactive's proxy. `retryMirror()` now recovers the votes missed while VoteMirror was in debt |
+| L-1 | Reduced, not removable | VoteMirror now checks on the Governor that `threshold` trusted voters have voted before it casts (`Skipped(NotConfirmed)` otherwise), so a made-up callback cannot vote on a proposal the trusted voters are silent on. The side still comes from the callback: a standard Governor does not expose it |
+| L-2 | Fixed | Owner-only `MirrorReactive.retryMirror(proposalId, support)`; reverts unless `threshold` currently trusted voters agree on that choice (`AgreementNotReached`) and it is the choice requested first (`OtherChoiceRequested`) |
+| L-3 | Accepted and documented | Reactive bills per delivered log; `removeTrusted` stops it. On a Governor with fractional voting a trusted voter can cast several ballots per proposal, each billed and none counted |
+| L-4 | Fixed | `trustEpoch[voter]` is raised on removal and votes are recorded per epoch |
+| I-1 | Fixed | `Ownable2Step` on both contracts; `renounceOwnership()` reverts with `RenounceDisabled` |
+| I-2 | Fixed | VoteMirror's constructor reverts with `ZeroAddress` |
+| I-3 | Fixed | `agreement()` returns 0 for a support value above 2 |
+| I-4 | Finality fixed, weight by design | VoteMirror's check reads the Governor when it casts, so votes removed by a reorg no longer count. Counting per address is the product rule |
+| I-5 | Documented | Testnet demo keys. `cast` and `forge create` take a raw key only as an argument; a real setup would use a keystore or a hardware wallet |
+| I-6 | Fixed | `pragma solidity 0.8.30`; CI actions pinned by commit |
+
+## Second pass
+
+The second pass read the verified source of Reactive's system contract on Lasna (`0x8888…8888`, implementation
+`0xbbbb…bbbb`, on Sourcify) and ran a probe on the testnets with two throwaway contracts.
+
+- **N-1 (makes M-1 cheaper).** `SystemContract.requestCallback` is open to any caller and emits
+  `CallbackRequest(chainId, msg.sender, recipient, …)`, so a plain wallet on Lasna can request callbacks to
+  VoteMirror; no reactive contract is needed. In the probe a request sent by a wallet was delivered on Base Sepolia
+  with the wallet's address as first argument (transaction `0x6e221485caa1f02f590c52bf50fdd37c2fac8a1dda4868e627d2633337d8c362`).
+  VoteMirror rejects such a callback and is still charged for it.
+- **N-2.** A callback requested from an ordinary transaction of a contract, outside `react()`, is delivered with
+  that contract's address as first argument (transaction
+  `0xfd9046e610948747fc46b3aa274e3e8e6e585895966cea8019a68a15bec24fe0`). `retryMirror()` relies on this.
+- **N-3 (info).** When `2 × threshold` is not more than the number of trusted voters, both sides can reach the
+  threshold; the first one is mirrored, and `retryMirror()` only repeats that one.
+- **N-4 (info, fixed with L-2).** Lowering the threshold or setting the mirror late does not request a callback for
+  a proposal on which the trusted voters have already voted.
+- **N-5 (info, fixed).** A vote cast with `castVoteWithReasonAndParams` emits `VoteCastWithParams` and was not
+  followed. MirrorReactive now subscribes to both events and reads only the two leading words of the data.
+- **N-6 (info).** A callback that ends in `Skipped` is billed like any other.
+- **N-7 (info, part of L-1).** The system contract and the callback proxy are each upgradeable by one key.
+
+Why M-1 cannot be closed in VoteMirror: `CallbackProxy._callback` charges the recipient after every call, and when
+the recipient's reserve is empty it calls `pay(debt)` on it. If VoteMirror refused to pay for callbacks it
+rejected, the unpaid amount would become debt, and `_callback` reverts with `InDebt` for a recipient in debt: one
+foreign callback would then stop mirroring at once instead of after the balance is spent. Paying is the lesser
+harm. A rejected callback costs VoteMirror the proxy's fixed overhead only, because it reverts at the first check.
+
+Considered and not done: re-requesting automatically when the owner lifts a pause (more fees and more surface
+than one `retryMirror` transaction), and requiring `2 × threshold > n` (it would forbid "any one of my three
+delegates", which is a legitimate rule; the first requested choice is now final instead).
+
 ## What was checked
 
 - Manual read of both contracts and of the Reactive base contracts they inherit (`AbstractCallback`,
   `AbstractPayer`, `AbstractReactive`, `reactive-lib-omni` v0.1.0).
 - The verified source of Reactive's Base Sepolia callback proxy (`0x476F44b1…3585`, implementation
   `0x49E4AC69…E059`), because VoteMirror's authorization and fees depend on it.
-- `forge test` (51 tests after this review, all passing), `forge coverage` (VoteMirror 100% lines and branches,
-  MirrorReactive 98% lines, 64% branches), Slither 0.11 (no finding beyond events after external calls to trusted
-  contracts and naming).
-- Live state, read only: the runtime bytecode of all four deployed contracts is identical to a build of `main`;
-  owner, callback proxy, reactive sender, Governor, origin chain, threshold 2 of 3 and the trusted list match the
-  deployment file; neither contract is in debt; the owner's 1,000 votes are delegated to VoteMirror.
-- Two findings (M-1, L-1) were reproduced on a local fork of Base Sepolia by impersonating Reactive's relayer. No
-  transaction was sent to a real network.
+- `forge test` (51 tests after the first pass, 77 after the fixes, all passing), `forge coverage` after the fixes
+  (VoteMirror 100% lines and branches, MirrorReactive 100% lines, 82% branches: the rest are sub-conditions of the
+  log filter), Slither 0.11 (no finding beyond events after external calls to trusted contracts, calls in bounded
+  loops and naming).
+- First deployment, read only: the runtime bytecode of all four contracts was identical to a build of `main`;
+  owner, callback proxy, reactive sender, Governor, origin chain, threshold 2 of 3 and the trusted list matched the
+  deployment file; neither contract was in debt; the owner's 1,000 votes were delegated to VoteMirror.
+- Two findings (M-1, L-1) were reproduced on a local fork of Base Sepolia by impersonating Reactive's relayer. The
+  first pass sent no transaction to a real network.
+- Second pass: the verified source of Reactive's Lasna system contract, and a throwaway probe contract on the two
+  testnets to confirm N-1 and N-2.
+- Deployment with the fixes (2026-11-24, addresses in the README): the same checks again. Runtime bytecode of all
+  four contracts identical to a build of this code, sources verified (Blockscout, Sourcify exact match), wiring and
+  the trusted list equal on both contracts, no debt. Four demo loops (For, Against, Skip, Retry) and a live run of
+  VoteMirror's own check (`Skipped(NotConfirmed)`, then mirrored after `retryMirror`) are listed in the README with
+  their transactions; each transaction's events were read back from its receipt.
 
 ## Findings
 
@@ -60,7 +117,7 @@ Reproduced on a fork: a rejected callback cost VoteMirror 575,731,200,000 wei at
 current balance of 0.01999 ETH covers about 34,700 of them, so on Base Sepolia today this is expensive to do and
 cheap to recover from. The cost to the victim grows with the gas price of the destination chain.
 
-This cannot be fully fixed in VoteMirror, the charge is made by the proxy. For a future deployment: keep only a
+This cannot be fully fixed in VoteMirror, the charge is made by the proxy. Keep only a
 small balance in the contract, watch `debt()` and the balance, and give the owner a way to have a proposal
 mirrored again after an outage (L-2).
 
@@ -77,7 +134,7 @@ voter had voted on.
 
 The reach is limited to `castVoteWithReason` on the one Governor, with the voting power delegated to VoteMirror;
 tokens cannot be moved, and `setPaused`, `setSkipped` and an earlier `castVote` still stop it. This is the trust
-model of any Reactive callback contract. The README wording is corrected in this change.
+model of any Reactive callback contract. The README wording was corrected.
 
 ### L-2 A skipped, paused or failed callback is final for that proposal
 
@@ -86,8 +143,9 @@ model of any Reactive callback contract. The README wording is corrected in this
 by the owner, not active yet) or is lost on the way (the proxy incident on 2026-11-23, VoteMirror in debt), no
 later trusted vote requests it again. Lifting the pause or the skip does not bring the vote back.
 
-Tests: `test_Loop_UnskippedProposalIsNotMirroredLater`, `test_Loop_ProposalMirroredWhilePausedIsNotMirroredLater`.
-The owner can still vote with `castVote()`. A future version could let the owner clear the flag for a proposal.
+The owner could still vote with `castVote()`. Fixed with `retryMirror()`; tests:
+`test_Loop_UnskippedProposalIsMirroredAfterRetry`, `test_Loop_ProposalSkippedWhilePausedIsMirroredAfterRetry`,
+`test_Loop_RetryAfterMirroredVoteIsSkipped`, `test_RevertWhen_RetryWithoutAgreement`.
 
 ### L-3 One trusted voter alone can run up MirrorReactive's fees
 
@@ -104,7 +162,7 @@ subscriptions stop being served and nothing is mirrored until the owner pays the
 longer count"; after `addTrusted` for the same address they do again, on every proposal still open. The reverse
 also holds: a vote cast while the address was not trusted is never counted.
 
-Tests: `test_ReAddedVoterBringsBackOldVotes`, `test_VoteCastBeforeBeingTrustedIsNotCounted`.
+Fixed; tests: `test_ReAddedVoterDoesNotBringBackOldVotes`, `test_VoteCastBeforeBeingTrustedIsNotCounted`.
 
 ### I-1 `renounceOwnership` and one-step transfer are left enabled
 
@@ -123,7 +181,7 @@ deployed values were checked and are correct.
 
 `recordedVote[...] == support_ + 1` (`src/MirrorReactive.sol:115`) overflows a `uint8` for 255. `react()` never
 passes a value above 2, so only an outside caller of the view is affected.
-Test: `test_RevertWhen_AgreementQueriedWithSupport255`.
+Fixed; test: `test_AgreementIsZeroForUnknownSupport`.
 
 ### I-4 Trusted votes count whatever their weight, and without waiting for finality
 
