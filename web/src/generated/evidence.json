@@ -1,0 +1,354 @@
+{
+  "deployment": {
+    "contractVersion": 4,
+    "baseSepoliaChainId": 84532,
+    "lasnaChainId": 5318007,
+    "demoToken": "0x1c1000C7d8Ee05b97F5FF7bfCbA7c04aC9e58515",
+    "demoGovernor": "0x04bB46C2E47F640Dd94bCfC0ea2aC9191364fafb",
+    "voteMirror": "0x4a89e26aD48A2729d8D95B3b446DBC1083AEF87a",
+    "mirrorReactive": "0x81A8a6edf8B2d773FF53dc1450De4822c5756988",
+    "callbackProxy": "0x476F44b11F5C942c58f4c8E3d0300E5710743585",
+    "owner": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+    "trustedVoters": [
+      "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+      "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e",
+      "0x6AA709775837be9E562fe2eA9dcC383Bd14a99e4"
+    ],
+    "threshold": 2
+  },
+  "scenarios": [
+    {
+      "mode": "for",
+      "title": "A shared conviction",
+      "summary": "Two trusted voters support a proposal. VoteMirror follows their agreement.",
+      "path": "Reactive callback",
+      "outcome": "Mirrored",
+      "proposalId": "49757969774088266091400892823129886353044308034007435573215089695692240129519",
+      "description": "VoteMirror v4 for audit-4",
+      "support": 1,
+      "sourceFile": "v4-for-audit-4.json",
+      "baseFrom": "62855634",
+      "proposeTx": "0xbffae2c4ff1818ccd5d270129c9530484a092e3254940ca0d6e843e0a6123899",
+      "voteTxs": [
+        "0x3e5f19e88a4a7989b63edb2ed4fce3fd112c413c38a22a5cea5e974ded2d26d8",
+        "0x38df975582c4212d521e9a14454344e02bf58a00348a46c3e8f7f5ed2b747ca1"
+      ],
+      "reactiveTx": "0x980169992adc53c96d8b5c1de3dbe6ead4872909dd9538957735b8b073e39de8",
+      "resultTx": "0x05dc9053e458802e4b06d5e39d0e19673963ba6cba6f7bd23039520cb56ac749",
+      "ballots": [
+        {
+          "voter": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+          "support": 1,
+          "tx": "0x3e5f19e88a4a7989b63edb2ed4fce3fd112c413c38a22a5cea5e974ded2d26d8"
+        },
+        {
+          "voter": "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e",
+          "support": 1,
+          "tx": "0x38df975582c4212d521e9a14454344e02bf58a00348a46c3e8f7f5ed2b747ca1"
+        }
+      ],
+      "votes": [
+        "0",
+        "3000000000000000000000",
+        "0"
+      ],
+      "mirrored": true
+    },
+    {
+      "mode": "against",
+      "title": "Dissent, mirrored",
+      "summary": "Agreement works both ways. Two Against ballots trigger an Against vote.",
+      "path": "Reactive callback",
+      "outcome": "Mirrored",
+      "proposalId": "75423870452188056903594644903068445374877274576832846520166735298766422046191",
+      "description": "VoteMirror v4 against audit-4",
+      "support": 0,
+      "sourceFile": "v4-against-audit-4.json",
+      "baseFrom": "62855835",
+      "proposeTx": "0x204fca3992bf84277a58e0b0e207603a19574ed6ca924ec56aa87783684ead5f",
+      "voteTxs": [
+        "0x632f84bdbed523161d2f934f9d2666ffbf59664e5004c79f268b5db98bf42c8a",
+        "0x8db1e7b13a58a5fbcc8d9639610ea2f8768af515c86429a50dd1b6172b5c9a80"
+      ],
+      "reactiveTx": "0x4d04d9eba1908eec4362a77b624a4383cc26aacffbe6cb66e8b2c55aa76182dd",
+      "resultTx": "0x81c629bbe6d575d9aaec7d778aa26af7a9fa8b9ed7f1c6aa53db6a76975c8d17",
+      "ballots": [
+        {
+          "voter": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+          "support": 0,
+          "tx": "0x632f84bdbed523161d2f934f9d2666ffbf59664e5004c79f268b5db98bf42c8a"
+        },
+        {
+          "voter": "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e",
+          "support": 0,
+          "tx": "0x8db1e7b13a58a5fbcc8d9639610ea2f8768af515c86429a50dd1b6172b5c9a80"
+        }
+      ],
+      "votes": [
+        "3000000000000000000000",
+        "0",
+        "0"
+      ],
+      "mirrored": true
+    },
+    {
+      "mode": "split",
+      "title": "Disagreement is a decision",
+      "summary": "One For, one Against. Without same-side agreement, VoteMirror stays out.",
+      "path": "No consensus",
+      "outcome": "No consensus",
+      "proposalId": "55402208725363585135812277407999216366708771299491869408367828081175280648481",
+      "description": "VoteMirror v4 split audit-4",
+      "support": 1,
+      "sourceFile": "v4-split-audit-4.json",
+      "baseFrom": "62856761",
+      "proposeTx": "0x1b6d54f3a8cca2e1d4f25535507f460b5bd43733b6866289523e12ef804cb531",
+      "voteTxs": [
+        "0xc7fc586a73be3056ce7da76b89f164a0ab32586f98a28a5a9d73ef198eabfcec",
+        "0x881f3fd7ccd5dda9d0c6c528f62a2f4b55c9aa0b760416f69b274c28938329c9"
+      ],
+      "reactiveTx": null,
+      "resultTx": "0xaee6b6cbf32a15914975a04782b6564a323735bf63f5c2c4df131d4dd96fe61a",
+      "ballots": [
+        {
+          "voter": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+          "support": 1,
+          "tx": "0xc7fc586a73be3056ce7da76b89f164a0ab32586f98a28a5a9d73ef198eabfcec"
+        },
+        {
+          "voter": "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e",
+          "support": 0,
+          "tx": "0x881f3fd7ccd5dda9d0c6c528f62a2f4b55c9aa0b760416f69b274c28938329c9"
+        }
+      ],
+      "votes": [
+        "1000000000000000000000",
+        "1000000000000000000000",
+        "0"
+      ],
+      "mirrored": false
+    },
+    {
+      "mode": "skip",
+      "title": "Your veto stays yours",
+      "summary": "The owner skips a proposal. Trusted agreement cannot override that choice.",
+      "path": "Owner skipped",
+      "outcome": "Skipped",
+      "proposalId": "47184644913734358607312962148630220016735977445603286002944481236450734262617",
+      "description": "VoteMirror v4 skip audit-4",
+      "support": 1,
+      "sourceFile": "v4-skip-audit-4.json",
+      "baseFrom": "62856058",
+      "proposeTx": "0xf48c5844789e8aa88fe6855654328d9f66553f61fcd7dedefbfb6106f7cad027",
+      "voteTxs": [
+        "0x7a1c8fd510ba315856e6072a264a332154a1b19ad46f847c5a20bfbff580a654",
+        "0x1a9b98b12c5d8fdc8ba4094529a703d4f712aefa8934242048c16158dd485c96"
+      ],
+      "reactiveTx": "0x2d969d884beab1003f33e333e3b0753df24fb7cf1f0a7cf3dfb10ec98d52282a",
+      "resultTx": "0x62a87f66557e102943257feafd8df5369c0d1e1167aecf155ae97cec8f18e7e0",
+      "ballots": [
+        {
+          "voter": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+          "support": 1,
+          "tx": "0x7a1c8fd510ba315856e6072a264a332154a1b19ad46f847c5a20bfbff580a654"
+        },
+        {
+          "voter": "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e",
+          "support": 1,
+          "tx": "0x1a9b98b12c5d8fdc8ba4094529a703d4f712aefa8934242048c16158dd485c96"
+        }
+      ],
+      "votes": [
+        "0",
+        "2000000000000000000000",
+        "0"
+      ],
+      "mirrored": false
+    },
+    {
+      "mode": "retry",
+      "title": "A second chance to deliver",
+      "summary": "A paused callback is skipped. After unpausing, a Reactive retry completes the vote.",
+      "path": "Reactive retry",
+      "outcome": "Mirrored",
+      "proposalId": "112688493777849622430263842608513889273411563616005158057233641222946667069081",
+      "description": "VoteMirror v4 retry audit-4",
+      "support": 1,
+      "sourceFile": "v4-retry-audit-4.json",
+      "baseFrom": "62856270",
+      "proposeTx": "0x4638259bc4e51643995e601c1e630dc3253a707c40ac7d4e8420f42b980f5000",
+      "voteTxs": [
+        "0xf589472f6fa127883e442be59f48be5701a29d158f4cede1ff583ce46f8248ce",
+        "0x6d1eaf227ce8c5483222a61b030285001d0f43ac3e390b96b563fe8a3c587233"
+      ],
+      "reactiveTx": "0x73d12f67e88502d779a143990b8af4ce4d4aa3023e4e702a33388d84ed7ca491",
+      "resultTx": "0x3f58f0058c3d5219f10a4c0b88e036962b9f734efad01683cc98e1eaf342c1be",
+      "ballots": [
+        {
+          "voter": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+          "support": 1,
+          "tx": "0xf589472f6fa127883e442be59f48be5701a29d158f4cede1ff583ce46f8248ce"
+        },
+        {
+          "voter": "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e",
+          "support": 1,
+          "tx": "0x6d1eaf227ce8c5483222a61b030285001d0f43ac3e390b96b563fe8a3c587233"
+        }
+      ],
+      "votes": [
+        "0",
+        "3000000000000000000000",
+        "0"
+      ],
+      "mirrored": true
+    },
+    {
+      "mode": "reconcile",
+      "title": "A recovery, on your terms",
+      "summary": "The owner reconciles the vote directly after unpausing.",
+      "path": "Owner recovery",
+      "outcome": "Mirrored",
+      "proposalId": "96305536181626308064673475820244462152304350566681521228793544220774049116332",
+      "description": "VoteMirror v4 reconcile audit-4",
+      "support": 1,
+      "sourceFile": "v4-reconcile-audit-4.json",
+      "baseFrom": "62856486",
+      "proposeTx": "0x3460ea0aebbf812bfbe1df529b9fe4fc4c51456a986a93ae5399f186859c27f2",
+      "voteTxs": [
+        "0x1d248d7b724259ecebfd2a01f644de19cd7f43dc3956487477de637da25e247a",
+        "0xc10b28de3dd1036021c136b64b995745236bb648fc6c567c184142f8ac162d3c"
+      ],
+      "reactiveTx": "0xf706073836cfdb8d56f8447a9f87f2c0f995ee65924f321972b42a0eea991c1d",
+      "resultTx": "0x1c0fe996ca89359c14b67b219da0528cbb31f78b3ae4f46b016d79d54eef5cde",
+      "ballots": [
+        {
+          "voter": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+          "support": 1,
+          "tx": "0x1d248d7b724259ecebfd2a01f644de19cd7f43dc3956487477de637da25e247a"
+        },
+        {
+          "voter": "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e",
+          "support": 1,
+          "tx": "0xc10b28de3dd1036021c136b64b995745236bb648fc6c567c184142f8ac162d3c"
+        }
+      ],
+      "votes": [
+        "0",
+        "3000000000000000000000",
+        "0"
+      ],
+      "mirrored": true
+    },
+    {
+      "mode": "recovery",
+      "title": "A safety net on-chain",
+      "summary": "A recorded Cron recovery delivers the vote after a pause. Cron is currently off.",
+      "path": "Cron recovery",
+      "outcome": "Mirrored",
+      "proposalId": "107173004047891152552213873326458140846085570798693392758650198215682801725166",
+      "description": "VoteMirror v4 recovery audit-4",
+      "support": 1,
+      "sourceFile": "v4-recovery-audit-4.json",
+      "baseFrom": "62854037",
+      "proposeTx": "0xb6e8e6a0512ed69c6e6b0cf9cff84cac2ea488034479ecd172a91b39791bb017",
+      "voteTxs": [
+        "0xa3240e6f7065fc1cf4dd4a25b8d3f92ae8b8b490ad2dde8b346d2fa04795dff7",
+        "0xd7e230b054696ee6c3dc92f15e39c6de7745497e56e6219d1334fe0deae7b96a"
+      ],
+      "reactiveTx": "0xd174479e903e6b0fe186504735e7c9ed9d3dc70d3145391cd3d7edddcfb5fce6",
+      "resultTx": "0xaa63e3403495ff3ef056bd1998244e4e95c46927196bcf4720ab3b8c007f93a6",
+      "ballots": [
+        {
+          "voter": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+          "support": 1,
+          "tx": "0xa3240e6f7065fc1cf4dd4a25b8d3f92ae8b8b490ad2dde8b346d2fa04795dff7"
+        },
+        {
+          "voter": "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e",
+          "support": 1,
+          "tx": "0xd7e230b054696ee6c3dc92f15e39c6de7745497e56e6219d1334fe0deae7b96a"
+        }
+      ],
+      "votes": [
+        "0",
+        "3000000000000000000000",
+        "0"
+      ],
+      "mirrored": true
+    },
+    {
+      "mode": "lostlogs",
+      "title": "When an event goes missing",
+      "summary": "A recorded Cron scan recovers an agreement absent from Reactive logs.",
+      "path": "Cron recovery",
+      "outcome": "Mirrored",
+      "proposalId": "31038646742400074923263549134799668963865716722756520527405655965072452558564",
+      "description": "VoteMirror v4 lostlogs audit-4",
+      "support": 1,
+      "sourceFile": "v4-lostlogs-audit-4.json",
+      "baseFrom": "62854388",
+      "proposeTx": "0xa551f3a9cd7dba39d2e8db757784460e144bd805e475d9a91665c59800bebea9",
+      "voteTxs": [
+        "0x6cc74994eb13ff3a27c5579ae7b6c2456883632ea7a1aa72699bf8445e7eb373",
+        "0x69cebd4ea9789955ff5ca07501a56ba7cd1b78e024f0a2b532af92e3518ae5e5"
+      ],
+      "reactiveTx": null,
+      "resultTx": "0x4ba78c653742fc3b28d72598c1a05d9ecc5c1fa3b9e0a247e60c921d13a6d768",
+      "ballots": [
+        {
+          "voter": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+          "support": 1,
+          "tx": "0x6cc74994eb13ff3a27c5579ae7b6c2456883632ea7a1aa72699bf8445e7eb373"
+        },
+        {
+          "voter": "0x6AA709775837be9E562fe2eA9dcC383Bd14a99e4",
+          "support": 1,
+          "tx": "0x69cebd4ea9789955ff5ca07501a56ba7cd1b78e024f0a2b532af92e3518ae5e5"
+        }
+      ],
+      "votes": [
+        "0",
+        "3000000000000000000000",
+        "0"
+      ],
+      "mirrored": true
+    },
+    {
+      "mode": "sender",
+      "title": "Delivery has a backup",
+      "summary": "With Cron off and a source ballot missing, the dedicated Base sender recovers the vote.",
+      "path": "Recovery sender",
+      "outcome": "Mirrored",
+      "proposalId": "50509171866234483266093507873869752914407808510153577807255459636877997161633",
+      "description": "VoteMirror v4 sender audit-service-2",
+      "support": 1,
+      "sourceFile": "v4-sender-audit-service-2.json",
+      "baseFrom": "62913224",
+      "proposeTx": "0x2b7fe842a87e43abba6365eff5ee58aee6fe62b89d2172b4e680e926c87a9ecf",
+      "voteTxs": [
+        "0x793a639c68912e5c3aaa0d88abe1d179c1d2d089f62956f7678b5fb0b912637f",
+        "0xddf80b1eacef6467f59803b00b2e8544ae61cc7a9394b95f95865d314adef470"
+      ],
+      "reactiveTx": null,
+      "resultTx": "0xf432d30bfdfeb16d01917383d8e0ba3ee4264a915dcd58517f8767214fcdebe7",
+      "ballots": [
+        {
+          "voter": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+          "support": 1,
+          "tx": "0x793a639c68912e5c3aaa0d88abe1d179c1d2d089f62956f7678b5fb0b912637f"
+        },
+        {
+          "voter": "0x6AA709775837be9E562fe2eA9dcC383Bd14a99e4",
+          "support": 1,
+          "tx": "0xddf80b1eacef6467f59803b00b2e8544ae61cc7a9394b95f95865d314adef470"
+        }
+      ],
+      "votes": [
+        "0",
+        "3000000000000000000000",
+        "0"
+      ],
+      "mirrored": true
+    }
+  ]
+}

@@ -39,7 +39,25 @@ The deployment manifest is [hardened-testnet-v4.json](deployments/hardened-testn
 Current contract sources are verified on Sourcify. Creation bytecode, constructor arguments
 and runtime were checked against the build in [v4-bytecode-check.json](deployments/v4-bytecode-check.json).
 
-## Build and test
+## Frontend dashboard
+
+The [frontend](web/) provides current policy and proposal reads, browser-wallet proposal
+creation and ballots, and nine clearly labeled historical demos. It rechecks receipt
+status, contract addresses and decoded events before marking a recorded run verified.
+Reactive callbacks, owner recovery and sender recovery retain distinct labels.
+
+```sh
+cd web
+npm ci
+npm run dev
+```
+
+Open the local URL printed by Vite. The frontend uses Base Sepolia and Lasna public
+RPCs and never reads local keystores. See [web/README.md](web/README.md) for building,
+Chrome browser checks and filming a demo. It is a single deployed holder workspace;
+it does not create a personalized VoteMirror for each connecting wallet.
+
+## Contract and service checks
 
 Requirements are Foundry with Solidity 0.8.30 and Python 3. The deployment and local
 service wrappers additionally require Windows PowerShell 7.

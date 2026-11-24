@@ -1,0 +1,22 @@
+{
+  "name": "votemirror-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "node --test test/*.test.js",
+    "sync-data": "node scripts/sync-data.mjs",
+    "test:browser": "playwright test",
+    "check:live": "node scripts/check-live.mjs"
+  },
+  "dependencies": {
+    "viem": "^2.38.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "vite": "^7.2.0"
+  }
+}
