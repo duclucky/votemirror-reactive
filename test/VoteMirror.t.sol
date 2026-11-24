@@ -177,6 +177,39 @@ contract VoteMirrorTest is Test {
         assertEq(forVotes, 2_000e18);
     }
 
+    /// @dev MirrorReactive asks once per proposal. A callback that was skipped is not requested again when the
+    ///      owner lifts the skip, even if more trusted voters agree afterwards.
+    function test_Loop_UnskippedProposalIsNotMirroredLater() public {
+        uint256 id = _propose("Skipped first, wanted after all");
+        vm.prank(user);
+        mirror.setSkipped(id, true);
+        _voteAndRelay(alice, id, FOR);
+        _voteAndRelay(bob, id, FOR);
+
+        vm.prank(user);
+        mirror.setSkipped(id, false);
+        _voteAndRelay(carol, id, FOR);
+
+        assertEq(system.callbackCount(), 1);
+        assertFalse(governor.hasVoted(id, address(mirror)));
+    }
+
+    /// @dev Same for a pause: the callback that arrived while paused is the only one for that proposal.
+    function test_Loop_ProposalMirroredWhilePausedIsNotMirroredLater() public {
+        uint256 id = _propose("Voted on while paused");
+        vm.prank(user);
+        mirror.setPaused(true);
+        _voteAndRelay(alice, id, FOR);
+        _voteAndRelay(bob, id, FOR);
+
+        vm.prank(user);
+        mirror.setPaused(false);
+        _voteAndRelay(carol, id, FOR);
+
+        assertEq(system.callbackCount(), 1);
+        assertFalse(governor.hasVoted(id, address(mirror)));
+    }
+
     function test_Loop_ThirdAgreeingVoteDoesNotVoteTwice() public {
         uint256 id = _propose("Fund the grants round");
         _voteAndRelay(alice, id, FOR);

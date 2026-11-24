@@ -42,7 +42,8 @@ Design decisions:
 
 - **Callback authorization is double checked.** `castMirrored` requires `msg.sender` to be the Reactive callback
   proxy and the first argument, which Reactive overwrites with the address of the requesting reactive contract, to be
-  the `MirrorReactive` it was deployed for. Nobody else can make VoteMirror vote.
+  the `MirrorReactive` it was deployed for. No other contract or account can make VoteMirror vote; Reactive's
+  relayer and the owner of the callback proxy are trusted to deliver only what `MirrorReactive` requested.
 - **The callback never reverts on business conditions.** A failed callback is still charged, so a paused contract, a
   skipped proposal, a closed vote, or an earlier manual vote emit `Skipped(proposalId, support, reason)` instead.
 - **The owner always wins.** A manual `castVote` is final: the Governor allows one vote per account, and the callback
@@ -131,7 +132,7 @@ callback on Base Sepolia.
 
 ## Tests
 
-`forge test` runs 46 tests:
+`forge test` runs 51 tests:
 
 - [`test/MirrorReactive.t.sol`](test/MirrorReactive.t.sol): k of n rule (For, Against, Abstain, split votes,
   threshold of one), duplicate votes, one callback per proposal, untrusted voters and foreign logs ignored, only the
@@ -159,7 +160,13 @@ callback on Base Sepolia.
   mirrored.
 - **Gas must be kept topped up.** Both contracts pay for their own reactions and callbacks and stop being served if
   they run into debt; `coverDebt()` settles it.
-- **Not audited.** Demo code for a hackathon, testnet only.
+- **One callback per proposal.** If that callback is skipped (paused, skipped by the owner) or lost, lifting the
+  pause or the skip does not bring the vote back; the owner votes with `castVote()`.
+- **Rejected callbacks are still billed.** Reactive's callback proxy charges VoteMirror for a callback requested by
+  somebody else's reactive contract even though VoteMirror rejects it, so its balance can be run down from outside.
+- **Re-adding a trusted voter brings back their recorded votes** on proposals that are still open.
+- **Not audited.** Demo code for a hackathon, testnet only. Our own review of the contracts, which is not an
+  independent audit, is in [`docs/security-review.md`](docs/security-review.md).
 
 ## License
 
