@@ -47,7 +47,7 @@ function statusBadge(status) {
     ownerVoted: ["ok", `Owner voted ${view.supportName(status.support)} directly`],
     skipped: ["warn", view.skipReason(status.reason).label],
     pending: ["info", "Callback on its way"],
-    undelivered: ["bad", "Callback never arrived"],
+    undelivered: ["bad", "Callback not delivered"],
     watching: ["info", "Watching for trusted votes"],
     noAgreement: ["muted", "Threshold not reached"],
   };
@@ -70,7 +70,7 @@ function statusSentence(proposal, state) {
     case "pending":
       return `The threshold was reached and the callback to Base Sepolia has been requested. It usually lands within seconds.`;
     case "undelivered":
-      return `The threshold was reached and a callback was requested on Reactive Lasna, but no callback has reached VoteMirror on Base Sepolia, so no vote was cast.`;
+      return `The threshold was reached and a callback was requested on Reactive Lasna, but it was not delivered to VoteMirror on Base Sepolia (the relay transaction failed or was never sent), so no vote was cast.`;
     case "watching":
       return `${status.agreeing} of the ${status.threshold} trusted votes needed so far.`;
     default:
@@ -234,7 +234,7 @@ function render(state, { openIds }) {
     stat(summary.observedVotes, "trusted votes counted", "on Reactive Lasna"),
     stat(summary.mirrored, "votes mirrored", "cast by VoteMirror", "ok"),
     stat(summary.skipped, "votes skipped", "callback arrived, no vote", "warn"),
-    summary.undelivered > 0 && stat(summary.undelivered, "callbacks never arrived", "requested, not delivered", "bad"),
+    summary.undelivered > 0 && stat(summary.undelivered, "callbacks not delivered", "requested, never reached VoteMirror", "bad"),
     summary.retries > 0 && stat(summary.retries, summary.retries === 1 ? "retry by the owner" : "retries by the owner", "callback requested again", "info"),
     summary.pending + summary.watching > 0 && stat(summary.pending + summary.watching, "in progress", "open right now", "info"),
   );
