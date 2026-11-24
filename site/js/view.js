@@ -5,19 +5,24 @@ import { sameAddress } from "./abi.js";
 export const SUPPORT = ["Against", "For", "Abstain"];
 export const PROPOSAL_STATES = ["Pending", "Active", "Canceled", "Defeated", "Succeeded", "Queued", "Expired", "Executed"];
 export const SKIP_REASONS = [
-  { name: "Paused", text: "mirroring was paused by the owner" },
-  { name: "SkippedByOwner", text: "the owner marked this proposal to be skipped" },
-  { name: "AlreadyVoted", text: "VoteMirror had already voted on this proposal" },
-  { name: "NotActive", text: "voting on the proposal was no longer open" },
-  { name: "CastFailed", text: "the Governor rejected the vote" },
-  { name: "NotConfirmed", text: "VoteMirror could not confirm on Base Sepolia that enough trusted voters had voted that way" },
+  { name: "Paused", label: "Skipped: mirroring paused", text: "mirroring was paused by the owner" },
+  { name: "SkippedByOwner", label: "Skipped by the owner", text: "the owner marked this proposal to be skipped" },
+  { name: "AlreadyVoted", label: "Skipped: already voted", text: "VoteMirror had already voted on this proposal" },
+  { name: "NotActive", label: "Skipped: voting not open", text: "voting on the proposal was not open" },
+  { name: "CastFailed", label: "Skipped: vote rejected", text: "the Governor rejected the vote" },
+  {
+    name: "NotConfirmed",
+    label: "Skipped: not confirmed",
+    text: "VoteMirror could not confirm on Base Sepolia that enough trusted voters had voted that way",
+  },
 ];
 
 /** How long after a request a missing callback still counts as on its way (they normally land within seconds). */
 export const CALLBACK_GRACE_SECONDS = 300;
 
 export const supportName = (support) => SUPPORT[support] ?? `choice ${support}`;
-export const skipReason = (reason) => SKIP_REASONS[reason] ?? { name: `Reason ${reason}`, text: `reason ${reason}` };
+export const skipReason = (reason) =>
+  SKIP_REASONS[reason] ?? { name: `Reason ${reason}`, label: `Skipped: reason ${reason}`, text: `reason ${reason}` };
 
 // Order of events that share a timestamp across the two chains: cause before effect.
 const RANK = { created: 0, pausedSet: 1, skipSet: 1, vote: 2, observed: 3, requested: 4, retried: 4, ownerVote: 5, mirrored: 5, skipped: 5 };

@@ -55,6 +55,8 @@ a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
 .mono { font-family: var(--mono); font-size: 0.9em; overflow-wrap: anywhere; }
+.nowrap { white-space: nowrap; }
+.cell-address { white-space: nowrap; }
 h1, h2 { margin: 0; line-height: 1.25; }
 h2 { font-size: 1.15rem; }
 p { margin: 0; }
@@ -66,7 +68,9 @@ p { margin: 0; }
 h1 { font-size: 1.25rem; display: flex; align-items: center; gap: 8px; }
 .tag { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--warn); background: var(--warn-bg); padding: 2px 8px; border-radius: 999px; }
 .sub { color: var(--muted); font-size: 0.85rem; }
-.live { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--muted); flex-wrap: wrap; min-height: 32px; }
+.live { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--muted); min-height: 32px; min-width: 0; }
+.live #live-text { min-width: 0; }
+.live button { flex: none; }
 .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
 .dot.on { background: var(--ok); box-shadow: 0 0 0 4px var(--ok-bg); }
 .dot.busy { background: var(--info); animation: pulse 1s ease-in-out infinite; }
@@ -181,6 +185,12 @@ tbody th { white-space: nowrap; }
 @media (max-width: 560px) {
   .wrap { padding: 0 14px; }
   .top { position: static; }
+  .live { width: 100%; }
+  .live #live-text { flex: 1; }
+  .intro { padding-top: 22px; }
+  .flow { gap: 8px; margin-top: 16px; }
+  .flow li { padding: 12px 14px; gap: 3px; }
+  .flow li::after { top: 10px; right: 14px; }
   .card { padding: 16px; }
   .proposal summary { grid-template-columns: auto minmax(0, 1fr) auto; padding: 12px 14px; }
   .proposal summary .status { grid-column: 2 / 3; grid-row: 2; justify-self: start; white-space: normal; }
@@ -189,6 +199,8 @@ tbody th { white-space: nowrap; }
   .p-facts { grid-template-columns: 1fr 1fr; gap: 10px 16px; }
   .fact-tally { grid-column: 1 / -1; }
   .tally { flex-wrap: wrap; gap: 4px 16px; }
+  .addr-full { font-size: 0.74rem; }
+  .cell-address { white-space: normal; }
   table, thead, tbody, tr, th, td { display: block; }
   thead { position: absolute; left: -9999px; }
   tbody tr { padding: 10px 0; border-bottom: 1px solid var(--line); }

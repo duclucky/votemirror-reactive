@@ -161,6 +161,8 @@ test("labels", () => {
   assert.deepEqual([0, 1, 2, 9].map(view.supportName), ["Against", "For", "Abstain", "choice 9"]);
   assert.deepEqual([0, 1, 2, 3, 4, 5].map((reason) => view.skipReason(reason).name), ["Paused", "SkippedByOwner", "AlreadyVoted", "NotActive", "CastFailed", "NotConfirmed"]);
   assert.equal(view.skipReason(9).name, "Reason 9");
+  assert.equal(view.skipReason(1).label, "Skipped by the owner");
+  assert.equal(view.skipReason(9).label, "Skipped: reason 9");
   assert.equal(view.proposalTitle("\n## Hello world \nmore"), "Hello world");
   assert.equal(view.proposalTitle(""), "Untitled proposal");
 });

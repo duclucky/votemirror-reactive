@@ -28,8 +28,11 @@ const ext = (href, ...children) => h("a", { href, target: "_blank", rel: "noopen
 const chainBadge = (key) => h("span", { class: `chain ${key}` }, NETWORKS[key].name);
 const txLink = (chain, hash) =>
   ext(NETWORKS[chain].tx(hash), h("span", { class: "mono" }, view.shortHash(hash)), h("span", { class: "arrow", "aria-hidden": "true" }, " ↗"));
-const addressLink = (chain, address, label) =>
-  ext(NETWORKS[chain].address(address), h("span", { class: "mono", title: address }, label ?? view.shortAddress(address)));
+const addressLink = (chain, address, { full = false } = {}) =>
+  ext(
+    NETWORKS[chain].address(address),
+    h("span", { class: full ? "mono addr-full" : "mono nowrap", title: address }, full ? address : view.shortAddress(address)),
+  );
 const supportPill = (support) =>
   h("span", { class: `choice choice-${support}` }, view.supportName(support));
 
@@ -42,7 +45,7 @@ function statusBadge(status) {
   const map = {
     mirrored: ["ok", `Mirrored: voted ${view.supportName(status.support)}`],
     ownerVoted: ["ok", `Owner voted ${view.supportName(status.support)} directly`],
-    skipped: ["warn", `Skipped: ${view.skipReason(status.reason).name}`],
+    skipped: ["warn", view.skipReason(status.reason).label],
     pending: ["info", "Callback on its way"],
     undelivered: ["bad", "Callback never arrived"],
     watching: ["info", "Watching for trusted votes"],
@@ -121,7 +124,7 @@ function tally(proposal, state) {
   );
 }
 
-function proposalCard(proposal, state, open) {
+function proposalCard(proposal, state, open, now) {
   const steps = proposal.items.map((entry) =>
     h(
       "li",
@@ -136,6 +139,10 @@ function proposalCard(proposal, state, open) {
       ),
     ),
   );
+  // OpenZeppelin Governors count either in timestamps (this demo) or in block numbers.
+  const timed = proposal.voteEnd > 1_000_000_000;
+  const closed = timed ? proposal.voteEnd <= now : proposal.voteEnd <= state.base.head.block;
+  const deadline = timed ? view.formatUtc(proposal.voteEnd) : `block ${proposal.voteEnd.toLocaleString("en-US")}`;
   return h(
     "details",
     { class: `proposal tone-${proposal.status.kind}`, open, "data-proposal": proposal.proposalId },
@@ -154,7 +161,7 @@ function proposalCard(proposal, state, open) {
         "div",
         { class: "p-facts" },
         h("div", {}, h("span", { class: "label" }, "Governor state"), h("span", {}, proposal.governorStateName)),
-        h("div", {}, h("span", { class: "label" }, "Voting closes"), h("span", {}, view.formatUtc(proposal.voteEnd))),
+        h("div", {}, h("span", { class: "label" }, closed ? "Voting closed" : "Voting closes"), h("span", {}, deadline)),
         h("div", {}, h("span", { class: "label" }, "Proposal id"), h("span", { class: "mono", title: proposal.proposalId }, view.shortId(proposal.proposalId))),
         h("div", { class: "fact-tally" }, h("span", { class: "label" }, "Tally on the Governor"), tally(proposal, state) ?? "unavailable"),
       ),
@@ -195,7 +202,7 @@ function render(state, { openIds }) {
           "li",
           {},
           h("span", { class: "voter-name" }, `Trusted voter ${voter.number}`),
-          addressLink("base", voter.address, voter.address),
+          addressLink("base", voter.address, { full: true }),
           h("span", { class: "voter-seen" }, `${voter.observed} ${voter.observed === 1 ? "vote" : "votes"} counted`),
         ),
       ),
@@ -245,7 +252,7 @@ function render(state, { openIds }) {
       h("p", { class: "fine" }, "Times are each chain's own block time, so a step on Reactive Lasna can show a second earlier than the Base Sepolia vote that caused it."),
     ),
     ordered.length
-      ? ordered.map((proposal) => proposalCard(proposal, state, isOpen(proposal)))
+      ? ordered.map((proposal) => proposalCard(proposal, state, isOpen(proposal), now))
       : h("p", { class: "empty" }, "No proposals yet on this deployment. The first one will appear here within seconds of being created."),
     state.base.complete && state.lasna.complete
       ? null
@@ -253,7 +260,7 @@ function render(state, { openIds }) {
   );
 
   const row = (name, chain, address, role) =>
-    h("tr", {}, h("th", { scope: "row" }, name), h("td", {}, chainBadge(chain)), h("td", {}, addressLink(chain, address, address)), h("td", {}, role));
+    h("tr", {}, h("th", { scope: "row" }, name), h("td", {}, chainBadge(chain)), h("td", { class: "cell-address" }, addressLink(chain, address, { full: true })), h("td", {}, role));
   const balance = (value, chain) => (value === null ? "unknown" : `${view.formatUnits(value, 18)} ${NETWORKS[chain].currency}`);
   const contracts = h(
     "section",
@@ -277,6 +284,9 @@ function render(state, { openIds }) {
         ),
       ),
     ),
+    sameAddress(deployment.mirrorReactive, deployment.token)
+      ? h("p", { class: "fine" }, `MirrorReactive and the ${symbol} token are two separate contracts that happen to have the same address on two different chains.`)
+      : null,
     settings.watchedGovernor && !sameAddress(settings.watchedGovernor, deployment.governor)
       ? h("p", { class: "fine" }, "Note: the reactive contract follows a different Governor than the one listed here.")
       : null,

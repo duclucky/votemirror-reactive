@@ -17,6 +17,8 @@ const deployment = JSON.parse(await readFile(deploymentPath, "utf8"));
 await writeFile(join(dist, "deployment.json"), JSON.stringify(deployment, null, 2) + "\n");
 await writeFile(join(dist, ".nojekyll"), "");
 
+// The page always asks for snapshot.json; `null` means there is none.
+await writeFile(join(dist, "snapshot.json"), "null\n");
 if (process.argv.includes("--snapshot")) {
   const { loadState } = await import("./js/chain.js");
   try {
