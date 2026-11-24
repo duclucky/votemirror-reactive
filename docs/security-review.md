@@ -81,14 +81,22 @@ delegates", which is a legitimate rule; the first requested choice is now final 
   `AbstractPayer`, `AbstractReactive`, `reactive-lib-omni` v0.1.0).
 - The verified source of Reactive's Base Sepolia callback proxy (`0x476F44b1…3585`, implementation
   `0x49E4AC69…E059`), because VoteMirror's authorization and fees depend on it.
-- `forge test` (51 tests after the first pass, 73 after the fixes, all passing), `forge coverage` (VoteMirror 100% lines and branches,
-  MirrorReactive 98% lines, 64% branches), Slither 0.11 (no finding beyond events after external calls to trusted
-  contracts and naming).
-- Live state, read only: the runtime bytecode of all four deployed contracts is identical to a build of `main`;
-  owner, callback proxy, reactive sender, Governor, origin chain, threshold 2 of 3 and the trusted list match the
-  deployment file; neither contract is in debt; the owner's 1,000 votes are delegated to VoteMirror.
-- Two findings (M-1, L-1) were reproduced on a local fork of Base Sepolia by impersonating Reactive's relayer. No
-  transaction was sent to a real network.
+- `forge test` (51 tests after the first pass, 77 after the fixes, all passing), `forge coverage` after the fixes
+  (VoteMirror 100% lines and branches, MirrorReactive 100% lines, 82% branches: the rest are sub-conditions of the
+  log filter), Slither 0.11 (no finding beyond events after external calls to trusted contracts, calls in bounded
+  loops and naming).
+- First deployment, read only: the runtime bytecode of all four contracts was identical to a build of `main`;
+  owner, callback proxy, reactive sender, Governor, origin chain, threshold 2 of 3 and the trusted list matched the
+  deployment file; neither contract was in debt; the owner's 1,000 votes were delegated to VoteMirror.
+- Two findings (M-1, L-1) were reproduced on a local fork of Base Sepolia by impersonating Reactive's relayer. The
+  first pass sent no transaction to a real network.
+- Second pass: the verified source of Reactive's Lasna system contract, and a throwaway probe contract on the two
+  testnets to confirm N-1 and N-2.
+- Deployment with the fixes (2026-11-24, addresses in the README): the same checks again. Runtime bytecode of all
+  four contracts identical to a build of this code, sources verified (Blockscout, Sourcify exact match), wiring and
+  the trusted list equal on both contracts, no debt. Four demo loops (For, Against, Skip, Retry) and a live run of
+  VoteMirror's own check (`Skipped(NotConfirmed)`, then mirrored after `retryMirror`) are listed in the README with
+  their transactions; each transaction's events were read back from its receipt.
 
 ## Findings
 

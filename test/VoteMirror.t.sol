@@ -448,6 +448,19 @@ contract VoteMirrorTest is Test {
         _deliver(123, FOR);
     }
 
+    /// @dev A Governor whose `hasVoted` reverts reads as "nobody voted": the callback is skipped, not reverted.
+    function test_RevertingHasVotedSkipsWithoutReverting() public {
+        uint256 id = _propose("p");
+        _trustedVotes(id, FOR);
+        vm.mockCallRevert(address(governor), abi.encodeWithSelector(IGovernor.hasVoted.selector), "broken");
+        assertEq(mirror.confirmations(id), 0);
+        vm.expectEmit(address(mirror));
+        emit VoteMirror.Skipped(id, FOR, VoteMirror.SkipReason.NotConfirmed);
+        _deliver(id, FOR);
+        vm.clearMockedCalls();
+        assertFalse(governor.hasVoted(id, address(mirror)));
+    }
+
     function test_InvalidSupportSkipsWithoutReverting() public {
         uint256 id = _propose("p");
         _trustedVotes(id, FOR);

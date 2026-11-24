@@ -294,6 +294,34 @@ contract MirrorReactiveTest is Test {
         vm.stopPrank();
     }
 
+    function test_RevertWhen_SettingsAreInvalid() public {
+        address[] memory trusted = new address[](1);
+        trusted[0] = alice;
+        vm.expectRevert(MirrorReactive.ZeroAddress.selector);
+        new MirrorReactive(ORIGIN, address(0), trusted, 1);
+
+        vm.expectRevert(MirrorReactive.ZeroAddress.selector);
+        reactive.setMirror(address(0));
+        vm.expectRevert(MirrorReactive.ZeroAddress.selector);
+        reactive.addTrusted(address(0));
+        vm.expectRevert(abi.encodeWithSelector(MirrorReactive.NotTrusted.selector, stranger));
+        reactive.removeTrusted(stranger);
+    }
+
+    function test_NothingRequestedYetReadsAsZero() public {
+        _vote(alice, 7, AGAINST);
+        assertFalse(reactive.mirrorRequested(7));
+        assertEq(reactive.requestedSupport(7), 0);
+    }
+
+    function test_OwnerWithdrawsUnusedBalance() public {
+        vm.deal(address(reactive), 2 ether);
+        uint256 before = address(this).balance;
+        reactive.withdraw(0.5 ether);
+        assertEq(address(reactive).balance, 1.5 ether);
+        assertEq(address(this).balance, before + 0.5 ether);
+    }
+
     // ------------------------------------------------------------------ changing the list
 
     function test_AddTrustedSubscribesAndCounts() public {
