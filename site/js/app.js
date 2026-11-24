@@ -63,7 +63,9 @@ function statusSentence(proposal, state) {
   switch (status.kind) {
     case "mirrored":
       return `VoteMirror cast ${view.supportName(status.support)} with ${votes(status.weight)} after ${status.agreeing === null ? "enough trusted voters" : voters(status.agreeing)} agreed.${
-        !status.retried
+        status.byHand
+          ? " The reactive contract had not requested a callback, so the owner requested it by hand."
+          : !status.retried
           ? ""
           : status.skipReason === null
             ? " The first callback was not delivered, so the owner asked again."
@@ -98,7 +100,9 @@ function itemText(entry, state) {
     case "requested":
       return [h("strong", {}, "Threshold reached"), ": callback requested to cast ", supportPill(entry.support)];
     case "retried":
-      return [h("strong", {}, "Owner asked again"), " (retry): callback requested to cast ", supportPill(entry.support)];
+      return entry.first
+        ? [h("strong", {}, "Owner requested the callback by hand"), " to cast ", supportPill(entry.support)]
+        : [h("strong", {}, "Owner asked again"), " (retry): callback requested to cast ", supportPill(entry.support)];
     case "mirrored":
       return [h("strong", {}, "VoteMirror voted "), supportPill(entry.support), ` with ${view.formatUnits(entry.weight, tokenDecimals)} ${symbol}`];
     case "skipped":
@@ -253,7 +257,7 @@ function render(state, { openIds }) {
     stat(summary.mirrored, summary.mirrored === 1 ? "vote mirrored" : "votes mirrored", "cast by VoteMirror", "ok"),
     stat(summary.skipped, summary.skipped === 1 ? "vote skipped" : "votes skipped", "callback arrived, no vote", "warn"),
     summary.undelivered > 0 && stat(summary.undelivered, summary.undelivered === 1 ? "callback not delivered" : "callbacks not delivered", "requested, never reached VoteMirror", "bad"),
-    summary.retries > 0 && stat(summary.retries, summary.retries === 1 ? "retry by the owner" : "retries by the owner", "callback requested again", "info"),
+    summary.retries > 0 && stat(summary.retries, summary.retries === 1 ? "retry by the owner" : "retries by the owner", "callback requested by hand", "info"),
     summary.pending + summary.watching > 0 && stat(summary.pending + summary.watching, "in progress", "open right now", "info"),
   );
 

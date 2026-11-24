@@ -50,7 +50,7 @@ test("a mirrored vote: full timeline in causal order across both chains", () => 
     ["base", "Mirrored", 14, { support: 1, weight: "500", tx: "0xcb" }],
   ]);
   const proposal = only(state);
-  assert.deepEqual(proposal.status, { kind: "mirrored", support: 1, weight: "500", agreeing: 2, retried: false, skipReason: null });
+  assert.deepEqual(proposal.status, { kind: "mirrored", support: 1, weight: "500", agreeing: 2, retried: false, byHand: false, skipReason: null });
   assert.deepEqual(kinds(proposal), ["created", "vote", "observed", "vote", "observed", "requested", "mirrored"]);
   assert.equal(proposal.title, "Fund grants");
   assert.equal(proposal.governorStateName, "Succeeded");
@@ -201,7 +201,7 @@ test("a proposal is described by the threshold in force at the time, not today's
   const rule = (at, threshold) => ["lasna", "ThresholdSet", at, { threshold, proposalId: undefined }];
   const state = stateOf([rule(-100, 2), ...agreed, ["base", "Mirrored", 13, { support: 1, weight: "1000" }], rule(5000, 3)], { settings: { threshold: 3 } });
   const proposal = only(state);
-  assert.deepEqual(proposal.status, { kind: "mirrored", support: 1, weight: "1000", agreeing: 2, retried: false, skipReason: null });
+  assert.deepEqual(proposal.status, { kind: "mirrored", support: 1, weight: "1000", agreeing: 2, retried: false, byHand: false, skipReason: null });
   assert.deepEqual(proposal.items.filter((entry) => entry.threshold !== undefined).map((entry) => [entry.kind, entry.agreeing, entry.threshold]), [
     ["observed", 1, 2],
     ["observed", 2, 2],
@@ -229,8 +229,9 @@ test("a NotConfirmed skip says what VoteMirror's own rule required, and the retr
   assert.deepEqual(kinds(proposal), ["created", "vote", "observed", "vote", "observed", "requested", "skipped", "thresholdSet", "retried", "mirrored"]);
   const skipped = proposal.items.find((entry) => entry.kind === "skipped");
   assert.deepEqual([skipped.required, skipped.confirmed], [3, 2]);
+  assert.equal(proposal.items.find((entry) => entry.kind === "retried").first, false);
   assert.equal(proposal.items.find((entry) => entry.kind === "thresholdSet").threshold, 2);
-  assert.deepEqual(proposal.status, { kind: "mirrored", support: 1, weight: "1000", agreeing: 2, retried: true, skipReason: 5 });
+  assert.deepEqual(proposal.status, { kind: "mirrored", support: 1, weight: "1000", agreeing: 2, retried: true, byHand: false, skipReason: 5 });
 });
 
 test("rule changes and pauses after a proposal was decided are not part of its story", () => {
@@ -263,4 +264,13 @@ test("VoteMirror's check counts its own trusted voters that voted, whatever they
   // Voter 2 agreed on Lasna but is not on VoteMirror's own list; voter 3 is, and voted only after the skip.
   const skipped = only(state).items.find((entry) => entry.kind === "skipped");
   assert.deepEqual([skipped.required, skipped.confirmed], [2, 1]);
+});
+
+test("a callback the owner requested by hand is not described as a retry of a failed one", () => {
+  const state = stateOf([created, vote(0, 10), observed(0, 10, 1), ["lasna", "MirrorRetried", 60, { support: 1, agreeing: 1 }], ["base", "Mirrored", 62, { support: 1, weight: "1000" }]], {
+    settings: { threshold: 1 },
+  });
+  const proposal = only(state);
+  assert.equal(proposal.items.find((entry) => entry.kind === "retried").first, true);
+  assert.deepEqual(proposal.status, { kind: "mirrored", support: 1, weight: "1000", agreeing: 1, retried: false, byHand: true, skipReason: null });
 });

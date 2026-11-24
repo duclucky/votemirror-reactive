@@ -125,6 +125,8 @@ function buildProposal(created, index, state, now) {
     } else if (event.event === "MirrorRequested" || event.event === "MirrorRetried") {
       const kind = event.event === "MirrorRequested" ? "requested" : "retried";
       const entry = item(kind, event, { support: event.support, agreeing: event.agreeing, threshold: thresholdAt(event) });
+      // `retryMirror` also serves when no callback was ever requested (the rule was changed after the votes).
+      if (kind === "retried") entry.first = !items.some((other) => other.kind === "requested" || other.kind === "retried");
       const cause = items.find((other) => other.kind === "observed" && other.tx === event.tx);
       if (cause) entry.sortTime = cause.sortTime;
       items.push(entry);
@@ -178,7 +180,8 @@ function buildProposal(created, index, state, now) {
       support: mirrored.support,
       weight: mirrored.weight,
       agreeing: mirroredRequest?.agreeing ?? null,
-      retried: mirroredRequest?.kind === "retried",
+      retried: mirroredRequest?.kind === "retried" && !mirroredRequest.first,
+      byHand: mirroredRequest?.kind === "retried" && mirroredRequest.first,
       skipReason: skippedFirst?.reason ?? null,
     };
   } else if (ownerVote) {
