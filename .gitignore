@@ -14,3 +14,4 @@ __pycache__/
 /slither-summary*.txt
 /service-test-results.txt
 /service/*.local.json
+/artifacts/video/

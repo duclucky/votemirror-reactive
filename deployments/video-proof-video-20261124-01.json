@@ -1,0 +1,48 @@
+{
+  "runId": "video-20261124-01",
+  "verifiedAt": "2026-11-24T14:02:55.268Z",
+  "proposalId": "28406061311993319165249340124674604467037773408864227618107871060751779118491",
+  "networks": {
+    "baseSepolia": 84532,
+    "lasna": 5318007
+  },
+  "contracts": {
+    "contractVersion": 4,
+    "baseSepoliaChainId": 84532,
+    "lasnaChainId": 5318007,
+    "demoToken": "0x1c1000C7d8Ee05b97F5FF7bfCbA7c04aC9e58515",
+    "demoGovernor": "0x04bB46C2E47F640Dd94bCfC0ea2aC9191364fafb",
+    "voteMirror": "0x4a89e26aD48A2729d8D95B3b446DBC1083AEF87a",
+    "mirrorReactive": "0x81A8a6edf8B2d773FF53dc1450De4822c5756988",
+    "callbackProxy": "0x476F44b11F5C942c58f4c8E3d0300E5710743585",
+    "owner": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+    "trustedVoters": [
+      "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+      "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e",
+      "0x6AA709775837be9E562fe2eA9dcC383Bd14a99e4"
+    ],
+    "threshold": 2
+  },
+  "proposalCreation": "0xb4698c5f35f2ef0d4b1ca7e426966dc5ec6e6c64fa15ae6c6b9d08de2f864e5b",
+  "origins": [
+    {
+      "role": "Alice",
+      "hash": "0x4264c4238c8f5aadfb960cf4268d0a531a397d4f147ed0162184672579b6d449",
+      "observationHash": "0x9305babf7c24db7cf2a08f2af527de3acae2e3c8ba33923078115b423fee8ae1",
+      "originLogMatched": true
+    },
+    {
+      "role": "Bob",
+      "hash": "0xc996f86a6f8773ce4afa2dd2a0a5a5ff96d9b935c16c98cab38a28718c6d7998",
+      "observationHash": "0x9af3bad9bfb1c8f20bfc465badc87ad573456cbfbcadf41f99c2ae2a80b69577",
+      "originLogMatched": true
+    }
+  ],
+  "reactiveRequest": "0x9af3bad9bfb1c8f20bfc465badc87ad573456cbfbcadf41f99c2ae2a80b69577",
+  "callback": "0xeba01810ae9a5b48d490eb8ad0d27ddaeb8848937f83ad138e68a1c8178c2105",
+  "deliveryPath": "Reactive callback",
+  "policyHash": "0xbafee2b90147efd6ff3569bb9b2b3d570b54ef12b66b3a6fcfe9a670d28cca7b",
+  "sourceReceiptsVerified": true,
+  "callbackPayloadVerified": true,
+  "recording": "The fresh proposal and ballot-state transitions were captured in the continuous Chrome recording; explorer pickup shots use the same hashes."
+}

@@ -74,6 +74,7 @@ export const governorAbi = parseAbi([
 const reactiveAbi = parseAbi([
   'function policyHash() view returns (bytes32)',
   'function recoveryEnabled() view returns (bool)',
+  'function mirrorRequested(uint256) view returns (bool)',
   'function requestedSupport(uint256) view returns (uint8)',
   'event MirrorRequested(uint256 indexed proposalId, uint8 support, uint256 agreeing)',
 ]);
@@ -260,14 +261,26 @@ export async function readDelivery(value, fromBlock, toBlock) {
   };
 }
 export async function readRequested(value) {
-  return Number(
+  const blockNumber = await reactive.getBlockNumber();
+  const args = [safeProposalId(value)];
+  const requested = await reactive.readContract({
+    address: deployment.mirrorReactive,
+    abi: reactiveAbi,
+    functionName: 'mirrorRequested',
+    args,
+    blockNumber,
+  });
+  if (!requested) return 0;
+  const support = Number(
     await reactive.readContract({
       address: deployment.mirrorReactive,
       abi: reactiveAbi,
       functionName: 'requestedSupport',
-      args: [safeProposalId(value)],
+      args,
+      blockNumber,
     }),
   );
+  return support + 1;
 }
 function events(receipt, address, abi) {
   return receipt.logs

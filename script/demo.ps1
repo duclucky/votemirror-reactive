@@ -6,9 +6,11 @@ param(
     [Parameter(Mandatory)][string]$WalletDirectory,
     [string]$Manifest = "$PSScriptRoot/../deployments/hardened-testnet-v4.json",
     [string]$RunId,
+    [ValidateSet('complete','proposal','firstvote')][string]$StopAfter='complete',
     [int]$WaitSeconds = 90
 )
 $ErrorActionPreference='Stop'
+if($StopAfter -ne 'complete' -and $Mode -ne 'for'){throw 'Staged recording is supported only for the For scenario.'}
 Set-Location "$PSScriptRoot/.."
 $baseRpc='https://sepolia.base.org'
 $lasnaRpc='https://lasna-rpc.rnk.dev/'
@@ -111,6 +113,9 @@ try {
     if($Mode -eq 'owneroverride'){
         Send-Step 'ownerOverride' 'owner' $baseRpc @($mirror,'castVote(uint256,uint8,string)',$state.proposalId,'0','Owner chooses Against before trusted agreement')
     }
+    if($StopAfter -eq 'proposal'){
+        $state.status='prepared-for-live-recording';Save-State;return
+    }
     if($Mode -in @('lostlogs','sender')){
         # Deliberately omit Carol's subscription on Lasna while Base still trusts her.
         Send-Step 'omitCarol' 'owner' $lasnaRpc @($reactive,'removeTrusted(address)',$deployment.trustedVoters[2])
@@ -121,6 +126,9 @@ try {
         }
     }
     Send-Step 'aliceVote' 'alice' $baseRpc @($governor,'castVote(uint256,uint8)',$state.proposalId,"$support")
+    if($StopAfter -eq 'firstvote'){
+        $state.status='first-ballot-for-live-recording';Save-State;return
+    }
     $bobSupport=if($Mode -in @('split','splitmajority')){0}else{$support}
     $secondVoter=if($Mode -in @('lostlogs','sender')){'carol'}else{'bob'}
     Send-Step 'bobVote' $secondVoter $baseRpc @($governor,'castVote(uint256,uint8)',$state.proposalId,"$bobSupport")
