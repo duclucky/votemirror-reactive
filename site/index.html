@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>VoteMirror status: live on Base Sepolia and Reactive Lasna</title>
+    <meta
+      name="description"
+      content="Read-only status page for VoteMirror: the trusted voters, the threshold, and every vote it mirrored or skipped, read live from Base Sepolia and Reactive Lasna."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%234f46e5'/%3E%3Cpath d='M8 10l5 12 3-7 3 7 5-12' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap top-row">
+        <div class="brand">
+          <span class="logo" aria-hidden="true">
+            <svg viewBox="0 0 32 32" width="32" height="32"><rect width="32" height="32" rx="7" fill="currentColor" /><path d="M8 10l5 12 3-7 3 7 5-12" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          </span>
+          <div>
+            <h1>VoteMirror <span class="tag">testnet</span></h1>
+            <p class="sub">Status page · read-only · no wallet needed</p>
+          </div>
+        </div>
+        <div class="live" id="live" role="status" aria-live="polite">
+          <span class="dot" id="live-dot"></span>
+          <span id="live-text">Reading both chains…</span>
+          <button id="refresh" type="button" hidden>Refresh</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section class="intro" aria-labelledby="intro-title">
+        <h2 id="intro-title">A DAO vote that casts itself once the voters you trust agree</h2>
+        <p>
+          The owner picks a few voters they trust. When enough of them have voted the same way on a proposal,
+          VoteMirror casts the owner's vote the same way, with no bot or server to run. Everything below is read
+          from the two testnets by your browser.
+        </p>
+        <ol class="flow">
+          <li>
+            <span class="chain base">Base Sepolia</span>
+            <strong>Trusted voters vote</strong>
+            <span>on a Governor proposal, as they normally would.</span>
+          </li>
+          <li>
+            <span class="chain lasna">Reactive Lasna</span>
+            <strong>A reactive contract counts</strong>
+            <span>their votes and asks for a callback when the threshold is reached.</span>
+          </li>
+          <li>
+            <span class="chain base">Base Sepolia</span>
+            <strong>VoteMirror casts the vote</strong>
+            <span>or skips it if the owner paused it or opted out of that proposal.</span>
+          </li>
+        </ol>
+      </section>
+
+      <div id="notice" class="notice" hidden></div>
+
+      <div id="app" aria-busy="true">
+        <div class="loading" id="loading">
+          <div class="spinner" aria-hidden="true"></div>
+          <p id="loading-text">Reading Base Sepolia and Reactive Lasna…</p>
+        </div>
+      </div>
+    </main>
+
+    <footer class="wrap foot">
+      <p>
+        Testnets only: Base Sepolia (84532) and Reactive Lasna (5318007). No real funds are involved. This page
+        only reads public data and cannot send transactions.
+      </p>
+      <p>
+        <a href="https://github.com/duclucky/votemirror-reactive">Source and README on GitHub</a> · built for the
+        Reactive Omni Buildathon
+      </p>
+    </footer>
+
+    <script type="module" src="js/app.js"></script>
+    <noscript><p class="wrap">This page reads live testnet data with JavaScript. Please enable it.</p></noscript>
+  </body>
+</html>
