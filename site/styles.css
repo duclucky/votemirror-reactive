@@ -101,7 +101,8 @@ button:disabled { opacity: 0.5; cursor: default; }
 .rule-line { margin-top: 10px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 8px; }
 .big { font-size: 1.9rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
 .voters { list-style: none; margin: 14px 0 0; padding: 0; border-top: 1px solid var(--line); }
-.voters li { display: grid; grid-template-columns: 9.5em minmax(0, 1fr) auto; gap: 4px 12px; align-items: baseline; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.voters li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; align-items: baseline; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.voters li a { grid-column: 1 / -1; grid-row: 2; }
 .voter-name { font-weight: 600; }
 .voter-seen { color: var(--muted); font-size: 0.85rem; white-space: nowrap; }
 .fine { color: var(--muted); font-size: 0.88rem; margin-top: 12px; }
@@ -130,6 +131,7 @@ button:disabled { opacity: 0.5; cursor: default; }
 .proposals { margin-top: 32px; }
 .section-head { margin-bottom: 12px; }
 .section-head p { color: var(--muted); font-size: 0.93rem; margin-top: 2px; }
+.section-head .fine { font-size: 0.82rem; }
 .empty { color: var(--muted); background: var(--surface); border: 1px dashed var(--line); border-radius: var(--radius); padding: 24px; text-align: center; }
 .proposal { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); margin-top: 10px; overflow: hidden; }
 .proposal summary { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 6px 12px; padding: 14px 18px; cursor: pointer; list-style: none; }
@@ -180,8 +182,6 @@ tbody th { white-space: nowrap; }
   .wrap { padding: 0 14px; }
   .top { position: static; }
   .card { padding: 16px; }
-  .voters li { grid-template-columns: 1fr auto; }
-  .voters li a { grid-column: 1 / -1; grid-row: 2; }
   .proposal summary { grid-template-columns: auto minmax(0, 1fr) auto; padding: 12px 14px; }
   .proposal summary .status { grid-column: 2 / 3; grid-row: 2; justify-self: start; white-space: normal; }
   .proposal summary::after { grid-column: 3; grid-row: 1 / span 2; }

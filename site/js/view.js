@@ -13,8 +13,8 @@ export const SKIP_REASONS = [
   { name: "NotConfirmed", text: "VoteMirror could not confirm on Base Sepolia that enough trusted voters had voted that way" },
 ];
 
-/** How long after a request a missing callback still counts as on its way. */
-export const CALLBACK_GRACE_SECONDS = 600;
+/** How long after a request a missing callback still counts as on its way (they normally land within seconds). */
+export const CALLBACK_GRACE_SECONDS = 300;
 
 export const supportName = (support) => SUPPORT[support] ?? `choice ${support}`;
 export const skipReason = (reason) => SKIP_REASONS[reason] ?? { name: `Reason ${reason}`, text: `reason ${reason}` };
@@ -121,7 +121,7 @@ function buildProposal(created, index, state, now) {
   } else if (ownerVote) {
     status = { kind: "ownerVoted", support: ownerVote.support, weight: ownerVote.weight };
   } else if (lastRequest && (!lastOutcome || items.indexOf(lastRequest) > items.indexOf(lastOutcome))) {
-    const waiting = active || now - lastRequest.timestamp < CALLBACK_GRACE_SECONDS;
+    const waiting = now - lastRequest.timestamp < CALLBACK_GRACE_SECONDS;
     status = { kind: waiting ? "pending" : "undelivered", support: lastRequest.support };
   } else if (lastOutcome) {
     status = { kind: "skipped", support: lastOutcome.support, reason: lastOutcome.reason };

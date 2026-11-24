@@ -66,7 +66,7 @@ function statusSentence(proposal, state) {
     case "pending":
       return `The threshold was reached and the callback to Base Sepolia has been requested. It usually lands within seconds.`;
     case "undelivered":
-      return `The threshold was reached and a callback was requested on Reactive Lasna, but no callback reached VoteMirror on Base Sepolia, so no vote was cast.`;
+      return `The threshold was reached and a callback was requested on Reactive Lasna, but no callback has reached VoteMirror on Base Sepolia, so no vote was cast.`;
     case "watching":
       return `${status.agreeing} of the ${threshold} trusted votes needed so far.`;
     default:
@@ -227,6 +227,7 @@ function render(state, { openIds }) {
     stat(summary.mirrored, "votes mirrored", "cast by VoteMirror", "ok"),
     stat(summary.skipped, "votes skipped", "callback arrived, no vote", "warn"),
     summary.undelivered > 0 && stat(summary.undelivered, "callbacks never arrived", "requested, not delivered", "bad"),
+    summary.retries > 0 && stat(summary.retries, summary.retries === 1 ? "retry by the owner" : "retries by the owner", "callback requested again", "info"),
     summary.pending + summary.watching > 0 && stat(summary.pending + summary.watching, "in progress", "open right now", "info"),
   );
 
@@ -241,6 +242,7 @@ function render(state, { openIds }) {
       { class: "section-head" },
       h("h2", { id: "proposals-title" }, "Proposals"),
       h("p", {}, "Newest first. Open one to follow the vote across both chains, step by step, with a link to every transaction."),
+      h("p", { class: "fine" }, "Times are each chain's own block time, so a step on Reactive Lasna can show a second earlier than the Base Sepolia vote that caused it."),
     ),
     ordered.length
       ? ordered.map((proposal) => proposalCard(proposal, state, isOpen(proposal)))

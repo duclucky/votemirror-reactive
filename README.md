@@ -4,6 +4,10 @@ Vote in a DAO automatically when the voters you trust agree, without giving anyo
 
 Built for the Reactive Omni Buildathon on [Reactive Network](https://reactive.network). Testnet only.
 
+**Live status page: <https://duclucky.github.io/votemirror-reactive/>.** No wallet and no sign-in: it reads both
+testnets from your browser and shows the trusted voters and threshold, every proposal, each trusted vote the reactive
+contract counted, and each vote VoteMirror mirrored or skipped, with links to the transactions on both chains.
+
 ## Problem
 
 Most governance token holders do not vote: reading every proposal takes time. The usual fix is to delegate to one
@@ -141,6 +145,24 @@ callback on Base Sepolia.
 - [`test/VoteMirror.t.sol`](test/VoteMirror.t.sol): the three demo loops end to end against a real OpenZeppelin
   Governor with a mock of the Reactive relay, pause, skip, owner override, proposals that are pending, closed or
   unknown, callback authorization (wrong caller, owner calling directly, another reactive contract), and funds.
+
+## Status page
+
+The page at <https://duclucky.github.io/votemirror-reactive/> is the static site in [`site/`](site), with no
+dependencies and no backend. It takes the contract addresses from
+[`deployments/testnet.json`](deployments/testnet.json), finds the deployment block from the contracts' own logs, and
+reads everything else from public RPC endpoints of Base Sepolia and Reactive Lasna (`eth_call` and `eth_getLogs`
+only; it cannot send a transaction). It refreshes every 30 seconds.
+
+```bash
+node --test "site/test/*.test.mjs"     # 33 tests, Node 22 or newer
+node site/build.mjs --snapshot         # builds site/dist
+python3 -m http.server -d site/dist    # open http://localhost:8000
+```
+
+[`status-page.yml`](.github/workflows/status-page.yml) runs the tests on every pull request and publishes the page to
+GitHub Pages on every push to `main`, so a redeployment shows up as soon as the new `deployments/testnet.json` is
+merged.
 
 ## Known limitations
 
