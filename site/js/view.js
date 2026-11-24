@@ -39,6 +39,17 @@ export function proposalTitle(description) {
   return line.replace(/^#+\s*/, "").trim() || "Untitled proposal";
 }
 
+const laterOnChain = (a, b) => a.block > b.block || (a.block === b.block && a.logIndex > b.logIndex);
+
+/**
+ * The threshold in force on the reactive contract at a point in its history, so that an old proposal is
+ * described by the rule that applied to it and not by today's. `before` picks the changes that count.
+ */
+function thresholdWhen(state, before) {
+  const changes = state.lasna.events.filter((event) => event.event === "ThresholdSet" && before(event));
+  return changes.length ? changes.at(-1).threshold : state.settings.threshold;
+}
+
 function buildProposal(created, index, state, now) {
   const { settings, deployment } = state;
   const proposalId = created.proposalId;
@@ -58,6 +69,7 @@ function buildProposal(created, index, state, now) {
   });
 
   const observed = lasnaEvents.filter((event) => event.event === "VoteObserved");
+  const thresholdAt = (event) => thresholdWhen(state, (change) => laterOnChain(event, change));
   const followed = (voter) =>
     observed.some((event) => sameAddress(event.voter, voter)) ||
     settings.trustedVoters.some((trusted) => sameAddress(trusted, voter));
@@ -93,13 +105,13 @@ function buildProposal(created, index, state, now) {
   for (const event of lasnaEvents) {
     if (event.event === "VoteObserved") {
       const vote = voteItems.get(event.voter.toLowerCase());
-      const entry = item("observed", event, { voter: event.voter, support: event.support, agreeing: event.agreeing });
+      const entry = item("observed", event, { voter: event.voter, support: event.support, agreeing: event.agreeing, threshold: thresholdAt(event) });
       // A reaction cannot come before the vote it reacts to, whatever the two chains' clocks say.
       if (vote) entry.sortTime = Math.max(entry.sortTime, vote.sortTime);
       items.push(entry);
     } else if (event.event === "MirrorRequested" || event.event === "MirrorRetried") {
       const kind = event.event === "MirrorRequested" ? "requested" : "retried";
-      const entry = item(kind, event, { support: event.support, agreeing: event.agreeing });
+      const entry = item(kind, event, { support: event.support, agreeing: event.agreeing, threshold: thresholdAt(event) });
       const cause = items.find((other) => other.kind === "observed" && other.tx === event.tx);
       if (cause) entry.sortTime = cause.sortTime;
       items.push(entry);
@@ -116,13 +128,16 @@ function buildProposal(created, index, state, now) {
   const lastOutcome = outcomes.at(-1);
   const governorState = live.state ?? null;
   const active = governorState === 1;
+  const timed = created.voteEnd > 1_000_000_000;
+  const closedAt = active || governorState === 0 || !timed ? Infinity : created.voteEnd;
   const agreeing = {};
   for (const event of observed) agreeing[event.support] = event.agreeing;
   const leading = Object.entries(agreeing).sort((a, b) => b[1] - a[1])[0];
+  const mirroredRequest = mirrored && requests.filter((entry) => items.indexOf(entry) < items.indexOf(mirrored)).at(-1);
 
   let status;
   if (mirrored) {
-    status = { kind: "mirrored", support: mirrored.support, weight: mirrored.weight };
+    status = { kind: "mirrored", support: mirrored.support, weight: mirrored.weight, agreeing: mirroredRequest?.agreeing ?? null };
   } else if (ownerVote) {
     status = { kind: "ownerVoted", support: ownerVote.support, weight: ownerVote.weight };
   } else if (lastRequest && (!lastOutcome || items.indexOf(lastRequest) > items.indexOf(lastOutcome))) {
@@ -131,9 +146,18 @@ function buildProposal(created, index, state, now) {
   } else if (lastOutcome) {
     status = { kind: "skipped", support: lastOutcome.support, reason: lastOutcome.reason };
   } else if (active || governorState === 0) {
-    status = { kind: "watching", agreeing: leading ? leading[1] : 0, support: leading ? Number(leading[0]) : null };
+    status = {
+      kind: "watching",
+      agreeing: leading ? leading[1] : 0,
+      support: leading ? Number(leading[0]) : null,
+      threshold: settings.threshold,
+    };
   } else {
-    status = { kind: "noAgreement", agreeing: leading ? leading[1] : 0 };
+    status = {
+      kind: "noAgreement",
+      agreeing: leading ? leading[1] : 0,
+      threshold: thresholdWhen(state, (change) => change.timestamp <= closedAt),
+    };
   }
 
   return {

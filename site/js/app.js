@@ -57,11 +57,12 @@ function statusBadge(status) {
 
 function statusSentence(proposal, state) {
   const { status } = proposal;
-  const { threshold, tokenSymbol, tokenDecimals } = state.settings;
+  const { tokenSymbol, tokenDecimals } = state.settings;
+  const voters = (count) => (count === 1 ? "1 trusted voter" : `${count} trusted voters`);
   const votes = (weight) => `${view.formatUnits(weight, tokenDecimals)} ${tokenSymbol ?? "votes"}`;
   switch (status.kind) {
     case "mirrored":
-      return `VoteMirror cast ${view.supportName(status.support)} with ${votes(status.weight)} after ${threshold} trusted voters agreed.`;
+      return `VoteMirror cast ${view.supportName(status.support)} with ${votes(status.weight)} after ${status.agreeing === null ? "enough trusted voters" : voters(status.agreeing)} agreed.`;
     case "ownerVoted":
       return `The owner cast ${view.supportName(status.support)} through VoteMirror by hand, with ${votes(status.weight)}.`;
     case "skipped":
@@ -71,14 +72,14 @@ function statusSentence(proposal, state) {
     case "undelivered":
       return `The threshold was reached and a callback was requested on Reactive Lasna, but no callback has reached VoteMirror on Base Sepolia, so no vote was cast.`;
     case "watching":
-      return `${status.agreeing} of the ${threshold} trusted votes needed so far.`;
+      return `${status.agreeing} of the ${status.threshold} trusted votes needed so far.`;
     default:
-      return `Voting closed before ${threshold} trusted voters agreed (${status.agreeing} did), so nothing was mirrored.`;
+      return `Voting closed before ${voters(status.threshold)} agreed (${status.agreeing} did), so nothing was mirrored.`;
   }
 }
 
 function itemText(entry, state) {
-  const { threshold, tokenSymbol, tokenDecimals } = state.settings;
+  const { tokenSymbol, tokenDecimals } = state.settings;
   const symbol = tokenSymbol ?? "votes";
   const who = entry.voter ? [h("strong", {}, voterLabel(state, entry.voter)), " (", addressLink("base", entry.voter), ")"] : [];
   switch (entry.kind) {
@@ -87,7 +88,7 @@ function itemText(entry, state) {
     case "vote":
       return [...who, " voted ", supportPill(entry.support), ` with ${view.formatUnits(entry.weight, tokenDecimals)} ${symbol}`];
     case "observed":
-      return ["Reactive contract counted the vote of ", ...who, ": ", h("strong", {}, `${entry.agreeing} of ${threshold}`), " needed for ", supportPill(entry.support)];
+      return ["Reactive contract counted the vote of ", ...who, ": ", h("strong", {}, `${entry.agreeing} of ${entry.threshold}`), " needed for ", supportPill(entry.support)];
     case "requested":
       return [h("strong", {}, "Threshold reached"), ": callback requested to cast ", supportPill(entry.support)];
     case "retried":

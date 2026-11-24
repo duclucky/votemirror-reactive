@@ -4,7 +4,7 @@ import * as view from "../js/view.js";
 
 const MIRROR = "0x00000000000000000000000000000000000000AA";
 const VOTERS = ["0x00000000000000000000000000000000000000b1", "0x00000000000000000000000000000000000000B2", "0x00000000000000000000000000000000000000b3"];
-const T0 = 1_000_000;
+const T0 = 1_700_000_000;
 const NOW = T0 + 10_000;
 
 /** Builds a state from a compact script of events: [chain, event, secondsAfterT0, fields]. */
@@ -50,7 +50,7 @@ test("a mirrored vote: full timeline in causal order across both chains", () => 
     ["base", "Mirrored", 14, { support: 1, weight: "500", tx: "0xcb" }],
   ]);
   const proposal = only(state);
-  assert.deepEqual(proposal.status, { kind: "mirrored", support: 1, weight: "500" });
+  assert.deepEqual(proposal.status, { kind: "mirrored", support: 1, weight: "500", agreeing: 2 });
   assert.deepEqual(kinds(proposal), ["created", "vote", "observed", "vote", "observed", "requested", "mirrored"]);
   assert.equal(proposal.title, "Fund grants");
   assert.equal(proposal.governorStateName, "Succeeded");
@@ -113,11 +113,11 @@ test("a request with no callback is pending for a few minutes, then undelivered"
 test("below the threshold: watching while open, not reached once closed", () => {
   const script = [created, vote(0, 10, 0), observed(0, 10, 1, 0)];
   const open = stateOf(script, { proposals: { 1: { state: 1 } } });
-  assert.deepEqual(only(open).status, { kind: "watching", agreeing: 1, support: 0 });
+  assert.deepEqual(only(open).status, { kind: "watching", agreeing: 1, support: 0, threshold: 2 });
   const closed = stateOf(script, { proposals: { 1: { state: 3 } } });
-  assert.deepEqual(only(closed).status, { kind: "noAgreement", agreeing: 1 });
+  assert.deepEqual(only(closed).status, { kind: "noAgreement", agreeing: 1, threshold: 2 });
   const untouched = stateOf([created], { proposals: { 1: { state: 0 } } });
-  assert.deepEqual(only(untouched).status, { kind: "watching", agreeing: 0, support: null });
+  assert.deepEqual(only(untouched).status, { kind: "watching", agreeing: 0, support: null, threshold: 2 });
 });
 
 test("the owner's manual vote is shown as such, and votes by strangers are left out", () => {
@@ -179,4 +179,20 @@ test("formatting", () => {
   assert.equal(view.formatUtc(1795471264), "2026-11-23 22:01:04 UTC");
   assert.equal(view.formatUtc(0), "time unknown");
   assert.deepEqual([5, 125, 7300, 200000].map((age) => view.timeAgo(1000, 1000 + age)), ["5s ago", "2 min ago", "2 h ago", "2 d ago"]);
+});
+
+test("a proposal is described by the threshold in force at the time, not today's", () => {
+  const rule = (at, threshold) => ["lasna", "ThresholdSet", at, { threshold, proposalId: undefined }];
+  const state = stateOf([rule(-100, 2), ...agreed, ["base", "Mirrored", 13, { support: 1, weight: "1000" }], rule(5000, 3)], { settings: { threshold: 3 } });
+  const proposal = only(state);
+  assert.deepEqual(proposal.status, { kind: "mirrored", support: 1, weight: "1000", agreeing: 2 });
+  assert.deepEqual(proposal.items.filter((entry) => entry.threshold !== undefined).map((entry) => [entry.kind, entry.agreeing, entry.threshold]), [
+    ["observed", 1, 2],
+    ["observed", 2, 2],
+    ["requested", 2, 2],
+  ]);
+  const closed = stateOf([rule(-100, 2), created, vote(0, 10), observed(0, 10, 1), rule(5000, 3)], { settings: { threshold: 3 }, proposals: { 1: { state: 3 } } });
+  assert.deepEqual(only(closed).status, { kind: "noAgreement", agreeing: 1, threshold: 2 });
+  const open = stateOf([rule(-100, 2), created, vote(0, 10), observed(0, 10, 1), rule(50, 3)], { settings: { threshold: 3 }, proposals: { 1: { state: 1 } } });
+  assert.deepEqual(only(open).status, { kind: "watching", agreeing: 1, support: 1, threshold: 3 });
 });
