@@ -10,6 +10,7 @@ export const SKIP_REASONS = [
   { name: "AlreadyVoted", text: "VoteMirror had already voted on this proposal" },
   { name: "NotActive", text: "voting on the proposal was no longer open" },
   { name: "CastFailed", text: "the Governor rejected the vote" },
+  { name: "NotConfirmed", text: "VoteMirror could not confirm on Base Sepolia that enough trusted voters had voted that way" },
 ];
 
 /** How long after a request a missing callback still counts as on its way. */
@@ -176,6 +177,17 @@ export function buildView(state, now = Math.floor(Date.now() / 1000)) {
       retries: state.lasna.events.filter((event) => event.event === "MirrorRetried").length,
     },
   };
+}
+
+/**
+ * True when VoteMirror's own copy of the rule (kept on Base Sepolia by the redeployed contract) differs
+ * from the reactive contract's. False when they match or when VoteMirror keeps no copy.
+ */
+export function ruleMismatch(settings) {
+  const { mirrorThreshold, mirrorTrustedVoters, threshold, trustedVoters } = settings;
+  if (mirrorThreshold === null || mirrorThreshold === undefined || !mirrorTrustedVoters) return false;
+  const set = (list) => [...list].map((address) => address.toLowerCase()).sort().join(",");
+  return mirrorThreshold !== threshold || set(mirrorTrustedVoters) !== set(trustedVoters);
 }
 
 // ------------------------------------------------------------------ formatting

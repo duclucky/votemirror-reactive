@@ -334,6 +334,9 @@ export async function loadState(deploymentJson, { clients = createClients(), pre
       mirrorGovernor: ethCall(mirror, "GOVERNOR()"),
       owner: ethCall(mirror, "owner()"),
       pendingOwner: ethCall(mirror, "pendingOwner()"),
+      // The redeployed VoteMirror keeps its own copy of the rule; the first deployment has no such views.
+      threshold: ethCall(mirror, "threshold()"),
+      trustedVoters: ethCall(mirror, "trustedVoters()"),
       balance: { method: "eth_getBalance", params: [mirror, "latest"] },
       governorName: ethCall(governor, "name()"),
       votingPower: ethCall(token, "getVotes(address)", [mirror]),
@@ -379,6 +382,8 @@ export async function loadState(deploymentJson, { clients = createClients(), pre
       mirrorGovernor: optional(onBase.mirrorGovernor, address0),
       mirrorOwner: optional(onBase.owner, address0),
       mirrorPendingOwner: nonZero(optional(onBase.pendingOwner, address0)),
+      mirrorThreshold: optional(onBase.threshold, number0),
+      mirrorTrustedVoters: optional(onBase.trustedVoters, (data) => abi.addressArray(data, 0)),
       mirrorBalance: optional(onBase.balance, (data) => BigInt(data).toString()),
       governorName: optional(onBase.governorName, (data) => abi.string(data, 0)),
       votingPower: optional(onBase.votingPower, big0),

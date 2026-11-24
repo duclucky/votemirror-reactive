@@ -200,6 +200,15 @@ function render(state, { openIds }) {
         ),
       ),
     ),
+    view.ruleMismatch(settings)
+      ? h(
+          "p",
+          { class: "notice inline" },
+          `The rule on Base Sepolia differs: VoteMirror itself requires ${settings.mirrorThreshold} of ${settings.mirrorTrustedVoters.length} trusted voters. A vote is only cast when both chains agree.`,
+        )
+      : settings.mirrorTrustedVoters
+        ? h("p", { class: "fine" }, "The same rule is stored on both chains: VoteMirror checks it again on Base Sepolia before voting.")
+        : null,
     h(
       "p",
       { class: "fine" },
