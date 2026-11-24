@@ -97,13 +97,26 @@ $wallets = "$env:USERPROFILE/.codex/wallets/your-votemirror-profile"
 ./script/demo.ps1 -WalletDirectory $wallets -Mode for -RunId demo-1
 ```
 
-Demo modes are for, against, skip, retry, reconcile, split, recovery, lostlogs and sender.
+Demo modes are for, against, abstain, splitmajority, thirdvote, owneroverride, skip,
+retry, reconcile, split, recovery, lostlogs and sender.
 Use a unique RunId for a new scenario; reuse it only to resume that scenario's recorded
 transactions. Some modes temporarily alter subscriptions or recovery settings.
 A fresh deployment needs its own updated sender configuration and deployment wiring.
 See the [sender operations guide](docs/relayer-service.md).
 
 ## Verified evidence
+
+The [submission evidence index](docs/submission-evidence.md) records a fresh set of
+eight scenarios with full origin → Lasna → Base callback links. Each trusted origin
+ballot is matched against the transaction hash and raw log carried in the Lasna system
+notification. The report separately labels an interrupted attempt recovered by the
+Base sender; that direct recovery is excluded from the Reactive callback count.
+
+To run this suite, use `script/run-evidence.ps1 -WalletDirectory <profile> -RunId <unique-id>`.
+It temporarily stops the local recovery sender when its journal has no pending
+transaction, restores the pause control on exit, and restarts the sender if it was
+previously running. From `web/`, independently verify the resulting receipts with
+`node scripts/verify-evidence-suite.mjs <run-id>`. This sends no transactions.
 
 Eight contract scenarios passed on live testnets, with receipts and vote totals read
 back. The [verification summary](deployments/v4-verification.json) links each scenario

@@ -1,0 +1,74 @@
+{
+  "initialRecoveryEnabled": false,
+  "mode": "owneroverride",
+  "runId": "submission-20261124-02",
+  "proposalId": "83134981177055261194368835372367993550427359025045203210467263787267451031111",
+  "confirmedSupport": "true\n1",
+  "proposalVotes": "1000000000000000000000 [1e21]\n2000000000000000000000 [2e21]\n0",
+  "steps": {
+    "ownerOverride": {
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "status": "confirmed",
+      "hash": "0x2aa437cdb16356d578594fa0fb32f0959f487d1a6e1cbcb949b147e0d860f309",
+      "nonce": "89"
+    },
+    "bobVote": {
+      "sender": "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e",
+      "status": "confirmed",
+      "hash": "0xeb99b5eb8f48c5240d93204b566b03eeb66417f818cc2aa7f3df954b84dfe4d7",
+      "nonce": "29"
+    },
+    "aliceVote": {
+      "sender": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+      "status": "confirmed",
+      "hash": "0x9b82d0f41ce07505a8d1ac7cb884a3ad37cd3c1ea1f432c447f06257b8810815",
+      "nonce": "32"
+    },
+    "propose": {
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "status": "confirmed",
+      "hash": "0x5e5c836ae1ca0449800076b873bf0eeb7335c4d51695c8e93ea610a810dd57a7",
+      "nonce": "88"
+    }
+  },
+  "reactiveEvents": [
+    {
+      "address": "0x81a8a6edf8b2d773ff53dc1450de4822c5756988",
+      "topics": [
+        "0xe5eaeebbae9c16b97d11878fa1bc382428b0e25d21db43f94998b638dc2e6477",
+        "0xb7ccbb5b3131a530a3b80ca4540005e181156bd7a787e2161912dbe3f25c8e47"
+      ],
+      "data": "0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002",
+      "blockHash": "0x81713c53eea61bb5c3d874e5d2f27050649d1280dbba3770f9ddcb6c34497498",
+      "blockNumber": "0x8b5a09",
+      "blockTimestamp": "0x0",
+      "transactionHash": "0xf3b3b4f1c6e536404459ea033ec62fd4722406b982550a050ed9504a83cc018e",
+      "transactionIndex": "0x2",
+      "logIndex": "0x6",
+      "removed": false
+    }
+  ],
+  "support": 1,
+  "initialSkipped": [
+    {
+      "address": "0x4a89e26ad48a2729d8d95b3b446dbc1083aef87a",
+      "topics": [
+        "0x918dc9d8b183a2ef15e89248f773d5319d4411c80cb7e0af59e4b4013b32b39d",
+        "0xb7ccbb5b3131a530a3b80ca4540005e181156bd7a787e2161912dbe3f25c8e47"
+      ],
+      "data": "0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002",
+      "blockHash": "0x90809a3858c2ae08e8683e7a314b2bc9819ecb477a9a33bfcf8fa6b19d885639",
+      "blockNumber": "0x3c110b7",
+      "blockTimestamp": "0x6b057117",
+      "transactionHash": "0x4ceb6bdac36cb70f9c2c043633ba4873d0f116e14f5171b442f55592122aef23",
+      "transactionIndex": "0x2",
+      "logIndex": "0x0",
+      "removed": false
+    }
+  ],
+  "baseFrom": "62984227",
+  "description": "VoteMirror v4 owneroverride submission-20261124-02",
+  "status": "verified",
+  "hasVoted": "true",
+  "lasnaFrom": "9132526"
+}

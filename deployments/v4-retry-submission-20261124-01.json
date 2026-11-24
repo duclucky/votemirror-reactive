@@ -1,0 +1,103 @@
+{
+  "initialSkipped": [
+    {
+      "address": "0x4a89e26ad48a2729d8d95b3b446dbc1083aef87a",
+      "topics": [
+        "0x918dc9d8b183a2ef15e89248f773d5319d4411c80cb7e0af59e4b4013b32b39d",
+        "0xdd2f6c9c30d77a2730a0343ec1cde2cf88df179098abe5a0319bcff2d5a42abb"
+      ],
+      "data": "0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000",
+      "blockHash": "0xa85b9a0f7114bd989c5fcec2140cc74d5fc3c1149fb7b6ec98f57136352542c4",
+      "blockNumber": "0x3c1064d",
+      "blockTimestamp": "0x6b056f02",
+      "transactionHash": "0x5e9004955f6d3dd3c31e9dfab7cc4f7f8ba3e26d1b5c698c4559d7bcac72edcf",
+      "transactionIndex": "0x8",
+      "logIndex": "0x12",
+      "removed": false
+    }
+  ],
+  "initialRecoveryEnabled": false,
+  "baseFrom": "62981580",
+  "support": 1,
+  "proposalVotes": "0\n3000000000000000000000 [3e21]\n0",
+  "proposalId": "100044930948447221512871333447436801271690687714990617753066998304396183612091",
+  "status": "verified",
+  "mirrored": [
+    {
+      "address": "0x4a89e26ad48a2729d8d95b3b446dbc1083aef87a",
+      "topics": [
+        "0xb63c3d31ef3ef99ff3a14cca677be785da10f98086635ac9b167ab61f060572a",
+        "0xdd2f6c9c30d77a2730a0343ec1cde2cf88df179098abe5a0319bcff2d5a42abb"
+      ],
+      "data": "0x000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000003635c9adc5dea00000",
+      "blockHash": "0xc5dabf91adc0126c493b1016ceb66687a41d3f09d2d6db93d582d2681fd8606b",
+      "blockNumber": "0x3c10691",
+      "blockTimestamp": "0x6b056f10",
+      "transactionHash": "0x701d248da8eb10ac7ff7d75d3cb7fc176c9682e53a16a65b2f82444544642de0",
+      "transactionIndex": "0x4",
+      "logIndex": "0xb",
+      "removed": false
+    }
+  ],
+  "confirmedSupport": "true\n1",
+  "hasVoted": "true",
+  "mode": "retry",
+  "description": "VoteMirror v4 retry submission-20261124-01",
+  "runId": "submission-20261124-01",
+  "steps": {
+    "retry": {
+      "hash": "0x33e8b01768cc18c2a1318388232622bdde67b342cb8bcb6470d9a278bea519df",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "nonce": "28",
+      "status": "confirmed"
+    },
+    "unpause": {
+      "hash": "0x577b1f5ec312acf2ecb66a0b8f23c131cac85293ddfbd3090e974f4a08796cf1",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "nonce": "85",
+      "status": "confirmed"
+    },
+    "aliceVote": {
+      "hash": "0x339a5465545c3241954a5a0c95b4eae2e02c62ea35ba3562f7ef01c6a23f36b2",
+      "sender": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+      "nonce": "29",
+      "status": "confirmed"
+    },
+    "bobVote": {
+      "hash": "0x82f258feffba9a03ccb029c4e172c9fb782a30ca844c3721ed07cd12cc6d3408",
+      "sender": "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e",
+      "nonce": "26",
+      "status": "confirmed"
+    },
+    "pause": {
+      "hash": "0x9eebc6cc1ca8d4037e5e6b8731e8c7923b1ff81774cafd98a045e28fa614c457",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "nonce": "84",
+      "status": "confirmed"
+    },
+    "propose": {
+      "hash": "0xc300d1d48fc1bac7e8dbb53604c65d589371b98681a015bb72168b265b43e19b",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "nonce": "83",
+      "status": "confirmed"
+    }
+  },
+  "lasnaFrom": "9132041",
+  "reactiveEvents": [
+    {
+      "address": "0x81a8a6edf8b2d773ff53dc1450de4822c5756988",
+      "topics": [
+        "0xe5eaeebbae9c16b97d11878fa1bc382428b0e25d21db43f94998b638dc2e6477",
+        "0xdd2f6c9c30d77a2730a0343ec1cde2cf88df179098abe5a0319bcff2d5a42abb"
+      ],
+      "data": "0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002",
+      "blockHash": "0xdbd3747b44955a5fb9810aab4e60c599320765acdaf5c49584d97172cfad69bd",
+      "blockNumber": "0x8b5821",
+      "blockTimestamp": "0x0",
+      "transactionHash": "0xf89dcf0e339e1b034bef13ad2915d71487649f1327b98f1318ca10f05a853852",
+      "transactionIndex": "0x2",
+      "logIndex": "0x6",
+      "removed": false
+    }
+  ]
+}

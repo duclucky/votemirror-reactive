@@ -1,7 +1,7 @@
 #requires -Version 7
 [CmdletBinding()]
 param(
-    [ValidateSet('for','against','skip','retry','reconcile','split','recovery','lostlogs','sender')]
+    [ValidateSet('for','against','abstain','splitmajority','thirdvote','owneroverride','skip','retry','reconcile','split','recovery','lostlogs','sender')]
     [string]$Mode = 'for',
     [Parameter(Mandatory)][string]$WalletDirectory,
     [string]$Manifest = "$PSScriptRoot/../deployments/hardened-testnet-v4.json",
@@ -21,11 +21,16 @@ $evidencePath="deployments/v4-$Mode-$RunId.json"
 $governor=$deployment.demoGovernor
 $mirror=$deployment.voteMirror
 $reactive=$deployment.mirrorReactive
-$support=if($Mode -eq 'against'){0}else{1}
+$support=if($Mode -eq 'against'){0}elseif($Mode -eq 'abstain'){2}else{1}
 function Invoke-Cast([string[]]$Arguments) {
-    $output=& cast @Arguments 2>&1
-    if($LASTEXITCODE -ne 0){throw ($output -join "`n")}
-    return ($output -join "`n").Trim()
+    # Read-only RPC retries are safe. Never retry an uncertain broadcast here.
+    $attempts=if($Arguments[0] -in @('call','logs','block-number','receipt')){3}else{1}
+    for($attempt=1;$attempt -le $attempts;$attempt++){
+        $output=& cast @Arguments 2>&1
+        if($LASTEXITCODE -eq 0){return ($output -join "`n").Trim()}
+        if($attempt -lt $attempts){Start-Sleep -Seconds 2}
+    }
+    throw ($output -join "`n")
 }
 $state=if(Test-Path -LiteralPath $evidencePath){
     Get-Content -Raw $evidencePath | ConvertFrom-Json -AsHashtable
@@ -103,6 +108,9 @@ try {
         if([DateTime]::UtcNow -gt $activeDeadline){throw 'Proposal did not become Active'}
         Start-Sleep -Seconds 2
     }
+    if($Mode -eq 'owneroverride'){
+        Send-Step 'ownerOverride' 'owner' $baseRpc @($mirror,'castVote(uint256,uint8,string)',$state.proposalId,'0','Owner chooses Against before trusted agreement')
+    }
     if($Mode -in @('lostlogs','sender')){
         # Deliberately omit Carol's subscription on Lasna while Base still trusts her.
         Send-Step 'omitCarol' 'owner' $lasnaRpc @($reactive,'removeTrusted(address)',$deployment.trustedVoters[2])
@@ -113,13 +121,24 @@ try {
         }
     }
     Send-Step 'aliceVote' 'alice' $baseRpc @($governor,'castVote(uint256,uint8)',$state.proposalId,"$support")
-    $bobSupport=if($Mode -eq 'split'){0}else{$support}
+    $bobSupport=if($Mode -in @('split','splitmajority')){0}else{$support}
     $secondVoter=if($Mode -in @('lostlogs','sender')){'carol'}else{'bob'}
     Send-Step 'bobVote' $secondVoter $baseRpc @($governor,'castVote(uint256,uint8)',$state.proposalId,"$bobSupport")
+    if($Mode -eq 'splitmajority'){
+        # Read the negative control before Carol supplies a matching ballot.
+        $state.beforeMajority=@{
+            block=(Invoke-Cast @('block-number','--rpc-url',$baseRpc));
+            hasVoted=(Invoke-Cast @('call',$governor,'hasVoted(uint256,address)(bool)',$state.proposalId,$mirror,'--rpc-url',$baseRpc));
+            confirmedSupport=(Invoke-Cast @('call',$mirror,'confirmedSupport(uint256)(bool,uint8)',$state.proposalId,'--rpc-url',$baseRpc))
+        }
+        if($state.beforeMajority.hasVoted -ne 'false' -or $state.beforeMajority.confirmedSupport -notmatch '^false'){throw 'Split ballots unexpectedly reached consensus'}
+        Save-State
+        Send-Step 'carolVote' 'carol' $baseRpc @($governor,'castVote(uint256,uint8)',$state.proposalId,"$support")
+    }
     if($Mode -eq 'split'){
         Send-Step 'reconcileSplit' 'owner' $baseRpc @($mirror,'reconcileVote(uint256,uint8)',$state.proposalId,'1')
         $state.reconcileEvidence=@(Find-Events 'Skipped(uint256 indexed,uint8,uint8)' $baseRpc $mirror ([long]$state.baseFrom))
-    }elseif($Mode -in @('skip','retry','reconcile','recovery')){
+    }elseif($Mode -in @('skip','retry','reconcile','recovery','owneroverride')){
         Wait-ForCallback 'Skipped(uint256 indexed,uint8,uint8)' 'initialSkipped'
         if($Mode -in @('retry','reconcile','recovery')){
             if($Mode -eq 'recovery'){
@@ -135,6 +154,19 @@ try {
         }
     }else{
         Wait-ForCallback 'Mirrored(uint256 indexed,uint8,uint256)' 'mirrored'
+    }
+    if($Mode -eq 'thirdvote'){
+        Send-Step 'carolVote' 'carol' $baseRpc @($governor,'castVote(uint256,uint8)',$state.proposalId,"$support")
+        $deadline=[DateTime]::UtcNow.AddSeconds($WaitSeconds)
+        do {
+            $recorded=Invoke-Cast @('call',$reactive,'recordedVote(uint256,address)(uint8)',$state.proposalId,$deployment.trustedVoters[2],'--rpc-url',$lasnaRpc)
+            if($recorded -eq '2'){break}
+            Start-Sleep -Seconds 3
+        }while([DateTime]::UtcNow -lt $deadline)
+        if($recorded -ne '2'){throw 'Third ballot was not observed by Reactive'}
+        $state.thirdVoteObserved=$true
+        $state.mirrored=@(Find-Events 'Mirrored(uint256 indexed,uint8,uint256)' $baseRpc $mirror ([long]$state.baseFrom))
+        if($state.mirrored.Count -ne 1){throw 'Unexpected mirror count after third ballot'}
     }
     if($Mode -in @('lostlogs','sender')){
         $state.sourceAgreement=Invoke-Cast @('call',$reactive,'agreement(uint256,uint8)(uint256)',$state.proposalId,'1','--rpc-url',$lasnaRpc)
@@ -158,6 +190,7 @@ try {
     $state.proposalVotes=Invoke-Cast @('call',$governor,'proposalVotes(uint256)(uint256,uint256,uint256)',$state.proposalId,'--rpc-url',$baseRpc)
     $state.confirmedSupport=Invoke-Cast @('call',$mirror,'confirmedSupport(uint256)(bool,uint8)',$state.proposalId,'--rpc-url',$baseRpc)
     $state.reactiveEvents=@(Find-Events 'MirrorRequested(uint256 indexed,uint8,uint256)' $lasnaRpc $reactive ([long]$state.lasnaFrom))
+    if($Mode -eq 'thirdvote' -and $state.reactiveEvents.Count -ne 1){throw 'Third ballot caused an unexpected callback request'}
     $state.status='verified'
     Save-State
     Write-Host "VERIFIED $Mode $evidencePath"

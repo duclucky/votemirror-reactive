@@ -1,0 +1,56 @@
+{
+  "scenarios": {
+    "for": {
+      "finishedAt": "2026-11-24T17:56:31.7790254+07:00",
+      "status": "verified",
+      "evidence": "deployments/v4-for-submission-20261124-01.json"
+    },
+    "against": {
+      "finishedAt": "2026-11-24T18:00:49.8502864+07:00",
+      "evidence": "deployments/v4-against-submission-20261124-01.json",
+      "status": "verified"
+    },
+    "abstain": {
+      "finishedAt": "2026-11-24T18:01:31.3371462+07:00",
+      "evidence": "deployments/v4-abstain-submission-20261124-01.json",
+      "status": "verified"
+    },
+    "splitmajority": {
+      "finishedAt": "2026-11-24T18:02:22.652554+07:00",
+      "evidence": "deployments/v4-splitmajority-submission-20261124-01.json",
+      "status": "verified"
+    },
+    "skip": {
+      "finishedAt": "2026-11-24T18:03:01.3665151+07:00",
+      "evidence": "deployments/v4-skip-submission-20261124-01.json",
+      "status": "verified"
+    },
+    "retry": {
+      "finishedAt": "2026-11-24T18:03:54.6255522+07:00",
+      "evidence": "deployments/v4-retry-submission-20261124-01.json",
+      "status": "verified"
+    },
+    "thirdvote": {
+      "status": "verified",
+      "evidence": "deployments/v4-thirdvote-submission-20261124-02.json",
+      "finishedAt": "2026-11-24T18:11:51.6762338+07:00"
+    },
+    "owneroverride": {
+      "status": "verified",
+      "evidence": "deployments/v4-owneroverride-submission-20261124-02.json",
+      "finishedAt": "2026-11-24T18:12:37.1140862+07:00"
+    }
+  },
+  "status": "independently-verified",
+  "initialTaskRunning": true,
+  "recoverySenderStoppedForProof": true,
+  "startedAt": "2026-11-24T17:55:26.5557869+07:00",
+  "deployment": "deployments/hardened-testnet-v4.json",
+  "finalPaused": "false",
+  "finishedAt": "2026-11-24T18:12:38.6779486+07:00",
+  "initialPaused": "false",
+  "runId": "submission-20261124-01",
+  "senderTaskState": "Running",
+  "independentlyVerifiedAt": "2026-11-24T11:18:33.230Z",
+  "verificationFile": "deployments/submission-evidence-submission-20261124-01.json"
+}

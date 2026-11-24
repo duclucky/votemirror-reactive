@@ -1,0 +1,619 @@
+{
+  "runId": "submission-20261124-01",
+  "verifiedAt": "2026-11-24T11:18:33.230Z",
+  "chainIds": {
+    "origin": 84532,
+    "reactive": 5318007,
+    "destination": 84532
+  },
+  "contracts": {
+    "governor": "0x04bB46C2E47F640Dd94bCfC0ea2aC9191364fafb",
+    "reactive": "0x81A8a6edf8B2d773FF53dc1450De4822c5756988",
+    "mirror": "0x4a89e26aD48A2729d8D95B3b446DBC1083AEF87a",
+    "proxy": "0x476F44b11F5C942c58f4c8E3d0300E5710743585"
+  },
+  "summary": {
+    "scenarios": 8,
+    "originVotes": 18,
+    "reactiveObservations": 18,
+    "callbackRequests": 9,
+    "proxyCallbacks": 9,
+    "mirroredVotes": 6
+  },
+  "operatingState": {
+    "policyHash": "0xbafee2b90147efd6ff3569bb9b2b3d570b54ef12b66b3a6fcfe9a670d28cca7b",
+    "paused": false,
+    "cronRecoveryEnabled": false,
+    "baseDebt": "0",
+    "reactiveDebt": "0",
+    "reactiveReserve": "391816000000000000",
+    "senderTaskRestored": true
+  },
+  "operationalProof": {
+    "funding": {
+      "hash": "0x54b1270aec14597df7e9a86ad88ec4d7f174a8412864eebff13e636d5f024cba",
+      "url": "https://lasna.reactscan.net/tx/0x54b1270aec14597df7e9a86ad88ec4d7f174a8412864eebff13e636d5f024cba",
+      "amountWei": "500000000000000000"
+    },
+    "separateSenderRecovery": {
+      "hash": "0xba401020d14156ed4b4e2748b4f6d969911aa42691311f5c372290cab2b8cd21",
+      "url": "https://sepolia.basescan.org/tx/0xba401020d14156ed4b4e2748b4f6d969911aa42691311f5c372290cab2b8cd21",
+      "proposalId": "105290869257360716008216453497014749227639238554715037027725025054193876472025",
+      "countedAsReactiveCallback": false
+    }
+  },
+  "scenarios": [
+    {
+      "mode": "for",
+      "evidenceFile": "deployments/v4-for-submission-20261124-01.json",
+      "label": "For consensus",
+      "verified": true,
+      "proposalId": "36228937224938343754827479087973957791250278039029893122434504547942826949354",
+      "description": "VoteMirror v4 for submission-20261124-01",
+      "proposalCreation": {
+        "hash": "0xfb164a6f127ede5ae963edaf5417c6953b5bf5bf5078888ed832da34397d1cee",
+        "url": "https://sepolia.basescan.org/tx/0xfb164a6f127ede5ae963edaf5417c6953b5bf5bf5078888ed832da34397d1cee"
+      },
+      "origins": [
+        {
+          "role": "aliceVote",
+          "voter": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+          "support": 1,
+          "hash": "0xbffbd5a107b852da88f7dfd7b1f76ae92d879e7d3d53af3363fece019b0a0d6d",
+          "url": "https://sepolia.basescan.org/tx/0xbffbd5a107b852da88f7dfd7b1f76ae92d879e7d3d53af3363fece019b0a0d6d",
+          "blockNumber": "62979403",
+          "reactiveObservation": {
+            "hash": "0x9408f2b0e100797d196260980fb03d00ef757e0a0eaf0092843799c957210f66",
+            "url": "https://lasna.reactscan.net/tx/0x9408f2b0e100797d196260980fb03d00ef757e0a0eaf0092843799c957210f66",
+            "originHashMatched": true,
+            "logRecordVerified": true
+          }
+        },
+        {
+          "role": "bobVote",
+          "voter": "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e",
+          "support": 1,
+          "hash": "0xe1b5fcc7a1627f3120e933b892543e6f8f093c269a8b694cc551f2ee6fdf5af9",
+          "url": "https://sepolia.basescan.org/tx/0xe1b5fcc7a1627f3120e933b892543e6f8f093c269a8b694cc551f2ee6fdf5af9",
+          "blockNumber": "62979421",
+          "reactiveObservation": {
+            "hash": "0xb6c6da5f177784e8929359d5bcf94f8ab00325ef906e8ab332e819aec3842257",
+            "url": "https://lasna.reactscan.net/tx/0xb6c6da5f177784e8929359d5bcf94f8ab00325ef906e8ab332e819aec3842257",
+            "originHashMatched": true,
+            "logRecordVerified": true
+          }
+        }
+      ],
+      "requests": [
+        {
+          "event": "MirrorRequested",
+          "support": 1,
+          "hash": "0xb6c6da5f177784e8929359d5bcf94f8ab00325ef906e8ab332e819aec3842257",
+          "url": "https://lasna.reactscan.net/tx/0xb6c6da5f177784e8929359d5bcf94f8ab00325ef906e8ab332e819aec3842257"
+        }
+      ],
+      "callbacks": [
+        {
+          "outcome": "Mirrored",
+          "support": 1,
+          "hash": "0x07b2ec010d80ac53a863ed8a553ad181266205fa3628ee80d988e7c78e130294",
+          "url": "https://sepolia.basescan.org/tx/0x07b2ec010d80ac53a863ed8a553ad181266205fa3628ee80d988e7c78e130294",
+          "blockNumber": "62979425"
+        }
+      ],
+      "ownerOverride": null,
+      "finalVoteTotals": [
+        "0",
+        "3000000000000000000000",
+        "0"
+      ],
+      "mirrorHasVoted": true
+    },
+    {
+      "mode": "against",
+      "evidenceFile": "deployments/v4-against-submission-20261124-01.json",
+      "label": "Against consensus",
+      "verified": true,
+      "proposalId": "22706991438215472360876397359231988165928698799516574737441836676777693021771",
+      "description": "VoteMirror v4 against submission-20261124-01",
+      "proposalCreation": {
+        "hash": "0xc29734f053461bbf0bf1acc691fac2fd0d4ebe6b3f71f10915292bfdea7a8082",
+        "url": "https://sepolia.basescan.org/tx/0xc29734f053461bbf0bf1acc691fac2fd0d4ebe6b3f71f10915292bfdea7a8082"
+      },
+      "origins": [
+        {
+          "role": "aliceVote",
+          "voter": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+          "support": 0,
+          "hash": "0x5eb637031cabedf677ec6a9bffe047bcacb705d907bf11da12ea3888379c408e",
+          "url": "https://sepolia.basescan.org/tx/0x5eb637031cabedf677ec6a9bffe047bcacb705d907bf11da12ea3888379c408e",
+          "blockNumber": "62980809",
+          "reactiveObservation": {
+            "hash": "0x89a23315c81012b2e3eeec3027e6228ca69be4c228188e94bb943950a1d9894c",
+            "url": "https://lasna.reactscan.net/tx/0x89a23315c81012b2e3eeec3027e6228ca69be4c228188e94bb943950a1d9894c",
+            "originHashMatched": true,
+            "logRecordVerified": true
+          }
+        },
+        {
+          "role": "bobVote",
+          "voter": "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e",
+          "support": 0,
+          "hash": "0x7693430be81f685883a425cab5307abc416d5794dd00ed50b0f341e33667dd6b",
+          "url": "https://sepolia.basescan.org/tx/0x7693430be81f685883a425cab5307abc416d5794dd00ed50b0f341e33667dd6b",
+          "blockNumber": "62980827",
+          "reactiveObservation": {
+            "hash": "0x174d28009e1bf3ee0b63b9b0d0e1ab43a6a5afa90398f936cc4a300f0d056965",
+            "url": "https://lasna.reactscan.net/tx/0x174d28009e1bf3ee0b63b9b0d0e1ab43a6a5afa90398f936cc4a300f0d056965",
+            "originHashMatched": true,
+            "logRecordVerified": true
+          }
+        }
+      ],
+      "requests": [
+        {
+          "event": "MirrorRequested",
+          "support": 0,
+          "hash": "0x174d28009e1bf3ee0b63b9b0d0e1ab43a6a5afa90398f936cc4a300f0d056965",
+          "url": "https://lasna.reactscan.net/tx/0x174d28009e1bf3ee0b63b9b0d0e1ab43a6a5afa90398f936cc4a300f0d056965"
+        }
+      ],
+      "callbacks": [
+        {
+          "outcome": "Mirrored",
+          "support": 0,
+          "hash": "0x7ebb9612f10d26ebb3f110df0386c32146698770189bf1543778923d219c543a",
+          "url": "https://sepolia.basescan.org/tx/0x7ebb9612f10d26ebb3f110df0386c32146698770189bf1543778923d219c543a",
+          "blockNumber": "62980834"
+        }
+      ],
+      "ownerOverride": null,
+      "finalVoteTotals": [
+        "3000000000000000000000",
+        "0",
+        "0"
+      ],
+      "mirrorHasVoted": true
+    },
+    {
+      "mode": "abstain",
+      "evidenceFile": "deployments/v4-abstain-submission-20261124-01.json",
+      "label": "Abstain consensus",
+      "verified": true,
+      "proposalId": "8778562821097296194814712495110370344560291553479725354752080596203352768197",
+      "description": "VoteMirror v4 abstain submission-20261124-01",
+      "proposalCreation": {
+        "hash": "0xc1856c48a714c890760a313ee32a4514c8b17515d7ead84704488e242369f9bc",
+        "url": "https://sepolia.basescan.org/tx/0xc1856c48a714c890760a313ee32a4514c8b17515d7ead84704488e242369f9bc"
+      },
+      "origins": [
+        {
+          "role": "aliceVote",
+          "voter": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+          "support": 2,
+          "hash": "0x6486faa33b24060751ad12511e7c6053753f0667a990dc6c80b00b6905b3b7d8",
+          "url": "https://sepolia.basescan.org/tx/0x6486faa33b24060751ad12511e7c6053753f0667a990dc6c80b00b6905b3b7d8",
+          "blockNumber": "62981026",
+          "reactiveObservation": {
+            "hash": "0xf8bd4fd9c28a4298244732707904cc7363a769771c5f12462a060999b3934c42",
+            "url": "https://lasna.reactscan.net/tx/0xf8bd4fd9c28a4298244732707904cc7363a769771c5f12462a060999b3934c42",
+            "originHashMatched": true,
+            "logRecordVerified": true
+          }
+        },
+        {
+          "role": "bobVote",
+          "voter": "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e",
+          "support": 2,
+          "hash": "0xa2d14071cd2f1eeaa6d4bf7debe40af8c7be7ca545e70446802b53c18858f139",
+          "url": "https://sepolia.basescan.org/tx/0xa2d14071cd2f1eeaa6d4bf7debe40af8c7be7ca545e70446802b53c18858f139",
+          "blockNumber": "62981042",
+          "reactiveObservation": {
+            "hash": "0xfe4e0753eccbe9382a9505f725e3b35653299fd0d4a9a0386fffbd6fee116302",
+            "url": "https://lasna.reactscan.net/tx/0xfe4e0753eccbe9382a9505f725e3b35653299fd0d4a9a0386fffbd6fee116302",
+            "originHashMatched": true,
+            "logRecordVerified": true
+          }
+        }
+      ],
+      "requests": [
+        {
+          "event": "MirrorRequested",
+          "support": 2,
+          "hash": "0xfe4e0753eccbe9382a9505f725e3b35653299fd0d4a9a0386fffbd6fee116302",
+          "url": "https://lasna.reactscan.net/tx/0xfe4e0753eccbe9382a9505f725e3b35653299fd0d4a9a0386fffbd6fee116302"
+        }
+      ],
+      "callbacks": [
+        {
+          "outcome": "Mirrored",
+          "support": 2,
+          "hash": "0x46b68b950549fa770bb4599237cc1c24cdcbb9f9c917a9b525f3e0c21b113374",
+          "url": "https://sepolia.basescan.org/tx/0x46b68b950549fa770bb4599237cc1c24cdcbb9f9c917a9b525f3e0c21b113374",
+          "blockNumber": "62981050"
+        }
+      ],
+      "ownerOverride": null,
+      "finalVoteTotals": [
+        "0",
+        "0",
+        "3000000000000000000000"
+      ],
+      "mirrorHasVoted": true
+    },
+    {
+      "mode": "splitmajority",
+      "evidenceFile": "deployments/v4-splitmajority-submission-20261124-01.json",
+      "label": "Split, then majority",
+      "verified": true,
+      "proposalId": "99120689870109209166797952185301981273289501946958317610033082514278182515334",
+      "description": "VoteMirror v4 splitmajority submission-20261124-01",
+      "proposalCreation": {
+        "hash": "0x30871962f7e0582a3dcbf4a8de429784795f322c0bcb96bf390443617599524c",
+        "url": "https://sepolia.basescan.org/tx/0x30871962f7e0582a3dcbf4a8de429784795f322c0bcb96bf390443617599524c"
+      },
+      "origins": [
+        {
+          "role": "aliceVote",
+          "voter": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+          "support": 1,
+          "hash": "0xb22557805b8cf74aceef30ea4da9a91a257cee4e13d486ad1c59e11625db8b78",
+          "url": "https://sepolia.basescan.org/tx/0xb22557805b8cf74aceef30ea4da9a91a257cee4e13d486ad1c59e11625db8b78",
+          "blockNumber": "62981225",
+          "reactiveObservation": {
+            "hash": "0x2d6649e066c4c43d14b232bce012a5be253769e3c77ee1b33163e24b8209eaa7",
+            "url": "https://lasna.reactscan.net/tx/0x2d6649e066c4c43d14b232bce012a5be253769e3c77ee1b33163e24b8209eaa7",
+            "originHashMatched": true,
+            "logRecordVerified": true
+          }
+        },
+        {
+          "role": "bobVote",
+          "voter": "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e",
+          "support": 0,
+          "hash": "0xd1dc92087fa27097fe6c0d776a7614841606d127064a47dabe528116315d1bb1",
+          "url": "https://sepolia.basescan.org/tx/0xd1dc92087fa27097fe6c0d776a7614841606d127064a47dabe528116315d1bb1",
+          "blockNumber": "62981243",
+          "reactiveObservation": {
+            "hash": "0x9d635fc07801914ddb42a3cda228f551dd9b8a057853ce66459a0db64586170d",
+            "url": "https://lasna.reactscan.net/tx/0x9d635fc07801914ddb42a3cda228f551dd9b8a057853ce66459a0db64586170d",
+            "originHashMatched": true,
+            "logRecordVerified": true
+          }
+        },
+        {
+          "role": "carolVote",
+          "voter": "0x6AA709775837be9E562fe2eA9dcC383Bd14a99e4",
+          "support": 1,
+          "hash": "0x6d64ecc6155f6d079370a038e1dc497e77a95f754d825bef255ebf76a564a407",
+          "url": "https://sepolia.basescan.org/tx/0x6d64ecc6155f6d079370a038e1dc497e77a95f754d825bef255ebf76a564a407",
+          "blockNumber": "62981281",
+          "reactiveObservation": {
+            "hash": "0x060e6f4945174dd0dae7c088f01ab1fcb34c6574a2aafc59784ae3730507a79f",
+            "url": "https://lasna.reactscan.net/tx/0x060e6f4945174dd0dae7c088f01ab1fcb34c6574a2aafc59784ae3730507a79f",
+            "originHashMatched": true,
+            "logRecordVerified": true
+          }
+        }
+      ],
+      "requests": [
+        {
+          "event": "MirrorRequested",
+          "support": 1,
+          "hash": "0x060e6f4945174dd0dae7c088f01ab1fcb34c6574a2aafc59784ae3730507a79f",
+          "url": "https://lasna.reactscan.net/tx/0x060e6f4945174dd0dae7c088f01ab1fcb34c6574a2aafc59784ae3730507a79f"
+        }
+      ],
+      "callbacks": [
+        {
+          "outcome": "Mirrored",
+          "support": 1,
+          "hash": "0x5dca629a633059dec6773490e12104d0fa629d9f8f6b89cb83c4d989fb074bdb",
+          "url": "https://sepolia.basescan.org/tx/0x5dca629a633059dec6773490e12104d0fa629d9f8f6b89cb83c4d989fb074bdb",
+          "blockNumber": "62981286"
+        }
+      ],
+      "ownerOverride": null,
+      "finalVoteTotals": [
+        "1000000000000000000000",
+        "3000000000000000000000",
+        "0"
+      ],
+      "mirrorHasVoted": true
+    },
+    {
+      "mode": "skip",
+      "evidenceFile": "deployments/v4-skip-submission-20261124-01.json",
+      "label": "Owner skip",
+      "verified": true,
+      "proposalId": "4659687604655985853164005417523156934026204605243082917279522195445723932",
+      "description": "VoteMirror v4 skip submission-20261124-01",
+      "proposalCreation": {
+        "hash": "0x5cd7be260ae503337d923b2f5e9cedaf79e733638425715b8d0f695edebef7eb",
+        "url": "https://sepolia.basescan.org/tx/0x5cd7be260ae503337d923b2f5e9cedaf79e733638425715b8d0f695edebef7eb"
+      },
+      "origins": [
+        {
+          "role": "aliceVote",
+          "voter": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+          "support": 1,
+          "hash": "0xf7d0bb2f9c3be21ff31d0d682f10f5abf6db41d51ef563ec909c26f23b585f01",
+          "url": "https://sepolia.basescan.org/tx/0xf7d0bb2f9c3be21ff31d0d682f10f5abf6db41d51ef563ec909c26f23b585f01",
+          "blockNumber": "62981488",
+          "reactiveObservation": {
+            "hash": "0x70854247581533b66c5609d14d32620edd1284d1a97adcaf38357e467bb9a227",
+            "url": "https://lasna.reactscan.net/tx/0x70854247581533b66c5609d14d32620edd1284d1a97adcaf38357e467bb9a227",
+            "originHashMatched": true,
+            "logRecordVerified": true
+          }
+        },
+        {
+          "role": "bobVote",
+          "voter": "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e",
+          "support": 1,
+          "hash": "0x757b0020ebae638c59ec8c0a764a18f47953c10e4c1b45ae05bd24113ba77cc7",
+          "url": "https://sepolia.basescan.org/tx/0x757b0020ebae638c59ec8c0a764a18f47953c10e4c1b45ae05bd24113ba77cc7",
+          "blockNumber": "62981510",
+          "reactiveObservation": {
+            "hash": "0x6b801cc9d067921d4dfc7c8f230e9c3bf82cb77974080e4e2dbe3e99c3eb16fc",
+            "url": "https://lasna.reactscan.net/tx/0x6b801cc9d067921d4dfc7c8f230e9c3bf82cb77974080e4e2dbe3e99c3eb16fc",
+            "originHashMatched": true,
+            "logRecordVerified": true
+          }
+        }
+      ],
+      "requests": [
+        {
+          "event": "MirrorRequested",
+          "support": 1,
+          "hash": "0x6b801cc9d067921d4dfc7c8f230e9c3bf82cb77974080e4e2dbe3e99c3eb16fc",
+          "url": "https://lasna.reactscan.net/tx/0x6b801cc9d067921d4dfc7c8f230e9c3bf82cb77974080e4e2dbe3e99c3eb16fc"
+        }
+      ],
+      "callbacks": [
+        {
+          "outcome": "Skipped",
+          "reason": 1,
+          "hash": "0x858ae3dc01f99f0836f993d4468d5605cfbe6551a3bf3fe6403d31f84cc40fde",
+          "url": "https://sepolia.basescan.org/tx/0x858ae3dc01f99f0836f993d4468d5605cfbe6551a3bf3fe6403d31f84cc40fde",
+          "blockNumber": "62981515"
+        }
+      ],
+      "ownerOverride": null,
+      "finalVoteTotals": [
+        "0",
+        "2000000000000000000000",
+        "0"
+      ],
+      "mirrorHasVoted": false
+    },
+    {
+      "mode": "retry",
+      "evidenceFile": "deployments/v4-retry-submission-20261124-01.json",
+      "label": "Paused, then Reactive retry",
+      "verified": true,
+      "proposalId": "100044930948447221512871333447436801271690687714990617753066998304396183612091",
+      "description": "VoteMirror v4 retry submission-20261124-01",
+      "proposalCreation": {
+        "hash": "0xc300d1d48fc1bac7e8dbb53604c65d589371b98681a015bb72168b265b43e19b",
+        "url": "https://sepolia.basescan.org/tx/0xc300d1d48fc1bac7e8dbb53604c65d589371b98681a015bb72168b265b43e19b"
+      },
+      "origins": [
+        {
+          "role": "aliceVote",
+          "voter": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+          "support": 1,
+          "hash": "0x339a5465545c3241954a5a0c95b4eae2e02c62ea35ba3562f7ef01c6a23f36b2",
+          "url": "https://sepolia.basescan.org/tx/0x339a5465545c3241954a5a0c95b4eae2e02c62ea35ba3562f7ef01c6a23f36b2",
+          "blockNumber": "62981684",
+          "reactiveObservation": {
+            "hash": "0xb66c039e3a60f874e9f0cd0b8a866bdda2dcc54acab9ea9ba05329490ae8d86b",
+            "url": "https://lasna.reactscan.net/tx/0xb66c039e3a60f874e9f0cd0b8a866bdda2dcc54acab9ea9ba05329490ae8d86b",
+            "originHashMatched": true,
+            "logRecordVerified": true
+          }
+        },
+        {
+          "role": "bobVote",
+          "voter": "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e",
+          "support": 1,
+          "hash": "0x82f258feffba9a03ccb029c4e172c9fb782a30ca844c3721ed07cd12cc6d3408",
+          "url": "https://sepolia.basescan.org/tx/0x82f258feffba9a03ccb029c4e172c9fb782a30ca844c3721ed07cd12cc6d3408",
+          "blockNumber": "62981703",
+          "reactiveObservation": {
+            "hash": "0xf89dcf0e339e1b034bef13ad2915d71487649f1327b98f1318ca10f05a853852",
+            "url": "https://lasna.reactscan.net/tx/0xf89dcf0e339e1b034bef13ad2915d71487649f1327b98f1318ca10f05a853852",
+            "originHashMatched": true,
+            "logRecordVerified": true
+          }
+        }
+      ],
+      "requests": [
+        {
+          "event": "MirrorRequested",
+          "support": 1,
+          "hash": "0xf89dcf0e339e1b034bef13ad2915d71487649f1327b98f1318ca10f05a853852",
+          "url": "https://lasna.reactscan.net/tx/0xf89dcf0e339e1b034bef13ad2915d71487649f1327b98f1318ca10f05a853852"
+        },
+        {
+          "event": "MirrorRetried",
+          "support": 1,
+          "hash": "0x33e8b01768cc18c2a1318388232622bdde67b342cb8bcb6470d9a278bea519df",
+          "url": "https://lasna.reactscan.net/tx/0x33e8b01768cc18c2a1318388232622bdde67b342cb8bcb6470d9a278bea519df"
+        }
+      ],
+      "callbacks": [
+        {
+          "outcome": "Skipped",
+          "reason": 0,
+          "hash": "0x5e9004955f6d3dd3c31e9dfab7cc4f7f8ba3e26d1b5c698c4559d7bcac72edcf",
+          "url": "https://sepolia.basescan.org/tx/0x5e9004955f6d3dd3c31e9dfab7cc4f7f8ba3e26d1b5c698c4559d7bcac72edcf",
+          "blockNumber": "62981709"
+        },
+        {
+          "outcome": "Mirrored",
+          "support": 1,
+          "hash": "0x701d248da8eb10ac7ff7d75d3cb7fc176c9682e53a16a65b2f82444544642de0",
+          "url": "https://sepolia.basescan.org/tx/0x701d248da8eb10ac7ff7d75d3cb7fc176c9682e53a16a65b2f82444544642de0",
+          "blockNumber": "62981777"
+        }
+      ],
+      "ownerOverride": null,
+      "finalVoteTotals": [
+        "0",
+        "3000000000000000000000",
+        "0"
+      ],
+      "mirrorHasVoted": true
+    },
+    {
+      "mode": "thirdvote",
+      "evidenceFile": "deployments/v4-thirdvote-submission-20261124-02.json",
+      "label": "Third ballot, no duplicate vote",
+      "verified": true,
+      "proposalId": "20045268361807965263975781613079352145030377677362195621491887852228068547988",
+      "description": "VoteMirror v4 thirdvote submission-20261124-02",
+      "proposalCreation": {
+        "hash": "0x395bfdf919830384e29ca372af446472403da89a42be6a0872018a1ce62bfe20",
+        "url": "https://sepolia.basescan.org/tx/0x395bfdf919830384e29ca372af446472403da89a42be6a0872018a1ce62bfe20"
+      },
+      "origins": [
+        {
+          "role": "aliceVote",
+          "voter": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+          "support": 1,
+          "hash": "0xe5a4fa1e767c2fdbd7892a4ad37f258ae49a2571e655c3881080950ec8632234",
+          "url": "https://sepolia.basescan.org/tx/0xe5a4fa1e767c2fdbd7892a4ad37f258ae49a2571e655c3881080950ec8632234",
+          "blockNumber": "62984084",
+          "reactiveObservation": {
+            "hash": "0xf3a2edafac18ba5e466b9d498270ce7512487dd1ce133994edcd835532d95fbb",
+            "url": "https://lasna.reactscan.net/tx/0xf3a2edafac18ba5e466b9d498270ce7512487dd1ce133994edcd835532d95fbb",
+            "originHashMatched": true,
+            "logRecordVerified": true
+          }
+        },
+        {
+          "role": "bobVote",
+          "voter": "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e",
+          "support": 1,
+          "hash": "0x6eb573a2659b101c7b290363565a382722dfa3ae5ee59241e4474e4b8b1f420c",
+          "url": "https://sepolia.basescan.org/tx/0x6eb573a2659b101c7b290363565a382722dfa3ae5ee59241e4474e4b8b1f420c",
+          "blockNumber": "62984100",
+          "reactiveObservation": {
+            "hash": "0x341214ae035611819faaa3313710b908f260f21c061f237bcd062575e7e4df44",
+            "url": "https://lasna.reactscan.net/tx/0x341214ae035611819faaa3313710b908f260f21c061f237bcd062575e7e4df44",
+            "originHashMatched": true,
+            "logRecordVerified": true
+          }
+        },
+        {
+          "role": "carolVote",
+          "voter": "0x6AA709775837be9E562fe2eA9dcC383Bd14a99e4",
+          "support": 1,
+          "hash": "0xc6b6ed0e476dedaa53fa16e86389d29f532a4d9336e5a6cdd3d868f54d39154b",
+          "url": "https://sepolia.basescan.org/tx/0xc6b6ed0e476dedaa53fa16e86389d29f532a4d9336e5a6cdd3d868f54d39154b",
+          "blockNumber": "62984153",
+          "reactiveObservation": {
+            "hash": "0x1df4b43e4e6887ae459e1da7f7b20b00f4880aa0744f64f805ce0d6c6a325c48",
+            "url": "https://lasna.reactscan.net/tx/0x1df4b43e4e6887ae459e1da7f7b20b00f4880aa0744f64f805ce0d6c6a325c48",
+            "originHashMatched": true,
+            "logRecordVerified": true
+          }
+        }
+      ],
+      "requests": [
+        {
+          "event": "MirrorRequested",
+          "support": 1,
+          "hash": "0x341214ae035611819faaa3313710b908f260f21c061f237bcd062575e7e4df44",
+          "url": "https://lasna.reactscan.net/tx/0x341214ae035611819faaa3313710b908f260f21c061f237bcd062575e7e4df44"
+        }
+      ],
+      "callbacks": [
+        {
+          "outcome": "Mirrored",
+          "support": 1,
+          "hash": "0xa7dc0f12749f2794c18b4afea9256722372ee502a788743c9f824bd5b6bf3c1e",
+          "url": "https://sepolia.basescan.org/tx/0xa7dc0f12749f2794c18b4afea9256722372ee502a788743c9f824bd5b6bf3c1e",
+          "blockNumber": "62984107"
+        }
+      ],
+      "ownerOverride": null,
+      "finalVoteTotals": [
+        "0",
+        "4000000000000000000000",
+        "0"
+      ],
+      "mirrorHasVoted": true
+    },
+    {
+      "mode": "owneroverride",
+      "evidenceFile": "deployments/v4-owneroverride-submission-20261124-02.json",
+      "label": "Owner vote takes priority",
+      "verified": true,
+      "proposalId": "83134981177055261194368835372367993550427359025045203210467263787267451031111",
+      "description": "VoteMirror v4 owneroverride submission-20261124-02",
+      "proposalCreation": {
+        "hash": "0x5e5c836ae1ca0449800076b873bf0eeb7335c4d51695c8e93ea610a810dd57a7",
+        "url": "https://sepolia.basescan.org/tx/0x5e5c836ae1ca0449800076b873bf0eeb7335c4d51695c8e93ea610a810dd57a7"
+      },
+      "origins": [
+        {
+          "role": "aliceVote",
+          "voter": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+          "support": 1,
+          "hash": "0x9b82d0f41ce07505a8d1ac7cb884a3ad37cd3c1ea1f432c447f06257b8810815",
+          "url": "https://sepolia.basescan.org/tx/0x9b82d0f41ce07505a8d1ac7cb884a3ad37cd3c1ea1f432c447f06257b8810815",
+          "blockNumber": "62984349",
+          "reactiveObservation": {
+            "hash": "0xa1558cc9e91444fc18788a8ba0cab0d1c082a71e352ce55926269b9f9a431f67",
+            "url": "https://lasna.reactscan.net/tx/0xa1558cc9e91444fc18788a8ba0cab0d1c082a71e352ce55926269b9f9a431f67",
+            "originHashMatched": true,
+            "logRecordVerified": true
+          }
+        },
+        {
+          "role": "bobVote",
+          "voter": "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e",
+          "support": 1,
+          "hash": "0xeb99b5eb8f48c5240d93204b566b03eeb66417f818cc2aa7f3df954b84dfe4d7",
+          "url": "https://sepolia.basescan.org/tx/0xeb99b5eb8f48c5240d93204b566b03eeb66417f818cc2aa7f3df954b84dfe4d7",
+          "blockNumber": "62984366",
+          "reactiveObservation": {
+            "hash": "0xf3b3b4f1c6e536404459ea033ec62fd4722406b982550a050ed9504a83cc018e",
+            "url": "https://lasna.reactscan.net/tx/0xf3b3b4f1c6e536404459ea033ec62fd4722406b982550a050ed9504a83cc018e",
+            "originHashMatched": true,
+            "logRecordVerified": true
+          }
+        }
+      ],
+      "requests": [
+        {
+          "event": "MirrorRequested",
+          "support": 1,
+          "hash": "0xf3b3b4f1c6e536404459ea033ec62fd4722406b982550a050ed9504a83cc018e",
+          "url": "https://lasna.reactscan.net/tx/0xf3b3b4f1c6e536404459ea033ec62fd4722406b982550a050ed9504a83cc018e"
+        }
+      ],
+      "callbacks": [
+        {
+          "outcome": "Skipped",
+          "reason": 2,
+          "hash": "0x4ceb6bdac36cb70f9c2c043633ba4873d0f116e14f5171b442f55592122aef23",
+          "url": "https://sepolia.basescan.org/tx/0x4ceb6bdac36cb70f9c2c043633ba4873d0f116e14f5171b442f55592122aef23",
+          "blockNumber": "62984375"
+        }
+      ],
+      "ownerOverride": {
+        "hash": "0x2aa437cdb16356d578594fa0fb32f0959f487d1a6e1cbcb949b147e0d860f309",
+        "url": "https://sepolia.basescan.org/tx/0x2aa437cdb16356d578594fa0fb32f0959f487d1a6e1cbcb949b147e0d860f309"
+      },
+      "finalVoteTotals": [
+        "1000000000000000000000",
+        "2000000000000000000000",
+        "0"
+      ],
+      "mirrorHasVoted": true
+    }
+  ]
+}

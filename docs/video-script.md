@@ -21,3 +21,10 @@ Bằng chứng nguồn nằm trong deployments/v4-verification.json và
 deployments/v4-sender-audit-service-2.json. Không dùng video hoặc giao dịch của các bản
 triển khai trước làm bằng chứng cho source hiện hành. Không tuyên bố độ trễ cố định nếu
 chưa đo đầy đủ từng vòng.
+
+Bộ chạy bổ sung ngày 24/11/2026 được tổng hợp ở [submission-evidence.md](submission-evidence.md).
+Ưu tiên các hash của bộ này khi cần chứng minh đủ ba chặng trên deployment hiện tại.
+Sáu kịch bản có vote mirrored; owner skip và owner override có callback nhưng cố ý
+không bỏ thêm phiếu. Retry có cả callback bị skip và callback thành công. Lượt thử
+bị cạn quỹ Reactive rồi được sender cứu nằm ở mục vận hành riêng, không tính vào
+số vòng Reactive đầy đủ.

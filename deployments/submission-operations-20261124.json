@@ -1,0 +1,12 @@
+{
+  "fundingHash": "0x54b1270aec14597df7e9a86ad88ec4d7f174a8412864eebff13e636d5f024cba",
+  "amountWei": "500000000000000000",
+  "network": "Lasna",
+  "separateSenderRecoveryTx": "0xba401020d14156ed4b4e2748b4f6d969911aa42691311f5c372290cab2b8cd21",
+  "target": "0x81A8a6edf8B2d773FF53dc1450De4822c5756988",
+  "reason": "Reactive fee reserve exhausted; original interrupted third-vote attempt was recovered by direct Base sender and is excluded from the Reactive loop count.",
+  "excludedReactiveAttempt": "deployments/v4-thirdvote-submission-20261124-01.json",
+  "debtBeforeWei": "13030900000000000",
+  "method": "depositTo(address)",
+  "runId": "submission-20261124-01"
+}

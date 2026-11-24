@@ -1,0 +1,68 @@
+{
+  "baseFrom": "62979313",
+  "confirmedSupport": "true\n1",
+  "steps": {
+    "propose": {
+      "hash": "0xfb164a6f127ede5ae963edaf5417c6953b5bf5bf5078888ed832da34397d1cee",
+      "nonce": "77",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "status": "confirmed"
+    },
+    "bobVote": {
+      "hash": "0xe1b5fcc7a1627f3120e933b892543e6f8f093c269a8b694cc551f2ee6fdf5af9",
+      "nonce": "21",
+      "sender": "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e",
+      "status": "confirmed"
+    },
+    "aliceVote": {
+      "hash": "0xbffbd5a107b852da88f7dfd7b1f76ae92d879e7d3d53af3363fece019b0a0d6d",
+      "nonce": "24",
+      "sender": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+      "status": "confirmed"
+    }
+  },
+  "status": "verified",
+  "proposalId": "36228937224938343754827479087973957791250278039029893122434504547942826949354",
+  "mirrored": [
+    {
+      "address": "0x4a89e26ad48a2729d8d95b3b446dbc1083aef87a",
+      "topics": [
+        "0xb63c3d31ef3ef99ff3a14cca677be785da10f98086635ac9b167ab61f060572a",
+        "0x5018da0fe047f2bdeee94f00e4d6dfef2dae4e830c4662ac6fe59b08cd22baea"
+      ],
+      "data": "0x000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000003635c9adc5dea00000",
+      "blockHash": "0x2021a326b2013eb51b18c08f09875cb847f17f70e289ca43c7f0b03925b43f46",
+      "blockNumber": "0x3c0fd61",
+      "blockTimestamp": "0x6b056d39",
+      "transactionHash": "0x07b2ec010d80ac53a863ed8a553ad181266205fa3628ee80d988e7c78e130294",
+      "transactionIndex": "0x3",
+      "logIndex": "0x2",
+      "removed": false
+    }
+  ],
+  "hasVoted": "true",
+  "mode": "for",
+  "description": "VoteMirror v4 for submission-20261124-01",
+  "proposalVotes": "0\n3000000000000000000000 [3e21]\n0",
+  "reactiveEvents": [
+    {
+      "address": "0x81a8a6edf8b2d773ff53dc1450de4822c5756988",
+      "topics": [
+        "0xe5eaeebbae9c16b97d11878fa1bc382428b0e25d21db43f94998b638dc2e6477",
+        "0x5018da0fe047f2bdeee94f00e4d6dfef2dae4e830c4662ac6fe59b08cd22baea"
+      ],
+      "data": "0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002",
+      "blockHash": "0xc3019450e620472a5d6f5dd6e21c8ff74f670faf48bbf88b053436baaf53e0e9",
+      "blockNumber": "0x8b566d",
+      "blockTimestamp": "0x0",
+      "transactionHash": "0xb6c6da5f177784e8929359d5bcf94f8ab00325ef906e8ab332e819aec3842257",
+      "transactionIndex": "0x2",
+      "logIndex": "0x6",
+      "removed": false
+    }
+  ],
+  "lasnaFrom": "9131609",
+  "support": 1,
+  "runId": "submission-20261124-01",
+  "initialRecoveryEnabled": false
+}

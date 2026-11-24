@@ -1,0 +1,68 @@
+{
+  "status": "verified",
+  "initialRecoveryEnabled": false,
+  "baseFrom": "62980679",
+  "support": 0,
+  "proposalVotes": "3000000000000000000000 [3e21]\n0\n0",
+  "proposalId": "22706991438215472360876397359231988165928698799516574737441836676777693021771",
+  "mirrored": [
+    {
+      "address": "0x4a89e26ad48a2729d8d95b3b446dbc1083aef87a",
+      "topics": [
+        "0xb63c3d31ef3ef99ff3a14cca677be785da10f98086635ac9b167ab61f060572a",
+        "0x3233b3a30ff676595cc0f47399b88a973599d8a64e2be061b4f5e4ae521a064b"
+      ],
+      "data": "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003635c9adc5dea00000",
+      "blockHash": "0x4277363891beda63e63d41011620d3d168bf4d1a4eee730df95a3be9cbe9f52a",
+      "blockNumber": "0x3c102e2",
+      "blockTimestamp": "0x6b056e53",
+      "transactionHash": "0x7ebb9612f10d26ebb3f110df0386c32146698770189bf1543778923d219c543a",
+      "transactionIndex": "0x5",
+      "logIndex": "0x8",
+      "removed": false
+    }
+  ],
+  "confirmedSupport": "true\n0",
+  "hasVoted": "true",
+  "mode": "against",
+  "description": "VoteMirror v4 against submission-20261124-01",
+  "runId": "submission-20261124-01",
+  "steps": {
+    "aliceVote": {
+      "hash": "0x5eb637031cabedf677ec6a9bffe047bcacb705d907bf11da12ea3888379c408e",
+      "sender": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+      "nonce": "25",
+      "status": "confirmed"
+    },
+    "propose": {
+      "hash": "0xc29734f053461bbf0bf1acc691fac2fd0d4ebe6b3f71f10915292bfdea7a8082",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "nonce": "78",
+      "status": "confirmed"
+    },
+    "bobVote": {
+      "hash": "0x7693430be81f685883a425cab5307abc416d5794dd00ed50b0f341e33667dd6b",
+      "sender": "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e",
+      "nonce": "22",
+      "status": "confirmed"
+    }
+  },
+  "lasnaFrom": "9131869",
+  "reactiveEvents": [
+    {
+      "address": "0x81a8a6edf8b2d773ff53dc1450de4822c5756988",
+      "topics": [
+        "0xe5eaeebbae9c16b97d11878fa1bc382428b0e25d21db43f94998b638dc2e6477",
+        "0x3233b3a30ff676595cc0f47399b88a973599d8a64e2be061b4f5e4ae521a064b"
+      ],
+      "data": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002",
+      "blockHash": "0x24ea53ff564bb6a43e586e6c86830ba0f6a7bd2e2e62c8432e287f5795105dbd",
+      "blockNumber": "0x8b577a",
+      "blockTimestamp": "0x0",
+      "transactionHash": "0x174d28009e1bf3ee0b63b9b0d0e1ab43a6a5afa90398f936cc4a300f0d056965",
+      "transactionIndex": "0x2",
+      "logIndex": "0x6",
+      "removed": false
+    }
+  ]
+}

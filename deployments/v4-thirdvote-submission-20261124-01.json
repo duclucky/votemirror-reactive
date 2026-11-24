@@ -1,0 +1,33 @@
+{
+  "initialRecoveryEnabled": false,
+  "baseFrom": "62981846",
+  "support": 1,
+  "proposalId": "105290869257360716008216453497014749227639238554715037027725025054193876472025",
+  "mode": "thirdvote",
+  "description": "VoteMirror v4 thirdvote submission-20261124-01",
+  "runId": "submission-20261124-01",
+  "steps": {
+    "aliceVote": {
+      "hash": "0x6dd3f5c897c9f4713a5f35391cdeb08e81b6a1fb72ed74b86c96f8778c1e34c1",
+      "sender": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+      "nonce": "30",
+      "status": "confirmed"
+    },
+    "propose": {
+      "hash": "0x2b6b6807aabddf077f3f77661908daee50ed11a7878cf6c42b8767e662e420f7",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "nonce": "86",
+      "status": "confirmed"
+    },
+    "bobVote": {
+      "hash": "0xc186fe4a7fcaebbd451db1c03322377972e5c388f1f61ad2663872c3e349a178",
+      "sender": "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e",
+      "nonce": "27",
+      "status": "confirmed"
+    }
+  },
+  "lasnaFrom": "9132092",
+  "status": "excluded-from-reactive-suite",
+  "exclusionReason": "Reactive fee reserve exhausted. The dedicated Base recovery sender restored this proposal after the runner resumed it. A fresh proposal was used for the Reactive third-vote proof.",
+  "directRecoveryHash": "0xba401020d14156ed4b4e2748b4f6d969911aa42691311f5c372290cab2b8cd21"
+}
