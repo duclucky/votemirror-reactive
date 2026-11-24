@@ -180,7 +180,8 @@ callback on Base Sepolia.
   they run into debt; `coverDebt()` settles it.
 - **Fees can be run up from outside.** Reactive's callback proxy charges VoteMirror for every callback addressed to
   it, also one that VoteMirror rejects, and anyone can request such a callback from Lasna. A trusted voter can
-  likewise make MirrorReactive pay for a `react()` per proposal they vote on. Keep the balances small and watched;
+  likewise make MirrorReactive pay for a `react()` per proposal they vote on, and per ballot on a Governor that
+  lets one voter cast several (fractional voting); `removeTrusted` stops it. Keep the balances small and watched;
   after a top-up, `retryMirror()` recovers the votes missed while a contract was in debt.
 - **Demo keys.** The scripts pass keys on the command line and one `.env` holds the owner and every trusted voter
   key. That is fine for a testnet demo and must not be copied to a real setup.

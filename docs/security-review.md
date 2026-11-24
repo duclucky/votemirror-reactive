@@ -34,7 +34,7 @@ No critical or high severity issue. One medium, four low, six informational.
 | M-1 | Mitigated, not removable | The charge is made by Reactive's proxy. `retryMirror()` now recovers the votes missed while VoteMirror was in debt |
 | L-1 | Reduced, not removable | VoteMirror now checks on the Governor that `threshold` trusted voters have voted before it casts (`Skipped(NotConfirmed)` otherwise), so a made-up callback cannot vote on a proposal the trusted voters are silent on. The side still comes from the callback: a standard Governor does not expose it |
 | L-2 | Fixed | Owner-only `MirrorReactive.retryMirror(proposalId, support)`; reverts unless `threshold` currently trusted voters agree on that choice (`AgreementNotReached`) and it is the choice requested first (`OtherChoiceRequested`) |
-| L-3 | Accepted and documented | Reactive bills per delivered log; `removeTrusted` stops it |
+| L-3 | Accepted and documented | Reactive bills per delivered log; `removeTrusted` stops it. On a Governor with fractional voting a trusted voter can cast several ballots per proposal, each billed and none counted |
 | L-4 | Fixed | `trustEpoch[voter]` is raised on removal and votes are recorded per epoch |
 | I-1 | Fixed | `Ownable2Step` on both contracts; `renounceOwnership()` reverts with `RenounceDisabled` |
 | I-2 | Fixed | VoteMirror's constructor reverts with `ZeroAddress` |
