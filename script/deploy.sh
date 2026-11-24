@@ -22,7 +22,7 @@ TRUSTED="[$(IFS=,; echo "${VOTERS[*]}")]"
 REACTIVE=$(create "$LASNA_RPC" $LASNA_CHAIN_ID src/MirrorReactive.sol:MirrorReactive "$REACTIVE_FUNDING" $BASE_CHAIN_ID "$GOVERNOR" "$TRUSTED" "$THRESHOLD")
 
 echo "3/6 VoteMirror on Base Sepolia"
-MIRROR=$(create "$BASE_SEPOLIA_RPC" $BASE_CHAIN_ID src/VoteMirror.sol:VoteMirror "$MIRROR_FUNDING" "$CALLBACK_PROXY" "$REACTIVE" "$GOVERNOR" "$OWNER")
+MIRROR=$(create "$BASE_SEPOLIA_RPC" $BASE_CHAIN_ID src/VoteMirror.sol:VoteMirror "$MIRROR_FUNDING" "$CALLBACK_PROXY" "$REACTIVE" "$GOVERNOR" "$OWNER" "$TRUSTED" "$THRESHOLD")
 
 echo "4/6 point MirrorReactive at VoteMirror"
 SET_MIRROR_TX=$(send "$LASNA_RPC" "$PRIVATE_KEY" "$REACTIVE" "setMirror(address)" "$MIRROR")

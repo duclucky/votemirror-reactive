@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
-import { Test, stdError } from "forge-std/Test.sol";
+import { Test } from "forge-std/Test.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IReactive } from "@reactive/src/interfaces/IReactive.sol";
 import { ISystemContract } from "@reactive/src/interfaces/ISystemContract.sol";
@@ -74,11 +74,15 @@ contract MirrorReactiveTest is Test {
     }
 
     function test_SubscribesOncePerTrustedVoter() public view {
-        assertEq(system.subscriptionCount(), 3);
-        (uint256 chainId, address contractAddress, uint256 topic0, uint256 topic1) = system.subscriptions(1);
+        // Two per voter: `VoteCast` and `VoteCastWithParams`.
+        assertEq(system.subscriptionCount(), 6);
+        (uint256 chainId, address contractAddress, uint256 topic0, uint256 topic1) = system.subscriptions(2);
         assertEq(chainId, ORIGIN);
         assertEq(contractAddress, governor);
         assertEq(topic0, reactive.VOTE_CAST_TOPIC_0());
+        assertEq(topic1, uint256(uint160(bob)));
+        (,, topic0, topic1) = system.subscriptions(3);
+        assertEq(topic0, reactive.VOTE_CAST_WITH_PARAMS_TOPIC_0());
         assertEq(topic1, uint256(uint160(bob)));
     }
 
@@ -208,6 +212,46 @@ contract MirrorReactiveTest is Test {
         assertEq(reactive.recordedVote(7, alice), 0);
     }
 
+    function test_TopicMatchesOpenZeppelinVoteCastWithParams() public view {
+        assertEq(
+            reactive.VOTE_CAST_WITH_PARAMS_TOPIC_0(),
+            uint256(keccak256("VoteCastWithParams(address,uint256,uint8,uint256,string,bytes)"))
+        );
+    }
+
+    /// @dev A vote cast with params is counted like a plain one, once per voter and proposal.
+    function test_VoteCastWithParamsIsCounted() public {
+        IReactive.LogRecord memory log = _log(alice, 7, FOR);
+        log.topic0 = reactive.VOTE_CAST_WITH_PARAMS_TOPIC_0();
+        log.data = abi.encode(uint256(7), FOR, uint256(100e18), "because", hex"1234");
+        vm.prank(SYSTEM);
+        reactive.react(log);
+        assertEq(reactive.agreement(7, FOR), 1);
+
+        _vote(alice, 7, AGAINST);
+        assertEq(reactive.agreement(7, AGAINST), 0);
+        _vote(bob, 7, FOR);
+        assertEq(system.callbackCount(), 1);
+    }
+
+    /// @dev Data that is too short or carries a support value beyond uint8 is ignored without reverting.
+    function test_MalformedVoteDataIgnored() public {
+        IReactive.LogRecord memory log = _log(alice, 7, FOR);
+        log.data = abi.encode(uint256(7));
+        vm.prank(SYSTEM);
+        reactive.react(log);
+        log.data = abi.encode(uint256(7), uint256(257));
+        vm.prank(SYSTEM);
+        reactive.react(log);
+        assertEq(reactive.recordedVote(7, alice), 0);
+
+        // Nothing after the two leading words is read.
+        log.data = abi.encode(uint256(7), uint256(FOR));
+        vm.prank(SYSTEM);
+        reactive.react(log);
+        assertEq(reactive.recordedVote(7, alice), FOR + 1);
+    }
+
     function test_UnknownSupportValueIgnored() public {
         _vote(alice, 7, 3);
         _vote(bob, 7, 3);
@@ -250,12 +294,40 @@ contract MirrorReactiveTest is Test {
         vm.stopPrank();
     }
 
+    function test_RevertWhen_SettingsAreInvalid() public {
+        address[] memory trusted = new address[](1);
+        trusted[0] = alice;
+        vm.expectRevert(MirrorReactive.ZeroAddress.selector);
+        new MirrorReactive(ORIGIN, address(0), trusted, 1);
+
+        vm.expectRevert(MirrorReactive.ZeroAddress.selector);
+        reactive.setMirror(address(0));
+        vm.expectRevert(MirrorReactive.ZeroAddress.selector);
+        reactive.addTrusted(address(0));
+        vm.expectRevert(abi.encodeWithSelector(MirrorReactive.NotTrusted.selector, stranger));
+        reactive.removeTrusted(stranger);
+    }
+
+    function test_NothingRequestedYetReadsAsZero() public {
+        _vote(alice, 7, AGAINST);
+        assertFalse(reactive.mirrorRequested(7));
+        assertEq(reactive.requestedSupport(7), 0);
+    }
+
+    function test_OwnerWithdrawsUnusedBalance() public {
+        vm.deal(address(reactive), 2 ether);
+        uint256 before = address(this).balance;
+        reactive.withdraw(0.5 ether);
+        assertEq(address(reactive).balance, 1.5 ether);
+        assertEq(address(this).balance, before + 0.5 ether);
+    }
+
     // ------------------------------------------------------------------ changing the list
 
     function test_AddTrustedSubscribesAndCounts() public {
         address dave = makeAddr("dave");
         reactive.addTrusted(dave);
-        assertEq(system.subscriptionCount(), 4);
+        assertEq(system.subscriptionCount(), 8);
         _vote(dave, 7, FOR);
         _vote(alice, 7, FOR);
         assertEq(system.callbackCount(), 1);
@@ -265,8 +337,12 @@ contract MirrorReactiveTest is Test {
         _vote(alice, 7, FOR);
         reactive.removeTrusted(alice);
 
-        assertEq(system.unsubscriptionCount(), 1);
-        (,,, uint256 topic1) = system.unsubscriptions(0);
+        assertEq(system.unsubscriptionCount(), 2);
+        (,, uint256 topic0, uint256 topic1) = system.unsubscriptions(0);
+        assertEq(topic0, reactive.VOTE_CAST_TOPIC_0());
+        assertEq(topic1, uint256(uint160(alice)));
+        (,, topic0, topic1) = system.unsubscriptions(1);
+        assertEq(topic0, reactive.VOTE_CAST_WITH_PARAMS_TOPIC_0());
         assertEq(topic1, uint256(uint160(alice)));
         assertEq(reactive.trustedVoters().length, 2);
         assertEq(reactive.agreement(7, FOR), 0);
@@ -277,15 +353,22 @@ contract MirrorReactiveTest is Test {
         assertEq(system.callbackCount(), 1);
     }
 
-    /// @dev Recorded votes are kept on removal, so they count again if the voter is trusted again later.
-    function test_ReAddedVoterBringsBackOldVotes() public {
+    /// @dev Votes seen before a removal stay out of the count when the voter is trusted again.
+    function test_ReAddedVoterDoesNotBringBackOldVotes() public {
         _vote(alice, 7, FOR);
+        assertEq(reactive.recordedVote(7, alice), FOR + 1);
         reactive.removeTrusted(alice);
-        assertEq(reactive.agreement(7, FOR), 0);
+        assertEq(reactive.trustEpoch(alice), 1);
+        assertEq(reactive.recordedVote(7, alice), 0);
 
         reactive.addTrusted(alice);
-        assertEq(reactive.agreement(7, FOR), 1);
+        assertEq(reactive.agreement(7, FOR), 0);
         _vote(bob, 7, FOR);
+        assertEq(system.callbackCount(), 0);
+
+        // A vote on another proposal, cast after being trusted again, counts as usual.
+        _vote(alice, 8, FOR);
+        _vote(bob, 8, FOR);
         assertEq(system.callbackCount(), 1);
     }
 
@@ -297,10 +380,124 @@ contract MirrorReactiveTest is Test {
         assertEq(reactive.agreement(7, FOR), 0);
     }
 
-    /// @dev `agreement` computes `support_ + 1` in a uint8, so 255 overflows.
-    function test_RevertWhen_AgreementQueriedWithSupport255() public {
-        vm.expectRevert(stdError.arithmeticError);
-        reactive.agreement(7, 255);
+    function test_AgreementIsZeroForUnknownSupport() public {
+        _vote(alice, 7, FOR);
+        assertEq(reactive.agreement(7, 3), 0);
+        assertEq(reactive.agreement(7, 255), 0);
+    }
+
+    // ------------------------------------------------------------------ retry
+
+    function test_RetryMirrorRequestsAgainWhatTrustedVotersAgreedOn() public {
+        _vote(alice, 7, AGAINST);
+        _vote(bob, 7, AGAINST);
+        assertEq(system.callbackCount(), 1);
+
+        vm.expectEmit(address(reactive));
+        emit MirrorReactive.MirrorRetried(7, AGAINST, 2);
+        reactive.retryMirror(7, AGAINST);
+
+        assertEq(system.callbackCount(), 2);
+        ISystemContract.CallbackConfiguration_V_1_0 memory config = system.callbackAt(1);
+        assertEq(config.chainId, ORIGIN);
+        assertEq(config.recipient, mirror);
+        assertEq(config.gasLimit, reactive.CALLBACK_GAS_LIMIT());
+        assertEq(config.payload, abi.encodeWithSignature("castMirrored(address,uint256,uint8)", address(0), 7, AGAINST));
+    }
+
+    function test_RevertWhen_RetryWithoutAgreement() public {
+        _vote(alice, 7, FOR);
+        vm.expectRevert(abi.encodeWithSelector(MirrorReactive.AgreementNotReached.selector, 7, FOR, 1, 2));
+        reactive.retryMirror(7, FOR);
+
+        _vote(bob, 7, FOR);
+        // The other side and unknown support values were not agreed on.
+        vm.expectRevert(abi.encodeWithSelector(MirrorReactive.AgreementNotReached.selector, 7, AGAINST, 0, 2));
+        reactive.retryMirror(7, AGAINST);
+        vm.expectRevert(abi.encodeWithSelector(MirrorReactive.AgreementNotReached.selector, 7, 9, 0, 2));
+        reactive.retryMirror(7, 9);
+    }
+
+    /// @dev With 2k <= n both sides can reach the threshold. The retry stays with the side requested first.
+    function test_RevertWhen_RetryAsksForAnotherChoiceThanTheFirstRequest() public {
+        address dave = makeAddr("dave");
+        reactive.addTrusted(dave);
+        _vote(alice, 7, FOR);
+        _vote(bob, 7, FOR);
+        _vote(carol, 7, AGAINST);
+        _vote(dave, 7, AGAINST);
+        assertEq(reactive.agreement(7, AGAINST), 2);
+        assertEq(reactive.requestedSupport(7), FOR);
+
+        vm.expectRevert(abi.encodeWithSelector(MirrorReactive.OtherChoiceRequested.selector, 7, FOR));
+        reactive.retryMirror(7, AGAINST);
+        reactive.retryMirror(7, FOR);
+        assertEq(system.callbackCount(), 2);
+    }
+
+    /// @dev A first request made by the owner fixes the choice too, for later retries and for `react()`.
+    function test_RetryAsFirstRequestFixesTheChoice() public {
+        _vote(alice, 7, FOR);
+        _vote(bob, 7, AGAINST);
+        reactive.setThreshold(1);
+        assertFalse(reactive.mirrorRequested(7));
+        reactive.retryMirror(7, AGAINST);
+        assertTrue(reactive.mirrorRequested(7));
+        assertEq(reactive.requestedSupport(7), AGAINST);
+
+        vm.expectRevert(abi.encodeWithSelector(MirrorReactive.OtherChoiceRequested.selector, 7, AGAINST));
+        reactive.retryMirror(7, FOR);
+        _vote(carol, 7, FOR);
+        assertEq(system.callbackCount(), 1);
+    }
+
+    function test_RevertWhen_RetryAfterAgreeingVoterWasRemoved() public {
+        _vote(alice, 7, FOR);
+        _vote(bob, 7, FOR);
+        reactive.removeTrusted(alice);
+        vm.expectRevert(abi.encodeWithSelector(MirrorReactive.AgreementNotReached.selector, 7, FOR, 1, 2));
+        reactive.retryMirror(7, FOR);
+    }
+
+    function test_RevertWhen_RetryByNonOwnerOrWithoutMirror() public {
+        _vote(alice, 7, FOR);
+        _vote(bob, 7, FOR);
+        vm.prank(stranger);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, stranger));
+        reactive.retryMirror(7, FOR);
+
+        address[] memory trusted = new address[](1);
+        trusted[0] = alice;
+        MirrorReactive unset = new MirrorReactive(ORIGIN, governor, trusted, 1);
+        vm.expectRevert(MirrorReactive.MirrorNotSet.selector);
+        unset.retryMirror(7, FOR);
+    }
+
+    /// @dev Lowering the threshold does not look back by itself; the owner can ask for the vote.
+    function test_RetryAfterThresholdWasLowered() public {
+        _vote(alice, 7, FOR);
+        _vote(bob, 7, AGAINST);
+        _vote(carol, 7, ABSTAIN);
+        reactive.setThreshold(1);
+        assertEq(system.callbackCount(), 0);
+        reactive.retryMirror(7, FOR);
+        assertEq(system.callbackCount(), 1);
+    }
+
+    // ------------------------------------------------------------------ ownership
+
+    function test_OwnershipMovesInTwoSteps() public {
+        reactive.transferOwnership(stranger);
+        assertEq(reactive.owner(), address(this));
+        vm.prank(stranger);
+        reactive.acceptOwnership();
+        assertEq(reactive.owner(), stranger);
+    }
+
+    function test_RevertWhen_OwnershipIsRenounced() public {
+        vm.expectRevert(MirrorReactive.RenounceDisabled.selector);
+        reactive.renounceOwnership();
+        assertEq(reactive.owner(), address(this));
     }
 
     function test_RevertWhen_RemovalWouldBreakThreshold() public {

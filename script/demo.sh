@@ -3,10 +3,12 @@
 #   ./script/demo.sh for      two trusted voters vote For     -> VoteMirror votes For
 #   ./script/demo.sh against  two trusted voters vote Against -> VoteMirror votes Against
 #   ./script/demo.sh skip     the owner skips the proposal    -> VoteMirror emits Skipped, no vote
+#   ./script/demo.sh retry    mirroring is paused during the votes -> Skipped; the owner unpauses and calls
+#                             retryMirror() on Lasna -> VoteMirror votes For
 . "$(dirname "$0")/lib.sh"
 
-MODE="${1:?usage: demo.sh for|against|skip}"
-case "$MODE" in for | skip) SUPPORT=1 ;; against) SUPPORT=0 ;; *) echo "unknown mode $MODE" >&2; exit 1 ;; esac
+MODE="${1:?usage: demo.sh for|against|skip|retry}"
+case "$MODE" in for | skip | retry) SUPPORT=1 ;; against) SUPPORT=0 ;; *) echo "unknown mode $MODE" >&2; exit 1 ;; esac
 WAIT_SECONDS="${WAIT_SECONDS:-180}"
 
 TOKEN=$(json "$DEPLOYMENT" demoToken)
@@ -44,6 +46,12 @@ echo "propose tx:     $PROPOSE_TX"
 if [ "$MODE" = skip ]; then
   SKIP_TX=$(send "$BASE_SEPOLIA_RPC" "$PRIVATE_KEY" "$MIRROR" "setSkipped(uint256,bool)" "$PROPOSAL_ID" true)
   echo "skip tx:        $SKIP_TX"
+fi
+if [ "$MODE" = retry ]; then
+  PAUSE_TX=$(send "$BASE_SEPOLIA_RPC" "$PRIVATE_KEY" "$MIRROR" "setPaused(bool)" true)
+  echo "pause tx:       $PAUSE_TX"
+  # Mirroring must not stay paused if a later step fails.
+  trap '[ "$(cast call "$MIRROR" "paused()(bool)" --rpc-url "$BASE_SEPOLIA_RPC")" = false ] || send "$BASE_SEPOLIA_RPC" "$PRIVATE_KEY" "$MIRROR" "setPaused(bool)" false >/dev/null' EXIT
 fi
 
 # ProposalState.Active is 1.
@@ -90,6 +98,20 @@ if [ -n "$CALLBACK_TX" ]; then
   echo "callback tx:    $CALLBACK_TX (Base Sepolia, $RESULT, ${DELAY}s after the last trusted vote)"
 else
   echo "callback tx:    not delivered within ${WAIT_SECONDS}s"
+fi
+if [ "$MODE" = retry ] && [ -n "$CALLBACK_TX" ]; then
+  UNPAUSE_TX=$(send "$BASE_SEPOLIA_RPC" "$PRIVATE_KEY" "$MIRROR" "setPaused(bool)" false)
+  echo "unpause tx:     $UNPAUSE_TX"
+  BASE_FROM=$(cast block-number --rpc-url "$BASE_SEPOLIA_RPC")
+  RETRY_TX=$(send "$LASNA_RPC" "$PRIVATE_KEY" "$REACTIVE" "retryMirror(uint256,uint8)" "$PROPOSAL_ID" "$SUPPORT")
+  echo "retry tx:       $RETRY_TX (Lasna, MirrorRetried)"
+  STARTED=$(date +%s) CALLBACK=""
+  while [ $(($(date +%s) - STARTED)) -lt "$WAIT_SECONDS" ] && [ -z "$CALLBACK" ]; do
+    sleep 3
+    CALLBACK=$(scan "$BASE_SEPOLIA_RPC" "$BASE_FROM" "$MIRROR" "$TOPIC_ID" "Mirrored(uint256 indexed,uint8,uint256)" "Skipped(uint256 indexed,uint8,uint8)")
+  done
+  read -r CALLBACK_TX _ RESULT <<<"$CALLBACK"
+  echo "callback tx 2:  ${CALLBACK_TX:-not delivered within ${WAIT_SECONDS}s}${CALLBACK_TX:+ (Base Sepolia, $RESULT)}"
 fi
 echo "VoteMirror voted: $(cast call "$GOVERNOR" "hasVoted(uint256,address)(bool)" "$PROPOSAL_ID" "$MIRROR" --rpc-url "$BASE_SEPOLIA_RPC")"
 echo "votes (against, for, abstain): $(cast call "$GOVERNOR" "proposalVotes(uint256)(uint256,uint256,uint256)" "$PROPOSAL_ID" --rpc-url "$BASE_SEPOLIA_RPC" | tr '\n' ' ')"
