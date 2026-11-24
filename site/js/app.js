@@ -102,10 +102,10 @@ function itemText(entry, state) {
     case "mirrored":
       return [h("strong", {}, "VoteMirror voted "), supportPill(entry.support), ` with ${view.formatUnits(entry.weight, tokenDecimals)} ${symbol}`];
     case "skipped":
-      if (view.skipReason(entry.reason).name === "NotConfirmed" && entry.required !== null && entry.agreeing !== null && entry.required > entry.agreeing) {
+      if (view.skipReason(entry.reason).name === "NotConfirmed" && entry.required !== null && entry.required > entry.confirmed) {
         return [
           h("strong", {}, "VoteMirror skipped the vote"),
-          `: its own copy of the rule on Base Sepolia required ${entry.required} trusted voters at that moment and ${entry.agreeing} had voted that way (NotConfirmed)`,
+          `: its own copy of the rule on Base Sepolia required ${entry.required} of its trusted voters to have voted at that moment, and ${entry.confirmed} had (NotConfirmed)`,
         ];
       }
       return [h("strong", {}, "VoteMirror skipped the vote"), `: ${view.skipReason(entry.reason).text} (${view.skipReason(entry.reason).name})`];

@@ -216,6 +216,7 @@ test("a proposal is described by the threshold in force at the time, not today's
 test("a NotConfirmed skip says what VoteMirror's own rule required, and the retry that fixed it", () => {
   const baseRule = (at, threshold) => ["base", "ThresholdSet", at, { threshold, proposalId: undefined }];
   const state = stateOf([
+    ...VOTERS.map((voter) => ["base", "TrustedVoterAdded", -60, { voter, proposalId: undefined }]),
     baseRule(-50, 3),
     ...agreed,
     ["base", "Skipped", 13, { support: 1, reason: 5 }],
@@ -227,7 +228,7 @@ test("a NotConfirmed skip says what VoteMirror's own rule required, and the retr
   const proposal = only(state);
   assert.deepEqual(kinds(proposal), ["created", "vote", "observed", "vote", "observed", "requested", "skipped", "thresholdSet", "retried", "mirrored"]);
   const skipped = proposal.items.find((entry) => entry.kind === "skipped");
-  assert.deepEqual([skipped.required, skipped.agreeing], [3, 2]);
+  assert.deepEqual([skipped.required, skipped.confirmed], [3, 2]);
   assert.equal(proposal.items.find((entry) => entry.kind === "thresholdSet").threshold, 2);
   assert.deepEqual(proposal.status, { kind: "mirrored", support: 1, weight: "1000", agreeing: 2, retried: true, skipReason: 5 });
 });
@@ -243,4 +244,23 @@ test("rule changes and pauses after a proposal was decided are not part of its s
   const open = stateOf([created, vote(0, 10), observed(0, 10, 1), ...after], { proposals: { 1: { state: 1 } } });
   assert.deepEqual(kinds(only(open)).slice(-2), ["pausedSet", "trustedRemoved"]);
   assert.equal(only(open).items.at(-1).voter, VOTERS[2]);
+});
+
+test("VoteMirror's check counts its own trusted voters that voted, whatever they chose", () => {
+  const state = stateOf([
+    ["base", "TrustedVoterAdded", -60, { voter: VOTERS[0], proposalId: undefined }],
+    ["base", "TrustedVoterAdded", -60, { voter: VOTERS[2], proposalId: undefined }],
+    ["base", "ThresholdSet", -50, { threshold: 2, proposalId: undefined }],
+    created,
+    vote(0, 10),
+    observed(0, 10, 1),
+    vote(1, 12),
+    observed(1, 12, 2, 1),
+    requested(12, "0xreq"),
+    ["base", "Skipped", 13, { support: 1, reason: 5 }],
+    vote(2, 20, 0),
+  ]);
+  // Voter 2 agreed on Lasna but is not on VoteMirror's own list; voter 3 is, and voted only after the skip.
+  const skipped = only(state).items.find((entry) => entry.kind === "skipped");
+  assert.deepEqual([skipped.required, skipped.confirmed], [2, 1]);
 });

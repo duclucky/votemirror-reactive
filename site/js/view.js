@@ -72,6 +72,23 @@ function buildProposal(created, index, state, now) {
 
   const observed = lasnaEvents.filter((event) => event.event === "VoteObserved");
   const thresholdAt = (event) => thresholdWhen(state, (change) => laterOnChain(event, change));
+  // What VoteMirror's own check on Base Sepolia saw when `event` happened: the threshold it required, and how
+  // many of the voters on its own trusted list had voted on the proposal by then (whatever their choice).
+  const confirmationsAt = (event) => {
+    const earlier = state.base.events.filter((other) => laterOnChain(event, other));
+    const required = earlier.filter((other) => other.event === "ThresholdSet").at(-1)?.threshold ?? null;
+    const trusted = new Set();
+    for (const other of earlier) {
+      if (other.event === "TrustedVoterAdded") trusted.add(other.voter.toLowerCase());
+      else if (other.event === "TrustedVoterRemoved") trusted.delete(other.voter.toLowerCase());
+    }
+    const voted = new Set(
+      earlier
+        .filter((other) => (other.event === "VoteCast" || other.event === "VoteCastWithParams") && other.proposalId === proposalId)
+        .map((other) => other.voter.toLowerCase()),
+    );
+    return { required, confirmed: required === null ? null : [...trusted].filter((voter) => voted.has(voter)).length };
+  };
   const followed = (voter) =>
     observed.some((event) => sameAddress(event.voter, voter)) ||
     settings.trustedVoters.some((trusted) => sameAddress(trusted, voter));
@@ -93,9 +110,7 @@ function buildProposal(created, index, state, now) {
     } else if (event.event === "Mirrored") {
       items.push(item("mirrored", event, { support: event.support, weight: event.weight }));
     } else if (event.event === "Skipped") {
-      // For NotConfirmed: the threshold VoteMirror's own copy of the rule required on Base Sepolia at that moment.
-      const required = state.base.events.filter((change) => change.event === "ThresholdSet" && laterOnChain(event, change)).at(-1);
-      items.push(item("skipped", event, { support: event.support, reason: event.reason, required: required?.threshold ?? null }));
+      items.push(item("skipped", event, { support: event.support, reason: event.reason, ...confirmationsAt(event) }));
     } else if (event.event === "SkipSet") {
       items.push(item("skipSet", event, { skipped: event.skipped }));
     }
@@ -134,11 +149,6 @@ function buildProposal(created, index, state, now) {
     items.push(item(kind, event, kind === "pausedSet" ? { paused: event.paused } : kind === "thresholdSet" ? { threshold: event.threshold } : { voter: event.voter }));
   }
   items.sort(compareItems);
-  for (const [position, entry] of items.entries()) {
-    if (entry.kind !== "skipped") continue;
-    const request = items.slice(0, position).filter((other) => other.kind === "requested" || other.kind === "retried").at(-1);
-    entry.agreeing = request?.agreeing ?? null;
-  }
 
   // Outcome: what VoteMirror ended up doing, read from the ordered events.
   const requests = items.filter((entry) => entry.kind === "requested" || entry.kind === "retried");
