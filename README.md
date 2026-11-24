@@ -41,6 +41,13 @@ and runtime were checked against the build in [v4-bytecode-check.json](deploymen
 
 ## Frontend dashboard
 
+For judges and visitors, the public, read-only showcase is
+[votemirror-demo.vercel.app](https://votemirror-demo.vercel.app). Its interactive
+recorded walkthroughs, usage guide and narrated film live in the separate
+[votemirror-demo repository](https://github.com/duclucky/votemirror-demo).
+Replay controls only change presentation state; they never submit transactions.
+Core contracts, execution scripts and sender remain in this repository.
+
 The [frontend](web/) provides current policy and proposal reads, browser-wallet proposal
 creation and ballots, and nine clearly labeled historical demos. It rechecks receipt
 status, contract addresses and decoded events before marking a recorded run verified.
