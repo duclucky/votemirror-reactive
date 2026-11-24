@@ -154,3 +154,16 @@ test("loadState refuses an endpoint that answers for another chain", async () =>
   chains.base.chainId = 8453;
   await assert.rejects(loadState(chains.deployment, { clients: createClients({ fetch: chains.fetch }) }), /wrong chain/);
 });
+
+test("loadState reads the rule VoteMirror keeps on Base Sepolia after the redeployment", async () => {
+  const chains = fakeChains();
+  const word = (n) => BigInt(n).toString(16).padStart(64, "0");
+  const mirror = chains.deployment.voteMirror;
+  chains.base.onCall(mirror, "threshold()", [], word(3));
+  chains.base.onCall(mirror, "trustedVoters()", [], word(0x20) + word(2) + chains.voters.slice(0, 2).map((voter) => voter.slice(2).toLowerCase().padStart(64, "0")).join(""));
+  chains.base.onCall(mirror, "pendingOwner()", [], word(0));
+  const state = await loadState(chains.deployment, { clients: createClients({ fetch: chains.fetch }) });
+  assert.equal(state.settings.mirrorThreshold, 3);
+  assert.deepEqual(state.settings.mirrorTrustedVoters, chains.voters.slice(0, 2));
+  assert.equal(state.settings.mirrorPendingOwner, null);
+});
