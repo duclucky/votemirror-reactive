@@ -62,7 +62,13 @@ function statusSentence(proposal, state) {
   const votes = (weight) => `${view.formatUnits(weight, tokenDecimals)} ${tokenSymbol ?? "votes"}`;
   switch (status.kind) {
     case "mirrored":
-      return `VoteMirror cast ${view.supportName(status.support)} with ${votes(status.weight)} after ${status.agreeing === null ? "enough trusted voters" : voters(status.agreeing)} agreed.`;
+      return `VoteMirror cast ${view.supportName(status.support)} with ${votes(status.weight)} after ${status.agreeing === null ? "enough trusted voters" : voters(status.agreeing)} agreed.${
+        !status.retried
+          ? ""
+          : status.skipReason === null
+            ? " The first callback was not delivered, so the owner asked again."
+            : ` The first callback was skipped (${view.skipReason(status.skipReason).text}); the owner asked again and the vote was cast.`
+      }`;
     case "ownerVoted":
       return `The owner cast ${view.supportName(status.support)} through VoteMirror by hand, with ${votes(status.weight)}.`;
     case "skipped":
@@ -96,9 +102,21 @@ function itemText(entry, state) {
     case "mirrored":
       return [h("strong", {}, "VoteMirror voted "), supportPill(entry.support), ` with ${view.formatUnits(entry.weight, tokenDecimals)} ${symbol}`];
     case "skipped":
+      if (view.skipReason(entry.reason).name === "NotConfirmed" && entry.required !== null && entry.agreeing !== null && entry.required > entry.agreeing) {
+        return [
+          h("strong", {}, "VoteMirror skipped the vote"),
+          `: its own copy of the rule on Base Sepolia required ${entry.required} trusted voters at that moment and ${entry.agreeing} had voted that way (NotConfirmed)`,
+        ];
+      }
       return [h("strong", {}, "VoteMirror skipped the vote"), `: ${view.skipReason(entry.reason).text} (${view.skipReason(entry.reason).name})`];
     case "skipSet":
       return entry.skipped ? "Owner marked this proposal to be skipped" : "Owner removed the skip mark from this proposal";
+    case "thresholdSet":
+      return [`Owner set the threshold kept on ${NETWORKS[entry.chain].name} to `, h("strong", {}, String(entry.threshold))];
+    case "trustedAdded":
+      return [`Owner added a trusted voter on ${NETWORKS[entry.chain].name}: `, addressLink("base", entry.voter)];
+    case "trustedRemoved":
+      return [`Owner removed a trusted voter on ${NETWORKS[entry.chain].name}: `, addressLink("base", entry.voter)];
     case "pausedSet":
       return entry.paused ? "Owner paused mirroring" : "Owner resumed mirroring";
     case "ownerVote":
@@ -230,11 +248,11 @@ function render(state, { openIds }) {
   const stats = h(
     "section",
     { class: "stats", "aria-label": "Totals since deployment" },
-    stat(summary.proposals, "proposals seen", `since block ${state.base.fromBlock.toLocaleString("en-US")}`),
-    stat(summary.observedVotes, "trusted votes counted", "on Reactive Lasna"),
-    stat(summary.mirrored, "votes mirrored", "cast by VoteMirror", "ok"),
-    stat(summary.skipped, "votes skipped", "callback arrived, no vote", "warn"),
-    summary.undelivered > 0 && stat(summary.undelivered, "callbacks not delivered", "requested, never reached VoteMirror", "bad"),
+    stat(summary.proposals, summary.proposals === 1 ? "proposal seen" : "proposals seen", `since block ${state.base.fromBlock.toLocaleString("en-US")}`),
+    stat(summary.observedVotes, summary.observedVotes === 1 ? "trusted vote counted" : "trusted votes counted", "on Reactive Lasna"),
+    stat(summary.mirrored, summary.mirrored === 1 ? "vote mirrored" : "votes mirrored", "cast by VoteMirror", "ok"),
+    stat(summary.skipped, summary.skipped === 1 ? "vote skipped" : "votes skipped", "callback arrived, no vote", "warn"),
+    summary.undelivered > 0 && stat(summary.undelivered, summary.undelivered === 1 ? "callback not delivered" : "callbacks not delivered", "requested, never reached VoteMirror", "bad"),
     summary.retries > 0 && stat(summary.retries, summary.retries === 1 ? "retry by the owner" : "retries by the owner", "callback requested again", "info"),
     summary.pending + summary.watching > 0 && stat(summary.pending + summary.watching, "in progress", "open right now", "info"),
   );

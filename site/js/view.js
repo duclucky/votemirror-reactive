@@ -25,7 +25,7 @@ export const skipReason = (reason) =>
   SKIP_REASONS[reason] ?? { name: `Reason ${reason}`, label: `Skipped: reason ${reason}`, text: `reason ${reason}` };
 
 // Order of events that share a timestamp across the two chains: cause before effect.
-const RANK = { created: 0, pausedSet: 1, skipSet: 1, vote: 2, observed: 3, requested: 4, retried: 4, ownerVote: 5, mirrored: 5, skipped: 5 };
+const RANK = { created: 0, pausedSet: 1, thresholdSet: 1, trustedAdded: 1, trustedRemoved: 1, skipSet: 1, vote: 2, observed: 3, requested: 4, retried: 4, ownerVote: 5, mirrored: 5, skipped: 5 };
 
 function compareItems(a, b) {
   if (a.sortTime !== b.sortTime) return a.sortTime - b.sortTime;
@@ -49,6 +49,8 @@ function thresholdWhen(state, before) {
   const changes = state.lasna.events.filter((event) => event.event === "ThresholdSet" && before(event));
   return changes.length ? changes.at(-1).threshold : state.settings.threshold;
 }
+
+const RULE_KINDS = { PausedSet: "pausedSet", ThresholdSet: "thresholdSet", TrustedVoterAdded: "trustedAdded", TrustedVoterRemoved: "trustedRemoved" };
 
 function buildProposal(created, index, state, now) {
   const { settings, deployment } = state;
@@ -91,15 +93,11 @@ function buildProposal(created, index, state, now) {
     } else if (event.event === "Mirrored") {
       items.push(item("mirrored", event, { support: event.support, weight: event.weight }));
     } else if (event.event === "Skipped") {
-      items.push(item("skipped", event, { support: event.support, reason: event.reason }));
+      // For NotConfirmed: the threshold VoteMirror's own copy of the rule required on Base Sepolia at that moment.
+      const required = state.base.events.filter((change) => change.event === "ThresholdSet" && laterOnChain(event, change)).at(-1);
+      items.push(item("skipped", event, { support: event.support, reason: event.reason, required: required?.threshold ?? null }));
     } else if (event.event === "SkipSet") {
       items.push(item("skipSet", event, { skipped: event.skipped }));
-    }
-  }
-  for (const event of state.base.events) {
-    // Pausing is global; it belongs to this proposal's story if it happened while the vote was open.
-    if (event.event === "PausedSet" && event.timestamp >= created.timestamp && event.timestamp <= created.voteEnd) {
-      items.push(item("pausedSet", event, { paused: event.paused }));
     }
   }
   for (const event of lasnaEvents) {
@@ -117,7 +115,30 @@ function buildProposal(created, index, state, now) {
       items.push(entry);
     }
   }
+  // Pausing and changes to the rule are global. They belong to this proposal's story while its outcome was
+  // still open: from its creation until VoteMirror voted, or else until the last step recorded for it.
+  const timed = created.voteEnd > 1_000_000_000;
+  const mirroredEvent = baseEvents.find((event) => event.event === "Mirrored");
+  const decided = items.some((entry) => entry.kind === "skipped" || entry.kind === "ownerVote");
+  const until = mirroredEvent
+    ? mirroredEvent.timestamp
+    : decided
+      ? Math.max(...items.map((entry) => entry.timestamp))
+      : timed
+        ? created.voteEnd
+        : Infinity;
+  for (const event of [...state.base.events, ...state.lasna.events]) {
+    const kind = RULE_KINDS[event.event];
+    if (!kind || event.timestamp < created.timestamp || event.timestamp > until) continue;
+    if (event.chain === "base" && (laterOnChain(created, event) || (mirroredEvent && laterOnChain(event, mirroredEvent)))) continue;
+    items.push(item(kind, event, kind === "pausedSet" ? { paused: event.paused } : kind === "thresholdSet" ? { threshold: event.threshold } : { voter: event.voter }));
+  }
   items.sort(compareItems);
+  for (const [position, entry] of items.entries()) {
+    if (entry.kind !== "skipped") continue;
+    const request = items.slice(0, position).filter((other) => other.kind === "requested" || other.kind === "retried").at(-1);
+    entry.agreeing = request?.agreeing ?? null;
+  }
 
   // Outcome: what VoteMirror ended up doing, read from the ordered events.
   const requests = items.filter((entry) => entry.kind === "requested" || entry.kind === "retried");
@@ -129,7 +150,6 @@ function buildProposal(created, index, state, now) {
   const governorState = live.state ?? null;
   const active = governorState === 1;
   // Removing a trusted voter drops the votes the contract recorded for them, so they stop counting from then on.
-  const timed = created.voteEnd > 1_000_000_000;
   const closedAt = active || governorState === 0 || !timed ? Infinity : created.voteEnd;
   const removals = state.lasna.events.filter((event) => event.event === "TrustedVoterRemoved" && event.timestamp <= closedAt);
   const agreeing = {};
@@ -142,7 +162,15 @@ function buildProposal(created, index, state, now) {
 
   let status;
   if (mirrored) {
-    status = { kind: "mirrored", support: mirrored.support, weight: mirrored.weight, agreeing: mirroredRequest?.agreeing ?? null };
+    const skippedFirst = outcomes.filter((entry) => entry.kind === "skipped" && items.indexOf(entry) < items.indexOf(mirrored)).at(-1);
+    status = {
+      kind: "mirrored",
+      support: mirrored.support,
+      weight: mirrored.weight,
+      agreeing: mirroredRequest?.agreeing ?? null,
+      retried: mirroredRequest?.kind === "retried",
+      skipReason: skippedFirst?.reason ?? null,
+    };
   } else if (ownerVote) {
     status = { kind: "ownerVoted", support: ownerVote.support, weight: ownerVote.weight };
   } else if (lastRequest && (!lastOutcome || items.indexOf(lastRequest) > items.indexOf(lastOutcome))) {
