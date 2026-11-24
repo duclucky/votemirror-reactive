@@ -1,0 +1,6 @@
+{
+  "reason": "Replace costly recurring Cron with VoteMirror-operated Base sender; keep event-driven Reactive subscriptions",
+  "feeReserveTx": "0xf5d421052bad5a9508e0070a61a99e88a69e29fe4f8a272d3fe4858f4037fb4d",
+  "disabledCronTx": "0x55a697ca98fef60546972b24bc0d40000094e7223f28ed91944817d6065bfa93",
+  "reserveDepositWei": "250000000000000000"
+}

@@ -1,0 +1,11 @@
+{
+  "baseBlock": "62917487",
+  "sourcePolicy": "0xbafee2b90147efd6ff3569bb9b2b3d570b54ef12b66b3a6fcfe9a670d28cca7b",
+  "sourceDebt": "0",
+  "baseDebt": "0",
+  "sourceReserves": "238318600000000000 [2.383e17]",
+  "recoveryEnabled": "false",
+  "basePolicy": "0xbafee2b90147efd6ff3569bb9b2b3d570b54ef12b66b3a6fcfe9a670d28cca7b",
+  "paused": "false",
+  "lasnaBlock": "9120024"
+}

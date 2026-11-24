@@ -1,0 +1,9 @@
+Start verifying contract `0x81A8a6edf8B2d773FF53dc1450De4822c5756988` deployed on 5318007
+Attempting to verify on Sourcify. Pass the --etherscan-api-key <API_KEY> to verify on Etherscan, or use the --verifier flag to verify on another provider.
+
+Submitting verification for [MirrorReactive] "0x81A8a6edf8B2d773FF53dc1450De4822c5756988".
+Submitted contract for verification:
+	Verification Job ID: `fba671c8-60c7-42b1-8c06-7edc4ad30b2b`
+	URL: https://sourcify.dev/server/v2/verify/fba671c8-60c7-42b1-8c06-7edc4ad30b2b
+Contract successfully verified:
+Status: `exact_match`

@@ -6,16 +6,7 @@
     }
   },
   "lib/openzeppelin-contracts": {
-    "tag": {
-      "name": "v5.7.0",
-      "rev": "cab19933c33c2ad1d4c7a84864a3601dddfd16f3"
-    }
-  },
-  "lib/reactive-lib": {
-    "tag": {
-      "name": "v0.2.0",
-      "rev": "d664678a7d86204c9391af4cedfd5ae0b0b904e4"
-    }
+    "rev": "c64a1edb67b6e3f4a15cca8909c9482ad33a02b0"
   },
   "lib/reactive-lib-omni": {
     "tag": {

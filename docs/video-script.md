@@ -1,14 +1,17 @@
-# VoteMirror demo video script
+# Kịch bản demo VoteMirror v4
 
-The video is 1:55 long: generated screens with an English text-to-speech voice-over and captions. The terminal
-output and explorer pages in it are from the run listed under "Run shown in the demo video" in the README.
+Video đề xuất khoảng 2 phút 30 giây, dùng địa chỉ và bằng chứng của deployment v4 trong README.
 
-| Time | Screen | Voice-over |
-| --- | --- | --- |
-| 0:00 to 0:14 | Problem: three cards (most holders never vote, delegate everything, follow k of n) | "Most token holders never vote. Delegating hands one person all of your voting power, on every proposal. VoteMirror is the middle ground: your votes follow a group of voters you trust, and only when enough of them agree." |
-| 0:14 to 0:39 | Animated architecture diagram: Base Sepolia and Reactive Lasna | "It is two contracts. MirrorReactive lives on Reactive Network and listens to the Governor's VoteCast events on Base Sepolia, with one subscription per trusted voter. When k of n pick the same side, it asks Reactive for a callback. VoteMirror, on Base Sepolia, receives that callback and casts the vote. Your tokens never leave your wallet: you only delegate voting power." |
-| 0:39 to 1:06 | `./script/demo.sh for` output, then the react transaction on Reactscan and the callback on Blockscout | "Loop one, on live testnets. A proposal opens. Trusted voter one votes For. Nothing happens: one of three is not enough. Trusted voter two votes For. The reactive contract now counts two of three and requests the callback, and about a second later VoteMirror votes For with the owner's 1,000 tokens. The explorer shows the callback transaction, delivered by Reactive's callback proxy, and the vote it cast." |
-| 1:06 to 1:17 | `./script/demo.sh against` output, then the callback on Blockscout | "Loop two. Same flow, but this time the trusted voters vote Against, so VoteMirror votes Against. It copies the side they agree on, not a fixed answer." |
-| 1:17 to 1:33 | `./script/demo.sh skip` output, then the `Skipped` event on Blockscout and the owner controls | "Loop three. The owner wants to judge this proposal personally, and marks it skipped. Two trusted voters still agree, and the callback still arrives, but VoteMirror emits Skipped instead of voting. The owner can also pause everything, or cast the vote directly." |
-| 1:33 to 1:50 | `forge test` output, contract addresses, README contents | "46 Foundry tests cover the k-of-n rule, duplicate votes, the owner override, pause, and who is allowed to deliver the callback. Everything runs on testnets only. Addresses, transaction hashes and known limitations are in the README." |
-| 1:50 to 1:55 | Title and repository URL | "VoteMirror: stay a voter, without reading every proposal." |
+| Thời lượng | Nội dung |
+|---|---|
+| 0:00–0:20 | Người dùng chọn 3 voter, ngưỡng 2. Token ở ví người dùng, voting power được delegate cho VoteMirror. |
+| 0:20–0:55 | Mở proposal For đã kiểm chứng. Theo dõi hai phiếu nguồn, giao dịch Lasna và callback Base. Mở tổng phiếu để thấy thêm đúng 1.000 VMD của VoteMirror. |
+| 0:55–1:15 | Mở proposal Split và Skip. Giải thích chia phía chưa đạt ngưỡng, còn skip do owner quyết định. |
+| 1:15–1:50 | Mở bằng chứng sender: CRON tắt, Lasna thiếu phiếu; ví riêng của dịch vụ gửi reconcileProposal trực tiếp lên Base. Kiểm tra sender và sự kiện Mirrored trên explorer. |
+| 1:50–2:10 | Cho thấy Task Scheduler chạy, heartbeat caught_up và journal ghi receipt. Trình bày restart và cùng nonce khi gửi lại bằng kết quả test. |
+| 2:10–2:30 | Hiện 112 test Solidity, 12 test dịch vụ, các địa chỉ v4 và các giới hạn vận hành chính. |
+
+Bằng chứng nguồn nằm trong deployments/v4-verification.json và
+deployments/v4-sender-audit-service-2.json. Không dùng video hoặc giao dịch của các bản
+triển khai trước làm bằng chứng cho source hiện hành. Không tuyên bố độ trễ cố định nếu
+chưa đo đầy đủ từng vòng.

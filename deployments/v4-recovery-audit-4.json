@@ -1,0 +1,108 @@
+{
+  "lasnaFrom": "9108048",
+  "proposalId": "107173004047891152552213873326458140846085570798693392758650198215682801725166",
+  "initialSkipped": [
+    {
+      "address": "0x4a89e26ad48a2729d8d95b3b446dbc1083aef87a",
+      "topics": [
+        "0x918dc9d8b183a2ef15e89248f773d5319d4411c80cb7e0af59e4b4013b32b39d",
+        "0xecf1c54a0556ee902820f01c088f832d674cbbe8a728f09a05d880ab43f6eeee"
+      ],
+      "data": "0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000",
+      "blockHash": "0xf1fd7661193c2f25cd99276e388670c5270c14b1174e8623d12eb8c271552481",
+      "blockNumber": "0x3bf142e",
+      "blockTimestamp": "0x6b050b62",
+      "transactionHash": "0x8d7c74e9560c8f42426af1765ad93a443115ee083d84bf055132ba1029c5ee0e",
+      "transactionIndex": "0x2",
+      "logIndex": "0x0",
+      "removed": false
+    }
+  ],
+  "hasVoted": "true",
+  "steps": {
+    "aliceVote": {
+      "hash": "0xa3240e6f7065fc1cf4dd4a25b8d3f92ae8b8b490ad2dde8b346d2fa04795dff7",
+      "status": "confirmed",
+      "nonce": "14",
+      "sender": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6"
+    },
+    "pause": {
+      "hash": "0x2c231a378ebbb17560641c8235a98223d431f99a7709845b6ce72ac0e42a2550",
+      "status": "confirmed",
+      "nonce": "51",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b"
+    },
+    "enableRecovery": {
+      "hash": "0x94c09d84ed26c951e9d6ea3e37d9d52e3e140a02dafed3ba9abe9045506375dc",
+      "status": "confirmed",
+      "nonce": "13",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b"
+    },
+    "unpause": {
+      "hash": "0x9888a964404a72cb1e2e6666640469a2050ae11e69a2f0e108d00a459fb224f4",
+      "status": "confirmed",
+      "nonce": "52",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b"
+    },
+    "propose": {
+      "hash": "0xb6e8e6a0512ed69c6e6b0cf9cff84cac2ea488034479ecd172a91b39791bb017",
+      "status": "confirmed",
+      "nonce": "50",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b"
+    },
+    "bobVote": {
+      "hash": "0xd7e230b054696ee6c3dc92f15e39c6de7745497e56e6219d1334fe0deae7b96a",
+      "status": "confirmed",
+      "nonce": "14",
+      "sender": "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e"
+    }
+  },
+  "description": "VoteMirror v4 recovery audit-4",
+  "mode": "recovery",
+  "baseFrom": "62854037",
+  "proposalVotes": "0\n3000000000000000000000 [3e21]\n0",
+  "reactiveEvents": [
+    {
+      "address": "0x81a8a6edf8b2d773ff53dc1450de4822c5756988",
+      "topics": [
+        "0xe5eaeebbae9c16b97d11878fa1bc382428b0e25d21db43f94998b638dc2e6477",
+        "0xecf1c54a0556ee902820f01c088f832d674cbbe8a728f09a05d880ab43f6eeee"
+      ],
+      "data": "0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002",
+      "blockHash": "0x91777571a28c7499cb4fe0bc1ef51001aeb57043c94269ba34f823ef6a32670f",
+      "blockNumber": "0x8afa6b",
+      "blockTimestamp": "0x0",
+      "transactionHash": "0xd174479e903e6b0fe186504735e7c9ed9d3dc70d3145391cd3d7edddcfb5fce6",
+      "transactionIndex": "0x2",
+      "logIndex": "0x6",
+      "removed": false
+    }
+  ],
+  "status": "verified",
+  "support": 1,
+  "runId": "audit-4",
+  "confirmedSupport": "true\n1",
+  "mirrored": [
+    {
+      "address": "0x4a89e26ad48a2729d8d95b3b446dbc1083aef87a",
+      "topics": [
+        "0xb63c3d31ef3ef99ff3a14cca677be785da10f98086635ac9b167ab61f060572a",
+        "0xecf1c54a0556ee902820f01c088f832d674cbbe8a728f09a05d880ab43f6eeee"
+      ],
+      "data": "0x000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000003635c9adc5dea00000",
+      "blockHash": "0x13b17e5752357b4fdf67ce2e0bc74c692526dca7e41c09bc6c748c4df79f422d",
+      "blockNumber": "0x3bf1480",
+      "blockTimestamp": "0x6b050b73",
+      "transactionHash": "0xaa63e3403495ff3ef056bd1998244e4e95c46927196bcf4720ab3b8c007f93a6",
+      "transactionIndex": "0x2",
+      "logIndex": "0x1",
+      "removed": false
+    }
+  ],
+  "recoveryDeliveryVerified": {
+    "proxy": "0x476f44b11f5c942c58f4c8e3d0300e5710743585",
+    "transactionHash": "0xaa63e3403495ff3ef056bd1998244e4e95c46927196bcf4720ab3b8c007f93a6",
+    "batchSelector": "0x0458bc8b",
+    "recoveryScannedEvent": true
+  }
+}

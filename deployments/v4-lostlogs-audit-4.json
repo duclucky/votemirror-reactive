@@ -1,0 +1,91 @@
+{
+  "support": 1,
+  "runId": "audit-4",
+  "steps": {
+    "enableRecovery": {
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "status": "not-submitted-rpc-rejected",
+      "nonce": "15",
+      "note": "Recovery was already enabled; resume skipped redundant call"
+    },
+    "omitCarol": {
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "status": "confirmed",
+      "hash": "0x876c17bd8436a6edbffcbad7b2a2e6f79d972be805bd886d8002a53d2f76dc1f",
+      "nonce": "14"
+    },
+    "propose": {
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "status": "confirmed",
+      "hash": "0xa551f3a9cd7dba39d2e8db757784460e144bd805e475d9a91665c59800bebea9",
+      "nonce": "53"
+    },
+    "aliceVote": {
+      "nonce": "15",
+      "sender": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+      "hash": "0x6cc74994eb13ff3a27c5579ae7b6c2456883632ea7a1aa72699bf8445e7eb373",
+      "status": "confirmed"
+    },
+    "bobVote": {
+      "nonce": "1",
+      "sender": "0x6AA709775837be9E562fe2eA9dcC383Bd14a99e4",
+      "hash": "0x69cebd4ea9789955ff5ca07501a56ba7cd1b78e024f0a2b532af92e3518ae5e5",
+      "status": "confirmed"
+    },
+    "restoreCarolSource": {
+      "nonce": "15",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "hash": "0x88606eb9081c2455991120f39e78ffed95c622f81802dfa90c0255f745e6c0eb",
+      "status": "confirmed"
+    },
+    "alignRemoveCarolBase": {
+      "nonce": "54",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "hash": "0x353702ae441dc7aa8c14d1f16145679619a5c9fdb0e7cc8f5b32d3d195ea84f5",
+      "status": "confirmed"
+    },
+    "alignAddCarolBase": {
+      "nonce": "55",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "hash": "0x9092892a87a2dfcaae94a8688bdc4bc36132bb753af3d8db8fc9c65d1819120b",
+      "status": "confirmed"
+    }
+  },
+  "baseFrom": "62854388",
+  "mode": "lostlogs",
+  "proposalId": "31038646742400074923263549134799668963865716722756520527405655965072452558564",
+  "description": "VoteMirror v4 lostlogs audit-4",
+  "lasnaFrom": "9108114",
+  "mirrored": [
+    {
+      "address": "0x4a89e26ad48a2729d8d95b3b446dbc1083aef87a",
+      "topics": [
+        "0xb63c3d31ef3ef99ff3a14cca677be785da10f98086635ac9b167ab61f060572a",
+        "0x449f40620f2aa6504c0efc69c64c288528141227f9a88308d8cbf70bcd2d1ee4"
+      ],
+      "data": "0x000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000003635c9adc5dea00000",
+      "blockHash": "0x81c62cb8e48b3fef9c3ae50858ca61af4556c3f4d29087616eae837477bbaf44",
+      "blockNumber": "0x3bf1840",
+      "blockTimestamp": "0x6b050c33",
+      "transactionHash": "0x4ba78c653742fc3b28d72598c1a05d9ecc5c1fa3b9e0a247e60c921d13a6d768",
+      "transactionIndex": "0x2",
+      "logIndex": "0x1",
+      "removed": false
+    }
+  ],
+  "sourceAgreement": "1",
+  "sourceCarolVote": "0",
+  "restoredBasePolicy": "0xddd91688263700a8405541722e6544a1e7904c3c08dcb04f6ddc292a3cbb7835",
+  "restoredSourcePolicy": "0xddd91688263700a8405541722e6544a1e7904c3c08dcb04f6ddc292a3cbb7835",
+  "hasVoted": "true",
+  "proposalVotes": "0\n3000000000000000000000 [3e21]\n0",
+  "confirmedSupport": "false\n0",
+  "reactiveEvents": [],
+  "status": "verified",
+  "recoveryDeliveryVerified": {
+    "proxy": "0x476f44b11f5c942c58f4c8e3d0300e5710743585",
+    "transactionHash": "0x4ba78c653742fc3b28d72598c1a05d9ecc5c1fa3b9e0a247e60c921d13a6d768",
+    "batchSelector": "0x0458bc8b",
+    "recoveryScannedEvent": true
+  }
+}

@@ -10,7 +10,7 @@ import { AbstractReactive } from "@reactive/src/base/AbstractReactive.sol";
 /// @title MirrorReactive
 /// @notice Lives on Reactive Network. Watches the `VoteCast` and `VoteCastWithParams` events of one Governor
 ///         on an origin chain, subscribed per trusted voter, and asks the owner's VoteMirror to cast the same vote
-///         once `threshold` trusted voters agree on a choice. A proposal is requested once by `react()`;
+///         once `threshold` trusted voters agree on a choice. A proposal is requested once per choice and policy by `react()`;
 ///         the owner can ask again with `retryMirror()` if that callback was skipped or lost.
 contract MirrorReactive is AbstractReactive, Ownable2Step {
     /// @dev keccak256("VoteCast(address,uint256,uint8,uint256,string)"), the OpenZeppelin Governor event.
@@ -38,6 +38,7 @@ contract MirrorReactive is AbstractReactive, Ownable2Step {
     /// @notice Number of trusted voters that must agree before the vote is mirrored.
     uint256 public threshold;
 
+    uint256 public policyVersion = 1;
     address[] private _trusted;
     mapping(address voter => bool) public isTrusted;
 
@@ -49,9 +50,12 @@ contract MirrorReactive is AbstractReactive, Ownable2Step {
     mapping(uint256 proposalId => mapping(address voter => mapping(uint256 epoch => uint8))) private _recordedVote;
 
     /// @dev Choice requested for a proposal, stored as `support + 1` (0 means nothing was requested yet).
-    ///      Set by the first request and never changed, so a retry cannot ask for another choice.
-    mapping(uint256 proposalId => uint8) private _requested;
+    ///      Set by the first successful request within each policy revision.
+    mapping(bytes32 policy => mapping(uint256 proposalId => uint8)) private _requested;
+    /// @dev Bit 0/1/2 records a successful request for Against/For/Abstain under this policy.
+    mapping(bytes32 policy => mapping(uint256 proposalId => uint8)) public requestedChoices;
 
+    event CallbackRequestFailed(uint256 indexed proposalId, uint8 support);
     event MirrorSet(address indexed mirror);
     event ThresholdSet(uint256 threshold);
     event TrustedVoterAdded(address indexed voter);
@@ -67,7 +71,6 @@ contract MirrorReactive is AbstractReactive, Ownable2Step {
     error ZeroAddress();
     error MirrorNotSet();
     error AgreementNotReached(uint256 proposalId, uint8 support, uint256 agreeing, uint256 threshold);
-    error OtherChoiceRequested(uint256 proposalId, uint8 requestedSupport);
     error RenounceDisabled();
 
     /// @param originChainId_ Chain of the Governor (84532 for Base Sepolia).
@@ -88,10 +91,69 @@ contract MirrorReactive is AbstractReactive, Ownable2Step {
         _setThreshold(threshold_);
     }
 
+    address public constant CRON_EMITTER = 0x0000000000000000000000000000000000fffFfF;
+    uint256 public constant CRON_TOPIC = 0x04463f7c1651e6b9774d7f85c85bb94654e3c46ca79b0c16fb16d4183307b687;
+    uint256 public constant RECOVERY_INTERVAL = 60;
+    uint256 public constant MAX_RECOVERY_REQUESTS_PER_DAY = 1440;
+    bool public recoveryEnabled;
+    uint256 public lastRecoveryRequestAt;
+    uint256 public recoveryDay;
+    uint256 public recoveryRequestsToday;
+    event RecoveryEnabled(bool enabled);
+    event RecoveryRequested();
+    event RecoveryRequestFailed();
+
+    function setRecoveryEnabled(bool enabled_) external onlyOwner {
+        if (enabled_ == recoveryEnabled) return;
+        recoveryEnabled = enabled_;
+        if (enabled_) {
+            SYSTEM.subscribe(block.chainid, CRON_EMITTER, CRON_TOPIC, REACTIVE_IGNORE, REACTIVE_IGNORE, REACTIVE_IGNORE);
+        } else {
+            SYSTEM.unsubscribe(
+                block.chainid, CRON_EMITTER, CRON_TOPIC, REACTIVE_IGNORE, REACTIVE_IGNORE, REACTIVE_IGNORE
+            );
+        }
+        emit RecoveryEnabled(enabled_);
+    }
+
+    function _requestRecovery() internal {
+        if (!recoveryEnabled || mirror == address(0) || block.timestamp < lastRecoveryRequestAt + RECOVERY_INTERVAL) {
+            return;
+        }
+        uint256 day = block.timestamp / 1 days;
+        if (recoveryDay != day) {
+            recoveryDay = day;
+            recoveryRequestsToday = 0;
+        }
+        if (recoveryRequestsToday >= MAX_RECOVERY_REQUESTS_PER_DAY) return;
+        lastRecoveryRequestAt = block.timestamp;
+        ++recoveryRequestsToday;
+        try SYSTEM.requestCallbackV_1_0(
+            ISystemContract.CallbackConfiguration_V_1_0({
+                chainId: ORIGIN_CHAIN_ID,
+                recipient: mirror,
+                gasLimit: 1_200_000,
+                payload: abi.encodeWithSignature("reconcileBatch(address)", address(0))
+            })
+        ) {
+            emit RecoveryRequested();
+        } catch {
+            // Keep cooldown/budget consumed on failure to bound repeated attempts during an outage.
+            emit RecoveryRequestFailed();
+        }
+    }
+
     // ------------------------------------------------------------------ reactive entry point
 
     /// @inheritdoc IReactive
     function react(LogRecord calldata log_) external onlySystem {
+        if (
+            log_.chainId == block.chainid && log_.contractAddress == CRON_EMITTER && log_.topic0 == CRON_TOPIC
+                && log_.opCode == 2
+        ) {
+            _requestRecovery();
+            return;
+        }
         // Anything unexpected falls through: a revert here is still billed.
         if (
             (log_.topic0 != VOTE_CAST_TOPIC_0 && log_.topic0 != VOTE_CAST_WITH_PARAMS_TOPIC_0) || log_.opCode != 2
@@ -111,11 +173,14 @@ contract MirrorReactive is AbstractReactive, Ownable2Step {
         uint256 agreeing = agreement(proposalId, support);
         emit VoteObserved(proposalId, voter, support, agreeing);
 
-        if (agreeing < threshold || _requested[proposalId] != 0 || mirror == address(0)) return;
+        if (
+            agreeing < threshold || (requestedChoices[policyHash()][proposalId] & uint8(1 << support)) != 0
+                || mirror == address(0)
+        ) return;
 
-        _requested[proposalId] = support + 1;
-        emit MirrorRequested(proposalId, support, agreeing);
-        _requestCallback(proposalId, support);
+        if (_requestCallback(proposalId, support)) {
+            emit MirrorRequested(proposalId, support, agreeing);
+        }
     }
 
     // ------------------------------------------------------------------ views
@@ -130,14 +195,14 @@ contract MirrorReactive is AbstractReactive, Ownable2Step {
         }
     }
 
-    /// @notice True once a callback was requested for the proposal.
+    /// @notice True once a callback was requested for the proposal under the current policy.
     function mirrorRequested(uint256 proposalId_) external view returns (bool) {
-        return _requested[proposalId_] != 0;
+        return _requested[policyHash()][proposalId_] != 0;
     }
 
-    /// @notice Choice that was requested for the proposal; meaningful only if `mirrorRequested` is true.
+    /// @notice First requested choice (diagnostic only). Base determines the canonical winning choice.
     function requestedSupport(uint256 proposalId_) external view returns (uint8) {
-        uint8 requested = _requested[proposalId_];
+        uint8 requested = _requested[policyHash()][proposalId_];
         return requested == 0 ? 0 : requested - 1;
     }
 
@@ -162,27 +227,26 @@ contract MirrorReactive is AbstractReactive, Ownable2Step {
 
     function setThreshold(uint256 threshold_) external onlyOwner {
         _setThreshold(threshold_);
+        ++policyVersion;
     }
 
     function addTrusted(address voter_) external onlyOwner {
         _addTrusted(voter_);
+        ++policyVersion;
     }
 
     /// @notice Asks VoteMirror again to cast `support_` on `proposalId_`, for a proposal whose callback was
     ///         skipped (paused, skipped by the owner), lost on the way, or never requested because the
     ///         threshold or the mirror was set after the trusted voters had voted.
-    /// @dev Only what the trusted voters agree on right now can be requested, and only the choice of the
-    ///      first request: the first agreement wins here as it does in `react()`. VoteMirror still applies
-    ///      its own checks, so a proposal it has already voted on is not voted twice.
+    /// @dev Any currently agreed choice can be retried. Base independently checks the first agreement
+    ///      in Governor receipt order; relay arrival order must never lock out the canonical choice.
     function retryMirror(uint256 proposalId_, uint8 support_) external onlyOwner {
         if (mirror == address(0)) revert MirrorNotSet();
         uint256 agreeing = agreement(proposalId_, support_);
         if (agreeing < threshold) revert AgreementNotReached(proposalId_, support_, agreeing, threshold);
-        uint8 requested = _requested[proposalId_];
-        if (requested == 0) _requested[proposalId_] = support_ + 1;
-        else if (requested != support_ + 1) revert OtherChoiceRequested(proposalId_, requested - 1);
-        emit MirrorRetried(proposalId_, support_, agreeing);
-        _requestCallback(proposalId_, support_);
+        if (_requestCallback(proposalId_, support_)) {
+            emit MirrorRetried(proposalId_, support_, agreeing);
+        }
     }
 
     /// @notice Stops following a voter. Their recorded votes no longer count towards agreement, also if the
@@ -199,6 +263,7 @@ contract MirrorReactive is AbstractReactive, Ownable2Step {
             }
         }
         isTrusted[voter_] = false;
+        ++policyVersion;
         ++trustEpoch[voter_];
         uint256 topic1 = uint256(uint160(voter_));
         SYSTEM.unsubscribe(ORIGIN_CHAIN_ID, GOVERNOR, VOTE_CAST_TOPIC_0, topic1, REACTIVE_IGNORE, REACTIVE_IGNORE);
@@ -225,18 +290,35 @@ contract MirrorReactive is AbstractReactive, Ownable2Step {
 
     // ------------------------------------------------------------------ internals
 
-    function _requestCallback(uint256 proposalId_, uint8 support_) internal {
-        SYSTEM.requestCallbackV_1_0(
+    function policyHash() public view returns (bytes32) {
+        return keccak256(abi.encode(ORIGIN_CHAIN_ID, GOVERNOR, policyVersion, threshold, _trusted));
+    }
+
+    function _requestCallback(uint256 proposalId_, uint8 support_) internal returns (bool) {
+        bytes32 policy = policyHash();
+        uint8 previousChoices = requestedChoices[policy][proposalId_];
+        uint8 previousFirst = _requested[policy][proposalId_];
+        // Reserve before calling the system, so nested delivery cannot request the same side again.
+        requestedChoices[policy][proposalId_] = previousChoices | uint8(1 << support_);
+        if (previousFirst == 0) _requested[policy][proposalId_] = support_ + 1;
+        try SYSTEM.requestCallbackV_1_0(
             ISystemContract.CallbackConfiguration_V_1_0({
                 chainId: ORIGIN_CHAIN_ID,
                 recipient: mirror,
                 gasLimit: CALLBACK_GAS_LIMIT,
                 // The first argument is overwritten by the network with this contract's address.
                 payload: abi.encodeWithSignature(
-                    "castMirrored(address,uint256,uint8)", address(0), proposalId_, support_
+                    "castMirrored(address,uint256,uint8,bytes32)", address(0), proposalId_, support_, policyHash()
                 )
             })
-        );
+        ) {
+            return true;
+        } catch {
+            requestedChoices[policy][proposalId_] = previousChoices;
+            _requested[policy][proposalId_] = previousFirst;
+            emit CallbackRequestFailed(proposalId_, support_);
+            return false;
+        }
     }
 
     function _addTrusted(address voter_) internal {

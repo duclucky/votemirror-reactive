@@ -1,0 +1,57 @@
+{
+  "confirmedSupport": "false\n0",
+  "lasnaFrom": "9108562",
+  "runId": "audit-4",
+  "status": "verified",
+  "reactiveEvents": [],
+  "steps": {
+    "bobVote": {
+      "hash": "0x881f3fd7ccd5dda9d0c6c528f62a2f4b55c9aa0b760416f69b274c28938329c9",
+      "status": "confirmed",
+      "sender": "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e",
+      "nonce": "20"
+    },
+    "aliceVote": {
+      "hash": "0xc7fc586a73be3056ce7da76b89f164a0ab32586f98a28a5a9d73ef198eabfcec",
+      "status": "confirmed",
+      "sender": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+      "nonce": "21"
+    },
+    "reconcileSplit": {
+      "hash": "0xaee6b6cbf32a15914975a04782b6564a323735bf63f5c2c4df131d4dd96fe61a",
+      "status": "confirmed",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "nonce": "68"
+    },
+    "propose": {
+      "hash": "0x1b6d54f3a8cca2e1d4f25535507f460b5bd43733b6866289523e12ef804cb531",
+      "status": "confirmed",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "nonce": "67"
+    }
+  },
+  "mode": "split",
+  "support": 1,
+  "description": "VoteMirror v4 split audit-4",
+  "proposalVotes": "1000000000000000000000 [1e21]\n1000000000000000000000 [1e21]\n0",
+  "baseFrom": "62856761",
+  "proposalId": "55402208725363585135812277407999216366708771299491869408367828081175280648481",
+  "hasVoted": "false",
+  "reconcileEvidence": [
+    {
+      "address": "0x4a89e26ad48a2729d8d95b3b446dbc1083aef87a",
+      "topics": [
+        "0x918dc9d8b183a2ef15e89248f773d5319d4411c80cb7e0af59e4b4013b32b39d",
+        "0x7a7c89f5a86a2007314ecf3e73cb7f18408d7fcc4f0f58fdbe36c8c40e268121"
+      ],
+      "data": "0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000005",
+      "blockHash": "0x5fcee1121ba784e706cdf6b910759c645c46640d957704a33fea87207635fb2c",
+      "blockNumber": "0x3bf1edc",
+      "blockTimestamp": "0x6b050d85",
+      "transactionHash": "0xaee6b6cbf32a15914975a04782b6564a323735bf63f5c2c4df131d4dd96fe61a",
+      "transactionIndex": "0x3",
+      "logIndex": "0x1",
+      "removed": false
+    }
+  ]
+}

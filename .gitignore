@@ -3,4 +3,14 @@ cache/
 broadcast/
 .env
 .env.*
-!.env.example
+
+__pycache__/
+
+# Local verification output and sender runtime
+/build-sizes*.txt
+/coverage-summary*.txt
+/verification-tests*.txt
+/slither-report*.json
+/slither-summary*.txt
+/service-test-results.txt
+/service/*.local.json

@@ -1,0 +1,35 @@
+{
+  "health": {
+    "timestamp": 1795504809,
+    "pid": 14412,
+    "status": "caught_up",
+    "pending": false,
+    "confirmed_transactions": 2
+  },
+  "restart": {
+    "oldChildPid": 3848,
+    "test": "scheduled-task-child-restart",
+    "stoppedUtc": "2026-11-24T07:19:30.3118432Z"
+  },
+  "receipts": [
+    {
+      "hash": "0x9a0b761dcf57d405d9db5144f6c63c59d73a37332e8c3ccd5d9fc4fa19ee03f2",
+      "proposal": "17573512896365305591615361293993545244469418348399413492077797557470241624959",
+      "cost": 2073096000000,
+      "status": "0x1",
+      "block": "0x3bf9405",
+      "vote_confirmed": true
+    },
+    {
+      "hash": "0xf432d30bfdfeb16d01917383d8e0ba3ee4264a915dcd58517f8767214fcdebe7",
+      "proposal": "50509171866234483266093507873869752914407808510153577807255459636877997161633",
+      "cost": 2073096000094,
+      "execution_cost": 2073096000000,
+      "l1_fee": 94,
+      "status": "0x1",
+      "block": "0x3bffbcf",
+      "vote_confirmed": true
+    }
+  ],
+  "pending": false
+}

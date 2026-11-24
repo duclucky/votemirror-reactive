@@ -1,0 +1,26 @@
+[
+  {
+    "contract": "DemoToken",
+    "address": "0x1c1000C7d8Ee05b97F5FF7bfCbA7c04aC9e58515",
+    "creationAndConstructorExact": true,
+    "runtimeMatches": true
+  },
+  {
+    "contract": "DemoGovernor",
+    "address": "0x04bB46C2E47F640Dd94bCfC0ea2aC9191364fafb",
+    "creationAndConstructorExact": true,
+    "runtimeMatches": true
+  },
+  {
+    "contract": "MirrorReactive",
+    "address": "0x81A8a6edf8B2d773FF53dc1450De4822c5756988",
+    "creationAndConstructorExact": true,
+    "runtimeMatches": true
+  },
+  {
+    "contract": "VoteMirror",
+    "address": "0x4a89e26aD48A2729d8D95B3b446DBC1083AEF87a",
+    "creationAndConstructorExact": true,
+    "runtimeMatches": true
+  }
+]

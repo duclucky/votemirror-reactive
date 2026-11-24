@@ -1,0 +1,106 @@
+[
+  {
+    "mode": "for",
+    "passed": true,
+    "proposalId": "49757969774088266091400892823129886353044308034007435573215089695692240129519",
+    "baseResultTx": "0x05dc9053e458802e4b06d5e39d0e19673963ba6cba6f7bd23039520cb56ac749",
+    "votes": [
+      "0",
+      "3000000000000000000000",
+      "0"
+    ],
+    "hasVoted": "true",
+    "recoveryViaCron": false
+  },
+  {
+    "mode": "against",
+    "passed": true,
+    "proposalId": "75423870452188056903594644903068445374877274576832846520166735298766422046191",
+    "baseResultTx": "0x81c629bbe6d575d9aaec7d778aa26af7a9fa8b9ed7f1c6aa53db6a76975c8d17",
+    "votes": [
+      "3000000000000000000000",
+      "0",
+      "0"
+    ],
+    "hasVoted": "true",
+    "recoveryViaCron": false
+  },
+  {
+    "mode": "skip",
+    "passed": true,
+    "proposalId": "47184644913734358607312962148630220016735977445603286002944481236450734262617",
+    "baseResultTx": "0x62a87f66557e102943257feafd8df5369c0d1e1167aecf155ae97cec8f18e7e0",
+    "votes": [
+      "0",
+      "2000000000000000000000",
+      "0"
+    ],
+    "hasVoted": "false",
+    "recoveryViaCron": false
+  },
+  {
+    "mode": "retry",
+    "passed": true,
+    "proposalId": "112688493777849622430263842608513889273411563616005158057233641222946667069081",
+    "baseResultTx": "0x3f58f0058c3d5219f10a4c0b88e036962b9f734efad01683cc98e1eaf342c1be",
+    "votes": [
+      "0",
+      "3000000000000000000000",
+      "0"
+    ],
+    "hasVoted": "true",
+    "recoveryViaCron": false
+  },
+  {
+    "mode": "reconcile",
+    "passed": true,
+    "proposalId": "96305536181626308064673475820244462152304350566681521228793544220774049116332",
+    "baseResultTx": "0x1c0fe996ca89359c14b67b219da0528cbb31f78b3ae4f46b016d79d54eef5cde",
+    "votes": [
+      "0",
+      "3000000000000000000000",
+      "0"
+    ],
+    "hasVoted": "true",
+    "recoveryViaCron": false
+  },
+  {
+    "mode": "split",
+    "passed": true,
+    "proposalId": "55402208725363585135812277407999216366708771299491869408367828081175280648481",
+    "baseResultTx": "0xaee6b6cbf32a15914975a04782b6564a323735bf63f5c2c4df131d4dd96fe61a",
+    "votes": [
+      "1000000000000000000000",
+      "1000000000000000000000",
+      "0"
+    ],
+    "hasVoted": "false",
+    "recoveryViaCron": false
+  },
+  {
+    "mode": "recovery",
+    "passed": true,
+    "proposalId": "107173004047891152552213873326458140846085570798693392758650198215682801725166",
+    "baseResultTx": "0xaa63e3403495ff3ef056bd1998244e4e95c46927196bcf4720ab3b8c007f93a6",
+    "votes": [
+      "0",
+      "3000000000000000000000",
+      "0"
+    ],
+    "hasVoted": "true",
+    "recoveryViaCron": true
+  },
+  {
+    "mode": "lostlogs",
+    "passed": true,
+    "proposalId": "31038646742400074923263549134799668963865716722756520527405655965072452558564",
+    "baseResultTx": "0x4ba78c653742fc3b28d72598c1a05d9ecc5c1fa3b9e0a247e60c921d13a6d768",
+    "votes": [
+      "0",
+      "3000000000000000000000",
+      "0"
+    ],
+    "hasVoted": "true",
+    "recoveryViaCron": true
+  }
+]

@@ -1,0 +1,98 @@
+{
+  "mode": "sender",
+  "description": "VoteMirror v4 sender audit-service-2",
+  "proposalId": "50509171866234483266093507873869752914407808510153577807255459636877997161633",
+  "support": 1,
+  "mirrored": [
+    {
+      "address": "0x4a89e26ad48a2729d8d95b3b446dbc1083aef87a",
+      "topics": [
+        "0xb63c3d31ef3ef99ff3a14cca677be785da10f98086635ac9b167ab61f060572a",
+        "0x6fab2d9d860dee6e801bd9c01ab4c2c9ce4106896520b62765ec2cacb6acbca1"
+      ],
+      "data": "0x000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000003635c9adc5dea00000",
+      "blockHash": "0x89f319a1bcde30c8dde59b6181cec2d863832b437975bac720fb91092f96c042",
+      "blockNumber": "0x3bffbcf",
+      "blockTimestamp": "0x6b0539b6",
+      "transactionHash": "0xf432d30bfdfeb16d01917383d8e0ba3ee4264a915dcd58517f8767214fcdebe7",
+      "transactionIndex": "0x2",
+      "logIndex": "0x1",
+      "removed": false
+    }
+  ],
+  "steps": {
+    "omitCarol": {
+      "hash": "0xfdeedd1ed7b2ea57aabf91dedfaf0bc730bf265f373f765ff33c1a71b8b08100",
+      "status": "confirmed",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "nonce": "22"
+    },
+    "aliceVote": {
+      "hash": "0x793a639c68912e5c3aaa0d88abe1d179c1d2d089f62956f7678b5fb0b912637f",
+      "status": "confirmed",
+      "sender": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+      "nonce": "23"
+    },
+    "bobVote": {
+      "hash": "0xddf80b1eacef6467f59803b00b2e8544ae61cc7a9394b95f95865d314adef470",
+      "status": "confirmed",
+      "sender": "0x6AA709775837be9E562fe2eA9dcC383Bd14a99e4",
+      "nonce": "3"
+    },
+    "disableRecoveryForSenderProof": {
+      "hash": "0x22ff526437fc413eff49cd0265f1a7d7023116fa0fdc31740d9afb971373f92a",
+      "status": "confirmed",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "nonce": "23"
+    },
+    "propose": {
+      "hash": "0x2b7fe842a87e43abba6365eff5ee58aee6fe62b89d2172b4e680e926c87a9ecf",
+      "status": "confirmed",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "nonce": "74"
+    },
+    "restoreCarolSource": {
+      "status": "confirmed",
+      "nonce": "24",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "hash": "0x2f623abf35ad677b95916781dc303cefe6eaa0261ef6a48316421fe3897a2b24"
+    },
+    "alignRemoveCarolBase": {
+      "status": "confirmed",
+      "nonce": "75",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "hash": "0x0438454320980d94c99ee0265ae4dfca96dedbd27e993625532c6435752ed506"
+    },
+    "alignAddCarolBase": {
+      "status": "confirmed",
+      "nonce": "76",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "hash": "0x5bd464a147292493eed3558eaf954587aab9f247c66f3b6b494e4ddbfb14d6e8"
+    },
+    "restoreRecoveryAfterSenderProof": {
+      "status": "confirmed",
+      "nonce": "25",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "hash": "0xa8583a2f3fe3a7f00e2768ef15cf867d8e75e06f2993e646d0a54c1161afbbc9"
+    }
+  },
+  "baseFrom": "62913224",
+  "lasnaFrom": "9119224",
+  "runId": "audit-service-2",
+  "sourceAgreement": "0",
+  "sourceCarolVote": "0",
+  "restoredBasePolicy": "0xbafee2b90147efd6ff3569bb9b2b3d570b54ef12b66b3a6fcfe9a670d28cca7b",
+  "restoredSourcePolicy": "0xbafee2b90147efd6ff3569bb9b2b3d570b54ef12b66b3a6fcfe9a670d28cca7b",
+  "hasVoted": "true",
+  "proposalVotes": "0\n3000000000000000000000 [3e21]\n0",
+  "confirmedSupport": "false\n0",
+  "reactiveEvents": [],
+  "status": "verified",
+  "serviceSenderProof": {
+    "transactionHash": "0xf432d30bfdfeb16d01917383d8e0ba3ee4264a915dcd58517f8767214fcdebe7",
+    "sender": "0x90788662f1b5332979f0049fdea519fc66d1bdae",
+    "recipient": "0x4a89e26ad48a2729d8d95b3b446dbc1083aef87a",
+    "l1FeeIncluded": true,
+    "receiptVoteConfirmed": true
+  }
+}

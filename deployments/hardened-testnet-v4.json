@@ -1,0 +1,89 @@
+{
+  "demoToken": "0x1c1000C7d8Ee05b97F5FF7bfCbA7c04aC9e58515",
+  "trustedVoters": [
+    "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+    "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e",
+    "0x6AA709775837be9E562fe2eA9dcC383Bd14a99e4"
+  ],
+  "contractVersion": 4,
+  "lasnaChainId": 5318007,
+  "baseSepoliaChainId": 84532,
+  "callbackProxy": "0x476F44b11F5C942c58f4c8E3d0300E5710743585",
+  "steps": {
+    "demoToken": {
+      "hash": "0x43eba797888ab2e56ddd1fa3e4325109b83e0600dc78662f2c4653308bcaa8d7",
+      "status": "deployed"
+    },
+    "ownerTokens": {
+      "status": "confirmed",
+      "hash": "0x6de80077869d831f8d4e9021e8a4709e7a7fbe5030ab68d5c66db6dffebc5900"
+    },
+    "alice-gas": {
+      "status": "confirmed",
+      "hash": "0x2973498568801ff79f782d28956c0533777d7a913da24d774c727515a114838d"
+    },
+    "alice-tokens": {
+      "status": "confirmed",
+      "hash": "0x313d49fbb5710f99e27023cc95150201ec3fe14cccf212ddc9d1cd5490b248d4"
+    },
+    "alice-delegate": {
+      "status": "confirmed",
+      "hash": "0x3a7cd1063b4b121f67befa25a8aa27eed6b9259f7cff61d909640e8c2420c90b"
+    },
+    "bob-gas": {
+      "status": "confirmed",
+      "hash": "0x55e6e49cc12a6e5cabf7ccd3d563b06f466619fed36b71fe15cd4b1331e10237"
+    },
+    "bob-tokens": {
+      "status": "confirmed",
+      "hash": "0x33dd2b3ec1d5a5df247e538229686ad659e6130c5f000a279dde93636a7dc77c"
+    },
+    "bob-delegate": {
+      "status": "confirmed",
+      "hash": "0x2c0124d612fbfe205cbdc5c0d1fcc1d70e643565a6dcc636cf9500f1d62e9ab2"
+    },
+    "carol-gas": {
+      "status": "confirmed",
+      "hash": "0xce457d7cb762e1874f2ef326f82e261b0134c8a8a1ff78dd5f91135e87b1e924"
+    },
+    "carol-tokens": {
+      "status": "confirmed",
+      "hash": "0x59b0761904409865a67e169a436ccb04bc65db57fc37842569153b39411dbb16"
+    },
+    "carol-delegate": {
+      "status": "confirmed",
+      "hash": "0x8eb71dc323bf892babd1a63ecdd34a23de6fab932c70cad28285f297a436783c"
+    },
+    "demoGovernor": {
+      "status": "deployed",
+      "hash": "0xf1b13ade08d6e31b02c95daa79cee88bb873373e746d3bf42f43c1818bda558b"
+    },
+    "mirrorReactive": {
+      "status": "deployed",
+      "hash": "0x73185a910880338eb773d0dbff9b97bdaae7fab2fc20d4ac2c0428ce201f32b8"
+    },
+    "voteMirror": {
+      "status": "deployed",
+      "hash": "0xbb3eead573cab70f2e5aeefbc1cc3312bbb71ed81a93c07389504e1a057f351f"
+    },
+    "setMirror": {
+      "status": "confirmed",
+      "hash": "0x1861f630461a026ad19b075a72bb7ad926f40aaa41a3be91fa2bc6696e54482c"
+    },
+    "ownerDelegate": {
+      "status": "confirmed",
+      "hash": "0xf59c8d83ba7390c00ef2ade48a4cfd777d5b83227998ecc15669ef87b656130e"
+    }
+  },
+  "owner": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+  "threshold": 2,
+  "demoGovernor": "0x04bB46C2E47F640Dd94bCfC0ea2aC9191364fafb",
+  "revision": 2,
+  "mirrorReactive": "0x81A8a6edf8B2d773FF53dc1450De4822c5756988",
+  "voteMirror": "0x4a89e26aD48A2729d8D95B3b446DBC1083AEF87a",
+  "policyHash": "0xbafee2b90147efd6ff3569bb9b2b3d570b54ef12b66b3a6fcfe9a670d28cca7b",
+  "status": "deployed-and-live-verified",
+  "verificationReport": "deployments/v4-verification.json",
+  "recoveryEnabled": false,
+  "relayerService": "deployments/relayer-service.json"
+}

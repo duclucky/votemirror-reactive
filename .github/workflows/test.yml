@@ -15,3 +15,4 @@ jobs:
       - uses: foundry-rs/foundry-toolchain@dba66c27052e63476d886f22216e119ba7e615bf # v1
       - run: forge fmt --check
       - run: forge test
+      - run: python3 -m unittest discover -s service -p test_relayer.py -v

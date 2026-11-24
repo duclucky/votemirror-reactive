@@ -9,6 +9,8 @@ import { IReactive } from "@reactive/src/interfaces/IReactive.sol";
 import { ISystemContract } from "@reactive/src/interfaces/ISystemContract.sol";
 import { AbstractPayer } from "@reactive/src/base/AbstractPayer.sol";
 import { AbstractCallback } from "@reactive/src/base/AbstractCallback.sol";
+import { IRecoveryGovernor } from "../src/interfaces/IRecoveryGovernor.sol";
+import { IVoteReceipts } from "../src/interfaces/IVoteReceipts.sol";
 import { VoteMirror } from "../src/VoteMirror.sol";
 import { MirrorReactive } from "../src/MirrorReactive.sol";
 import { DemoToken } from "../src/demo/DemoToken.sol";
@@ -89,7 +91,9 @@ contract VoteMirrorTest is Test {
         proxy.deliver(
             address(reactive),
             address(mirror),
-            abi.encodeWithSignature("castMirrored(address,uint256,uint8)", address(0), proposalId_, support_)
+            abi.encodeWithSignature(
+                "castMirrored(address,uint256,uint8,bytes32)", address(0), proposalId_, support_, reactive.policyHash()
+            )
         );
     }
 
@@ -311,6 +315,446 @@ contract VoteMirrorTest is Test {
 
     /// @dev A callback that MirrorReactive never asked for, delivered by the relayer through the real proxy
     ///      with the right first argument, does not make VoteMirror vote while the trusted voters are silent.
+    function test_StalePolicyRejectedAfterRoundTripThresholdChange() public {
+        uint256 id = _propose("stale");
+        _trustedVotes(id, FOR);
+        bytes32 oldPolicy = reactive.policyHash();
+        vm.startPrank(user);
+        mirror.setThreshold(1);
+        mirror.setThreshold(2);
+        vm.stopPrank();
+        assertNotEq(mirror.policyHash(), oldPolicy);
+        bool delivered = proxy.deliver(
+            address(reactive),
+            address(mirror),
+            abi.encodeCall(VoteMirror.castMirrored, (address(0), id, FOR, oldPolicy))
+        );
+        assertTrue(delivered);
+        assertFalse(governor.hasVoted(id, address(mirror)));
+        reactive.setThreshold(1);
+        reactive.setThreshold(2);
+        assertEq(mirror.policyHash(), reactive.policyHash());
+        _deliver(id, FOR);
+        assertTrue(governor.hasVoted(id, address(mirror)));
+    }
+
+    function test_EqualRevisionDifferentListIsRejected() public {
+        uint256 id = _propose("different policy");
+        vm.prank(user);
+        mirror.addTrusted(stranger);
+        reactive.addTrusted(makeAddr("other"));
+        assertEq(mirror.policyVersion(), reactive.policyVersion());
+        assertNotEq(mirror.policyHash(), reactive.policyHash());
+        _trustedVotes(id, FOR);
+        _deliver(id, FOR);
+        assertFalse(governor.hasVoted(id, address(mirror)));
+    }
+
+    function test_ReconcileWithoutAnyReactiveLogs() public {
+        uint256 id = _propose("lost logs");
+        _trustedVotes(id, FOR);
+        assertEq(reactive.agreement(id, FOR), 0);
+        vm.prank(user);
+        mirror.reconcileVote(id, FOR);
+        assertTrue(governor.hasVoted(id, address(mirror)));
+        vm.prank(user);
+        mirror.reconcileVote(id, FOR);
+        (, uint256 votes,) = governor.proposalVotes(id);
+        assertEq(votes, 2000e18 + token.getVotes(address(mirror)));
+    }
+
+    function test_ReconcileRespectsOwnerControlsAndDeadline() public {
+        uint256 id = _propose("recovery controls");
+        _trustedVotes(id, FOR);
+        vm.startPrank(user);
+        mirror.setPaused(true);
+        mirror.reconcileVote(id, FOR);
+        assertFalse(governor.hasVoted(id, address(mirror)));
+        mirror.setPaused(false);
+        mirror.setSkipped(id, true);
+        mirror.reconcileVote(id, FOR);
+        assertFalse(governor.hasVoted(id, address(mirror)));
+        mirror.setSkipped(id, false);
+        vm.warp(block.timestamp + VOTING_PERIOD + 1);
+        mirror.reconcileVote(id, FOR);
+        vm.stopPrank();
+        assertFalse(governor.hasVoted(id, address(mirror)));
+    }
+
+    function test_ReconcileOnlyOwner() public {
+        uint256 id = _propose("owner only");
+        _trustedVotes(id, FOR);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, stranger));
+        vm.prank(stranger);
+        mirror.reconcileVote(id, FOR);
+    }
+
+    function test_ReaddedVoterCannotContributeOldReceipt() public {
+        uint256 id = _propose("trust epoch");
+        _trustedVotes(id, FOR);
+        vm.startPrank(user);
+        mirror.removeTrusted(alice);
+        mirror.addTrusted(alice);
+        vm.stopPrank();
+        reactive.removeTrusted(alice);
+        reactive.addTrusted(alice);
+        _deliver(id, FOR);
+        assertFalse(governor.hasVoted(id, address(mirror)));
+        vm.prank(carol);
+        governor.castVote(id, FOR);
+        vm.prank(user);
+        mirror.reconcileVote(id, FOR);
+        assertTrue(governor.hasVoted(id, address(mirror)));
+    }
+
+    function test_FuzzBaseVerifiesFirstAgreement(uint8[3] memory choices, uint8 k, uint8 order) public {
+        k = uint8(bound(k, 1, 3));
+        vm.prank(user);
+        mirror.setThreshold(k);
+        reactive.setThreshold(k);
+        uint256 id = _propose("model");
+        address[3] memory voters = [alice, bob, carol];
+        uint256[3] memory counts;
+        bool reached;
+        uint8 winner;
+        for (uint256 i; i < 3; ++i) {
+            uint256 index = (i + order) % 3;
+            uint8 choice = uint8(bound(choices[index], 0, 3));
+            if (choice == 3) continue;
+            vm.prank(voters[index]);
+            governor.castVote(id, choice);
+            if (++counts[choice] == k && !reached) {
+                reached = true;
+                winner = choice;
+            }
+        }
+        for (uint8 side; side < 3; ++side) {
+            if (reached && side == winner) continue;
+            _deliver(id, side);
+            assertFalse(governor.hasVoted(id, address(mirror)));
+        }
+        if (reached) {
+            _deliver(id, winner);
+            assertTrue(governor.hasVoted(id, address(mirror)));
+        }
+    }
+
+    function test_FuzzWrongChoiceRejected(uint8 winning, uint8 supplied) public {
+        winning = uint8(bound(winning, 0, 2));
+        vm.assume(supplied != winning);
+        uint256 id = _propose("fuzz side");
+        _trustedVotes(id, winning);
+        _deliver(id, supplied);
+        assertFalse(governor.hasVoted(id, address(mirror)));
+    }
+
+    function test_FirstAgreementUsesGovernorOrder() public {
+        vm.prank(user);
+        mirror.setThreshold(1);
+        reactive.setThreshold(1);
+        uint256 id = _propose("first wins");
+        vm.prank(alice);
+        governor.castVote(id, AGAINST);
+        vm.prank(bob);
+        governor.castVote(id, FOR);
+        _deliver(id, FOR);
+        assertFalse(governor.hasVoted(id, address(mirror)));
+        _deliver(id, AGAINST);
+        assertTrue(governor.hasVoted(id, address(mirror)));
+    }
+
+    function test_ReceiptIncludesParamsBallot() public {
+        uint256 id = _propose("with params");
+        vm.prank(alice);
+        governor.castVoteWithReasonAndParams(id, FOR, "reason", hex"010203");
+        vm.prank(bob);
+        governor.castVote(id, FOR);
+        _deliver(id, FOR);
+        assertTrue(governor.hasVoted(id, address(mirror)));
+    }
+
+    function test_WorstCaseColdCallbackGas() public {
+        address[] memory voters = new address[](16);
+        voters[0] = alice;
+        voters[1] = bob;
+        voters[2] = carol;
+        for (uint256 i = 3; i < 16; ++i) {
+            voters[i] = address(uint160(1000 + i));
+            vm.prank(user);
+            mirror.addTrusted(voters[i]);
+            reactive.addTrusted(voters[i]);
+        }
+        uint256 id = _propose("gas");
+        // Reverse order maximizes receipt sorting. Zero-weight votes intentionally count per person.
+        for (uint256 i = 16; i > 0; --i) {
+            vm.prank(voters[i - 1]);
+            governor.castVote(id, FOR);
+        }
+        bytes32 policy = reactive.policyHash();
+        vm.cool(address(governor));
+        vm.cool(address(mirror));
+        vm.prank(address(proxy));
+        (bool ok,) = address(mirror).call{ gas: 417_000 }(
+            abi.encodeCall(VoteMirror.castMirrored, (address(reactive), id, FOR, policy))
+        );
+        assertTrue(ok);
+        assertTrue(governor.hasVoted(id, address(mirror)));
+    }
+
+    function test_ReorderedLogsStillMirrorCanonicalFirstAgreement() public {
+        vm.prank(user);
+        mirror.setThreshold(1);
+        reactive.setThreshold(1);
+        uint256 id = _propose("reordered origin logs");
+        vm.recordLogs();
+        vm.prank(alice);
+        governor.castVote(id, AGAINST);
+        vm.prank(bob);
+        governor.castVote(id, FOR);
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        assertEq(logs.length, 2);
+        // The later For log arrives first. Base already has both immutable receipts.
+        _relayRecordedVote(logs[1]);
+        assertFalse(governor.hasVoted(id, address(mirror)));
+        _relayRecordedVote(logs[0]);
+        assertTrue(governor.hasVoted(id, address(mirror)));
+        (uint256 against,,) = governor.proposalVotes(id);
+        assertEq(against, 2000e18);
+    }
+
+    function test_FuzzDeliveryPermutationPreservesCanonicalVote(uint8[3] memory choices, uint8 k, uint8 permutation)
+        public
+    {
+        k = uint8(bound(k, 1, 3));
+        permutation = uint8(bound(permutation, 0, 5));
+        vm.prank(user);
+        mirror.setThreshold(k);
+        reactive.setThreshold(k);
+        uint256 id = _propose("delivery permutations");
+        address[3] memory voters = [alice, bob, carol];
+        uint256[3] memory counts;
+        bool reached;
+        uint8 winner;
+        vm.recordLogs();
+        for (uint256 i; i < 3; ++i) {
+            uint8 side = uint8(bound(choices[i], 0, 2));
+            vm.prank(voters[i]);
+            governor.castVote(id, side);
+            if (++counts[side] == k && !reached) {
+                reached = true;
+                winner = side;
+            }
+        }
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        uint8[3][6] memory orders = [
+            [uint8(0), 1, 2], [uint8(0), 2, 1], [uint8(1), 0, 2], [uint8(1), 2, 0], [uint8(2), 0, 1], [uint8(2), 1, 0]
+        ];
+        for (uint256 i; i < 3; ++i) {
+            _relayRecordedVote(logs[orders[permutation][i]]);
+        }
+        assertEq(governor.hasVoted(id, address(mirror)), reached);
+        if (reached) {
+            (uint8 choice,) = governor.voteReceipt(id, address(mirror));
+            assertEq(choice, winner + 1);
+        }
+    }
+
+    function _relayRecordedVote(Vm.Log memory log_) internal {
+        IReactive.LogRecord memory record;
+        record.chainId = block.chainid;
+        record.contractAddress = address(governor);
+        record.topic0 = uint256(log_.topics[0]);
+        record.topic1 = uint256(log_.topics[1]);
+        record.opCode = 2;
+        record.data = log_.data;
+        uint256 before = system.callbackCount();
+        vm.prank(SYSTEM);
+        reactive.react(record);
+        for (uint256 i = before; i < system.callbackCount(); ++i) {
+            ISystemContract.CallbackConfiguration_V_1_0 memory config = system.callbackAt(i);
+            proxy.deliver(address(reactive), config.recipient, config.payload);
+        }
+    }
+
+    function test_CronRecoversWithoutAnyVoteLogsAndRepeatsAfterPause() public {
+        uint256 id = _propose("all origin logs lost");
+        _trustedVotes(id, FOR);
+        assertEq(reactive.agreement(id, FOR), 0);
+        reactive.setRecoveryEnabled(true);
+        vm.prank(user);
+        mirror.setPaused(true);
+        _recoveryTick();
+        assertFalse(governor.hasVoted(id, address(mirror)));
+        vm.prank(user);
+        mirror.setPaused(false);
+        vm.warp(block.timestamp + 60);
+        _recoveryTick();
+        assertTrue(governor.hasVoted(id, address(mirror)));
+        vm.warp(block.timestamp + 60);
+        _recoveryTick();
+        (, uint256 tally,) = governor.proposalVotes(id);
+        assertEq(tally, 3000e18);
+    }
+
+    function _recoveryTick() internal {
+        IReactive.LogRecord memory log_;
+        log_.chainId = block.chainid;
+        log_.contractAddress = reactive.CRON_EMITTER();
+        log_.topic0 = reactive.CRON_TOPIC();
+        log_.opCode = 2;
+        uint256 before = system.callbackCount();
+        vm.prank(SYSTEM);
+        reactive.react(log_);
+        for (uint256 i = before; i < system.callbackCount(); ++i) {
+            ISystemContract.CallbackConfiguration_V_1_0 memory config = system.callbackAt(i);
+            assertTrue(proxy.deliver(address(reactive), config.recipient, config.payload));
+        }
+    }
+
+    function test_AnyoneCanReconcileButCannotChooseTheWrongSide() public {
+        uint256 id = _propose("community recovery");
+        _trustedVotes(id, AGAINST);
+        vm.prank(stranger);
+        mirror.reconcileProposal(id);
+        (uint8 choice,) = governor.voteReceipt(id, address(mirror));
+        assertEq(choice, 1);
+    }
+
+    function test_RecoveryHonorsSkippedAndNoAgreement() public {
+        uint256 skippedId = _propose("skipped recovery");
+        _trustedVotes(skippedId, FOR);
+        vm.prank(user);
+        mirror.setSkipped(skippedId, true);
+        uint256 splitId = _propose("split recovery");
+        vm.prank(alice);
+        governor.castVote(splitId, FOR);
+        vm.prank(bob);
+        governor.castVote(splitId, AGAINST);
+        vm.prank(address(proxy));
+        mirror.reconcileBatch(address(reactive));
+        assertFalse(governor.hasVoted(skippedId, address(mirror)));
+        assertFalse(governor.hasVoted(splitId, address(mirror)));
+    }
+
+    function test_RecoveryCursorEventuallyVisitsEveryProposal() public {
+        uint256[] memory ids = new uint256[](7);
+        for (uint256 i; i < 7; ++i) {
+            ids[i] = _propose(vm.toString(i));
+            _trustedVotes(ids[i], FOR);
+        }
+        for (uint256 i; i < 4; ++i) {
+            vm.prank(address(proxy));
+            mirror.reconcileBatch(address(reactive));
+        }
+        for (uint256 i; i < 7; ++i) {
+            assertTrue(governor.hasVoted(ids[i], address(mirror)));
+        }
+    }
+
+    function test_ProposalRegistryBoundAndExpiredEntriesPruned() public {
+        for (uint256 i; i < 32; ++i) {
+            _propose(vm.toString(i));
+        }
+        assertEq(governor.recoveryProposals().length, 32);
+        vm.expectRevert(DemoGovernor.TooManyOpenProposals.selector);
+        _propose("full");
+        vm.warp(block.timestamp + VOTING_PERIOD + 1);
+        _propose("fresh after expiry");
+        assertEq(governor.recoveryProposals().length, 1);
+    }
+
+    function test_RecoveryBatchRequiresAuthenticatedProxy() public {
+        vm.expectRevert(abi.encodeWithSelector(AbstractPayer.NotAuthorized.selector, stranger, address(proxy)));
+        vm.prank(stranger);
+        mirror.reconcileBatch(address(reactive));
+        vm.expectRevert(
+            abi.encodeWithSelector(AbstractCallback.CallbackNotAuthorized.selector, stranger, address(reactive))
+        );
+        vm.prank(address(proxy));
+        mirror.reconcileBatch(stranger);
+    }
+
+    function test_RecoveryBatchColdGasBound() public {
+        for (uint160 i = 1; i <= 13; ++i) {
+            vm.prank(user);
+            mirror.addTrusted(address(1000 + i));
+            reactive.addTrusted(address(1000 + i));
+        }
+        address[] memory voters = mirror.trustedVoters();
+        for (uint256 p; p < 2; ++p) {
+            uint256 id = _propose(vm.toString(p));
+            for (uint256 i = 16; i > 0; --i) {
+                vm.prank(voters[i - 1]);
+                governor.castVote(id, FOR);
+            }
+        }
+        vm.cool(address(governor));
+        vm.cool(address(mirror));
+        vm.prank(address(proxy));
+        (bool ok,) =
+            address(mirror).call{ gas: 1_000_000 }(abi.encodeCall(VoteMirror.reconcileBatch, (address(reactive))));
+        assertTrue(ok);
+        uint256[] memory ids = governor.recoveryProposals();
+        for (uint256 i; i < ids.length; ++i) {
+            assertTrue(governor.hasVoted(ids[i], address(mirror)));
+        }
+    }
+
+    function test_PublicRecoveryStillHonorsPauseAndSkip() public {
+        uint256 id = _propose("permissionless controls");
+        _trustedVotes(id, FOR);
+        vm.prank(user);
+        mirror.setPaused(true);
+        vm.prank(stranger);
+        mirror.reconcileProposal(id);
+        assertFalse(governor.hasVoted(id, address(mirror)));
+        vm.startPrank(user);
+        mirror.setPaused(false);
+        mirror.setSkipped(id, true);
+        vm.stopPrank();
+        vm.prank(stranger);
+        mirror.reconcileProposal(id);
+        assertFalse(governor.hasVoted(id, address(mirror)));
+    }
+
+    function test_RecoveryEmptyAndUnavailableRegistryAreSafe() public {
+        vm.prank(address(proxy));
+        mirror.reconcileBatch(address(reactive));
+        assertEq(mirror.recoveryCursor(), 0);
+        vm.mockCallRevert(
+            address(governor), abi.encodeWithSelector(IRecoveryGovernor.recoveryProposals.selector), "offline"
+        );
+        vm.prank(address(proxy));
+        mirror.reconcileBatch(address(reactive));
+        vm.clearMockedCalls();
+        uint256[] memory huge = new uint256[](33);
+        vm.mockCall(
+            address(governor), abi.encodeWithSelector(IRecoveryGovernor.recoveryProposals.selector), abi.encode(huge)
+        );
+        vm.prank(address(proxy));
+        mirror.reconcileBatch(address(reactive));
+        assertEq(mirror.recoveryCursor(), 0);
+    }
+
+    function test_RegressionWrongSideCannotBeRelayed() public {
+        uint256 id = _propose("wrong side");
+        _trustedVotes(id, FOR);
+        _deliver(id, AGAINST);
+        assertFalse(governor.hasVoted(id, address(mirror)));
+        _deliver(id, FOR);
+        assertTrue(governor.hasVoted(id, address(mirror)));
+    }
+
+    function test_RegressionSplitVotesCannotBeMirrored() public {
+        uint256 id = _propose("split");
+        vm.prank(alice);
+        governor.castVote(id, FOR);
+        vm.prank(bob);
+        governor.castVote(id, AGAINST);
+        _deliver(id, FOR);
+        assertFalse(governor.hasVoted(id, address(mirror)));
+    }
+
     function test_CallbackWithoutTrustedVotesIsNotConfirmed() public {
         uint256 id = _propose("p");
         assertEq(mirror.confirmations(id), 0);
@@ -399,6 +843,9 @@ contract VoteMirrorTest is Test {
             mirror.addTrusted(address(i + 1000));
         }
         vm.stopPrank();
+        for (uint160 i = 1; i <= 13; ++i) {
+            reactive.addTrusted(address(i + 1000));
+        }
         uint256 id = _propose("p");
         _trustedVotes(id, FOR);
         uint256 gasBefore = gasleft();
@@ -449,11 +896,10 @@ contract VoteMirrorTest is Test {
     }
 
     /// @dev A Governor whose `hasVoted` reverts reads as "nobody voted": the callback is skipped, not reverted.
-    function test_RevertingHasVotedSkipsWithoutReverting() public {
+    function test_RevertingReceiptSkipsWithoutReverting() public {
         uint256 id = _propose("p");
         _trustedVotes(id, FOR);
-        vm.mockCallRevert(address(governor), abi.encodeWithSelector(IGovernor.hasVoted.selector), "broken");
-        assertEq(mirror.confirmations(id), 0);
+        vm.mockCallRevert(address(governor), abi.encodeWithSelector(IVoteReceipts.voteReceipt.selector), "broken");
         vm.expectEmit(address(mirror));
         emit VoteMirror.Skipped(id, FOR, VoteMirror.SkipReason.NotConfirmed);
         _deliver(id, FOR);
@@ -465,7 +911,7 @@ contract VoteMirrorTest is Test {
         uint256 id = _propose("p");
         _trustedVotes(id, FOR);
         vm.expectEmit(address(mirror));
-        emit VoteMirror.Skipped(id, 9, VoteMirror.SkipReason.CastFailed);
+        emit VoteMirror.Skipped(id, 9, VoteMirror.SkipReason.NotConfirmed);
         _deliver(id, 9);
         assertFalse(governor.hasVoted(id, address(mirror)));
     }
@@ -489,25 +935,28 @@ contract VoteMirrorTest is Test {
 
     function test_RevertWhen_CallerIsNotTheProxy() public {
         uint256 id = _propose("p");
+        bytes32 policy = reactive.policyHash();
         vm.expectRevert(abi.encodeWithSelector(AbstractPayer.NotAuthorized.selector, stranger, address(proxy)));
         vm.prank(stranger);
-        mirror.castMirrored(address(reactive), id, FOR);
+        mirror.castMirrored(address(reactive), id, FOR, policy);
     }
 
     function test_RevertWhen_OwnerCallsCallbackDirectly() public {
         uint256 id = _propose("p");
+        bytes32 policy = reactive.policyHash();
         vm.expectRevert(abi.encodeWithSelector(AbstractPayer.NotAuthorized.selector, user, address(proxy)));
         vm.prank(user);
-        mirror.castMirrored(address(reactive), id, FOR);
+        mirror.castMirrored(address(reactive), id, FOR, policy);
     }
 
     function test_RevertWhen_ProxyDeliversForAnotherReactiveContract() public {
         uint256 id = _propose("p");
+        bytes32 policy = reactive.policyHash();
         vm.expectRevert(
             abi.encodeWithSelector(AbstractCallback.CallbackNotAuthorized.selector, stranger, address(reactive))
         );
         vm.prank(address(proxy));
-        mirror.castMirrored(stranger, id, FOR);
+        mirror.castMirrored(stranger, id, FOR, policy);
         assertFalse(governor.hasVoted(id, address(mirror)));
     }
 
@@ -516,7 +965,7 @@ contract VoteMirrorTest is Test {
         bool success = proxy.deliver(
             stranger,
             address(mirror),
-            abi.encodeWithSignature("castMirrored(address,uint256,uint8)", address(0), id, FOR)
+            abi.encodeWithSignature("castMirrored(address,uint256,uint8,bytes32)", address(0), id, FOR)
         );
         assertFalse(success);
         assertFalse(governor.hasVoted(id, address(mirror)));

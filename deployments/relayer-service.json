@@ -1,0 +1,8 @@
+{
+  "mirror": "0x4a89e26aD48A2729d8D95B3b446DBC1083AEF87a",
+  "chain": 84532,
+  "relayer": "0x90788662F1b5332979f0049FDeA519fc66d1bdAe",
+  "dailyBudgetEth": "0.002",
+  "initialFundingEth": "0.005",
+  "fundingHash": "0x07851e2af5e1c438b8ad2acbb2e49fac48c77e6c05013f00869e56d27c1cd842"
+}

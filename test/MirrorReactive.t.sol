@@ -69,6 +69,157 @@ contract MirrorReactiveTest is Test {
 
     // ------------------------------------------------------------------ setup
 
+    function test_RevertedFirstSideReservationDoesNotBlockCanonicalSide() public {
+        reactive.setThreshold(1);
+        system.setRejectCallbacks(true);
+        _vote(bob, 13, FOR);
+        assertEq(reactive.requestedChoices(reactive.policyHash(), 13), 0);
+        assertFalse(reactive.mirrorRequested(13));
+        system.setRejectCallbacks(false);
+        _vote(alice, 13, AGAINST);
+        assertEq(system.callbackCount(), 1);
+        assertEq(reactive.requestedChoices(reactive.policyHash(), 13), 1);
+        reactive.retryMirror(13, FOR);
+        assertEq(reactive.requestedChoices(reactive.policyHash(), 13), 3);
+    }
+
+    function test_NestedSystemDeliveryCannotDuplicateRequestedSide() public {
+        _vote(alice, 17, FOR);
+        system.setNestedDelivery(address(reactive), abi.encodeCall(MirrorReactive.react, (_log(carol, 17, FOR))));
+        _vote(bob, 17, FOR);
+        assertEq(reactive.agreement(17, FOR), 3);
+        assertEq(system.callbackCount(), 1);
+        assertEq(reactive.requestedChoices(reactive.policyHash(), 17), 2);
+    }
+
+    function _cron() internal {
+        IReactive.LogRecord memory log_;
+        log_.chainId = block.chainid;
+        log_.contractAddress = reactive.CRON_EMITTER();
+        log_.topic0 = reactive.CRON_TOPIC();
+        log_.opCode = 2;
+        vm.prank(SYSTEM);
+        reactive.react(log_);
+    }
+
+    function test_RecoveryCooldownAndDisable() public {
+        vm.warp(1_800_000_000);
+        _cron();
+        assertEq(system.callbackCount(), 0);
+        reactive.setRecoveryEnabled(true);
+        _cron();
+        assertEq(system.callbackCount(), 1);
+        _cron();
+        assertEq(system.callbackCount(), 1);
+        vm.warp(block.timestamp + 59);
+        _cron();
+        assertEq(system.callbackCount(), 1);
+        vm.warp(block.timestamp + 1);
+        _cron();
+        assertEq(system.callbackCount(), 2);
+        reactive.setRecoveryEnabled(false);
+        vm.warp(block.timestamp + 60);
+        _cron();
+        assertEq(system.callbackCount(), 2);
+    }
+
+    function test_RecoveryRequestFailureConsumesCooldownNotVoteEvidence() public {
+        vm.warp(1_800_000_000);
+        reactive.setRecoveryEnabled(true);
+        system.setRejectCallbacks(true);
+        _cron();
+        assertEq(reactive.recoveryRequestsToday(), 1);
+        system.setRejectCallbacks(false);
+        _cron();
+        assertEq(system.callbackCount(), 0);
+        vm.warp(block.timestamp + 60);
+        _cron();
+        assertEq(system.callbackCount(), 1);
+    }
+
+    function test_RecoveryEnableOnlyOwner() public {
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, stranger));
+        vm.prank(stranger);
+        reactive.setRecoveryEnabled(true);
+    }
+
+    function test_NestedCronCannotBypassRecoveryCooldown() public {
+        vm.warp(1_800_000_000);
+        reactive.setRecoveryEnabled(true);
+        IReactive.LogRecord memory log_;
+        log_.chainId = block.chainid;
+        log_.contractAddress = reactive.CRON_EMITTER();
+        log_.topic0 = reactive.CRON_TOPIC();
+        log_.opCode = 2;
+        system.setNestedDelivery(address(reactive), abi.encodeCall(MirrorReactive.react, (log_)));
+        _cron();
+        assertEq(system.callbackCount(), 1);
+        assertEq(reactive.recoveryRequestsToday(), 1);
+    }
+
+    function test_RecoveryDayBoundaryAndIdempotentEnable() public {
+        uint256 day = 20_000 days;
+        vm.warp(day + 1 days - 30);
+        reactive.setRecoveryEnabled(true);
+        uint256 subscriptions = system.subscriptionCount();
+        reactive.setRecoveryEnabled(true);
+        assertEq(system.subscriptionCount(), subscriptions);
+        _cron();
+        assertEq(reactive.recoveryRequestsToday(), 1);
+        vm.warp(day + 1 days + 30);
+        _cron();
+        assertEq(reactive.recoveryRequestsToday(), 1);
+        assertEq(system.callbackCount(), 2);
+    }
+
+    function test_RealLasnaCron10FixtureRequestsRecovery() public {
+        string memory raw = vm.readFile("deployments/lasna-cron10-fixture.json");
+        IReactive.LogRecord memory record;
+        record.chainId = block.chainid;
+        record.contractAddress = vm.parseJsonAddress(raw, ".address");
+        record.topic0 = uint256(vm.parseJsonBytes32(raw, ".topics[0]"));
+        record.topic1 = uint256(vm.parseJsonBytes32(raw, ".topics[1]"));
+        record.data = vm.parseJsonBytes(raw, ".data");
+        record.opCode = 2;
+        vm.warp(1_800_000_000);
+        reactive.setRecoveryEnabled(true);
+        vm.prank(SYSTEM);
+        reactive.react(record);
+        assertEq(system.callbackCount(), 1);
+    }
+
+    function test_RequestFailurePreservesDecidingVoteAndCanRetry() public {
+        system.setRejectCallbacks(true);
+        _vote(alice, 99, FOR);
+        _vote(bob, 99, FOR);
+        assertEq(reactive.agreement(99, FOR), 2);
+        assertFalse(reactive.mirrorRequested(99));
+        system.setRejectCallbacks(false);
+        reactive.retryMirror(99, FOR);
+        assertEq(system.callbackCount(), 1);
+        assertTrue(reactive.mirrorRequested(99));
+    }
+
+    function test_FailedRetryPreservesFirstRequestedChoice() public {
+        _vote(alice, 99, FOR);
+        _vote(bob, 99, FOR);
+        system.setRejectCallbacks(true);
+        reactive.retryMirror(99, FOR);
+        assertTrue(reactive.mirrorRequested(99));
+        assertEq(reactive.requestedSupport(99), FOR);
+    }
+
+    function test_NewPolicyCanRequestAgain() public {
+        _vote(alice, 99, FOR);
+        _vote(bob, 99, FOR);
+        bytes32 before = reactive.policyHash();
+        reactive.setThreshold(1);
+        assertNotEq(reactive.policyHash(), before);
+        assertFalse(reactive.mirrorRequested(99));
+        reactive.retryMirror(99, FOR);
+        assertEq(system.callbackCount(), 2);
+    }
+
     function test_TopicMatchesOpenZeppelinVoteCast() public view {
         assertEq(reactive.VOTE_CAST_TOPIC_0(), uint256(keccak256("VoteCast(address,uint256,uint8,uint256,string)")));
     }
@@ -117,7 +268,10 @@ contract MirrorReactiveTest is Test {
         assertEq(config.recipient, mirror);
         assertEq(config.gasLimit, reactive.CALLBACK_GAS_LIMIT());
         assertEq(
-            config.payload, abi.encodeWithSignature("castMirrored(address,uint256,uint8)", address(0), uint256(7), FOR)
+            config.payload,
+            abi.encodeWithSignature(
+                "castMirrored(address,uint256,uint8,bytes32)", address(0), uint256(7), FOR, reactive.policyHash()
+            )
         );
         assertTrue(reactive.mirrorRequested(7));
     }
@@ -127,7 +281,9 @@ contract MirrorReactiveTest is Test {
         _vote(carol, 9, AGAINST);
         assertEq(
             system.callbackAt(0).payload,
-            abi.encodeWithSignature("castMirrored(address,uint256,uint8)", address(0), uint256(9), AGAINST)
+            abi.encodeWithSignature(
+                "castMirrored(address,uint256,uint8,bytes32)", address(0), uint256(9), AGAINST, reactive.policyHash()
+            )
         );
     }
 
@@ -146,7 +302,9 @@ contract MirrorReactiveTest is Test {
         assertEq(system.callbackCount(), 1);
         assertEq(
             system.callbackAt(0).payload,
-            abi.encodeWithSignature("castMirrored(address,uint256,uint8)", address(0), uint256(7), AGAINST)
+            abi.encodeWithSignature(
+                "castMirrored(address,uint256,uint8,bytes32)", address(0), uint256(7), AGAINST, reactive.policyHash()
+            )
         );
     }
 
@@ -402,7 +560,12 @@ contract MirrorReactiveTest is Test {
         assertEq(config.chainId, ORIGIN);
         assertEq(config.recipient, mirror);
         assertEq(config.gasLimit, reactive.CALLBACK_GAS_LIMIT());
-        assertEq(config.payload, abi.encodeWithSignature("castMirrored(address,uint256,uint8)", address(0), 7, AGAINST));
+        assertEq(
+            config.payload,
+            abi.encodeWithSignature(
+                "castMirrored(address,uint256,uint8,bytes32)", address(0), 7, AGAINST, reactive.policyHash()
+            )
+        );
     }
 
     function test_RevertWhen_RetryWithoutAgreement() public {
@@ -418,8 +581,8 @@ contract MirrorReactiveTest is Test {
         reactive.retryMirror(7, 9);
     }
 
-    /// @dev With 2k <= n both sides can reach the threshold. The retry stays with the side requested first.
-    function test_RevertWhen_RetryAsksForAnotherChoiceThanTheFirstRequest() public {
+    /// @dev With 2k <= n both sides can reach the threshold. Base validates canonical receipt order.
+    function test_RetryCanRequestEitherAgreedSide() public {
         address dave = makeAddr("dave");
         reactive.addTrusted(dave);
         _vote(alice, 7, FOR);
@@ -429,14 +592,13 @@ contract MirrorReactiveTest is Test {
         assertEq(reactive.agreement(7, AGAINST), 2);
         assertEq(reactive.requestedSupport(7), FOR);
 
-        vm.expectRevert(abi.encodeWithSelector(MirrorReactive.OtherChoiceRequested.selector, 7, FOR));
         reactive.retryMirror(7, AGAINST);
         reactive.retryMirror(7, FOR);
-        assertEq(system.callbackCount(), 2);
+        assertEq(system.callbackCount(), 4);
     }
 
-    /// @dev A first request made by the owner fixes the choice too, for later retries and for `react()`.
-    function test_RetryAsFirstRequestFixesTheChoice() public {
+    /// @dev The first request is diagnostic; another agreed side must remain reachable.
+    function test_RetryFirstChoiceDoesNotBlockAnotherAgreedChoice() public {
         _vote(alice, 7, FOR);
         _vote(bob, 7, AGAINST);
         reactive.setThreshold(1);
@@ -445,10 +607,9 @@ contract MirrorReactiveTest is Test {
         assertTrue(reactive.mirrorRequested(7));
         assertEq(reactive.requestedSupport(7), AGAINST);
 
-        vm.expectRevert(abi.encodeWithSelector(MirrorReactive.OtherChoiceRequested.selector, 7, AGAINST));
         reactive.retryMirror(7, FOR);
         _vote(carol, 7, FOR);
-        assertEq(system.callbackCount(), 1);
+        assertEq(system.callbackCount(), 2);
     }
 
     function test_RevertWhen_RetryAfterAgreeingVoterWasRemoved() public {

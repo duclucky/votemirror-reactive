@@ -17,6 +17,19 @@ contract MockSystem {
     ISystemContract.CallbackConfiguration_V_1_0[] internal _callbacks;
     mapping(address => uint256) public debt;
 
+    bool public rejectCallbacks;
+    address public nestedTarget;
+    bytes public nestedPayload;
+
+    function setNestedDelivery(address target, bytes calldata payload) external {
+        nestedTarget = target;
+        nestedPayload = payload;
+    }
+
+    function setRejectCallbacks(bool reject_) external {
+        rejectCallbacks = reject_;
+    }
+
     receive() external payable { }
 
     function subscribe(uint256 chainId_, address contract_, uint256 topic0_, uint256 topic1_, uint256, uint256)
@@ -33,6 +46,14 @@ contract MockSystem {
 
     // forge-lint: disable-next-line(mixed-case-function)
     function requestCallbackV_1_0(ISystemContract.CallbackConfiguration_V_1_0 memory config_) external {
+        require(!rejectCallbacks, "callback service unavailable");
+        if (nestedTarget != address(0)) {
+            address target = nestedTarget;
+            bytes memory payload = nestedPayload;
+            nestedTarget = address(0);
+            (bool ok,) = target.call(payload);
+            require(ok, "nested delivery failed");
+        }
         _callbacks.push(config_);
     }
 

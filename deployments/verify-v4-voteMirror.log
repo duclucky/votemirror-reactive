@@ -1,0 +1,10 @@
+Start verifying contract `0x4a89e26aD48A2729d8D95B3b446DBC1083AEF87a` deployed on base-sepolia
+Attempting to verify on Sourcify. Pass the --etherscan-api-key <API_KEY> to verify on Etherscan, or use the --verifier flag to verify on another provider.
+
+Submitting verification for [VoteMirror] "0x4a89e26aD48A2729d8D95B3b446DBC1083AEF87a".
+Submitted contract for verification:
+	Verification Job ID: `10768ec0-4c27-4837-9da5-46212d6d0e08`
+	URL: https://sourcify.dev/server/v2/verify/10768ec0-4c27-4837-9da5-46212d6d0e08
+Warning: Verification is still pending...; waiting 15 seconds before trying again (7 tries remaining)
+Contract successfully verified:
+Status: `exact_match`

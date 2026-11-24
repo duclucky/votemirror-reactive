@@ -1,0 +1,102 @@
+{
+  "confirmedSupport": "true\n1",
+  "lasnaFrom": "9108469",
+  "runId": "audit-4",
+  "status": "verified",
+  "initialSkipped": [
+    {
+      "address": "0x4a89e26ad48a2729d8d95b3b446dbc1083aef87a",
+      "topics": [
+        "0x918dc9d8b183a2ef15e89248f773d5319d4411c80cb7e0af59e4b4013b32b39d",
+        "0xf9236d5e5333e0a6638b9fbf7d45f02539b17322ebf0259d6055bf23378f7e99"
+      ],
+      "data": "0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000",
+      "blockHash": "0x0e20666cf332d4d1bf318fa0209abc318fac3155ad4819c70ce96ab48afd71b9",
+      "blockNumber": "0x3bf1cc7",
+      "blockTimestamp": "0x6b050d1b",
+      "transactionHash": "0x1880be7da90ffd92474a0212833be08ea44b8af3b27907d65d76b0800d079043",
+      "transactionIndex": "0x4",
+      "logIndex": "0x16",
+      "removed": false
+    }
+  ],
+  "steps": {
+    "aliceVote": {
+      "hash": "0xf589472f6fa127883e442be59f48be5701a29d158f4cede1ff583ce46f8248ce",
+      "status": "confirmed",
+      "sender": "0x0f8AA1b7E5D822214B235c1c8257C07965b6A2a6",
+      "nonce": "19"
+    },
+    "bobVote": {
+      "hash": "0x6d1eaf227ce8c5483222a61b030285001d0f43ac3e390b96b563fe8a3c587233",
+      "status": "confirmed",
+      "sender": "0xF3Dff85E11f21A682259Fef16d5c217a29eAe63e",
+      "nonce": "18"
+    },
+    "retry": {
+      "hash": "0xa8224fd2fdf80d52e846d8f3b4dd51713c3e2b4551665b725ac113cef835148c",
+      "status": "confirmed",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "nonce": "16"
+    },
+    "pause": {
+      "hash": "0x9726c3f2848f9b834123a9dd68cfddd993f52e9586c92adf8c89fdd8b65876c1",
+      "status": "confirmed",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "nonce": "61"
+    },
+    "propose": {
+      "hash": "0x4638259bc4e51643995e601c1e630dc3253a707c40ac7d4e8420f42b980f5000",
+      "status": "confirmed",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "nonce": "60"
+    },
+    "unpause": {
+      "hash": "0xb5060f2c8250453d3d4ebe3a01f264338f4483f1012853ebffc9768b0cf8646b",
+      "status": "confirmed",
+      "sender": "0xA16B597088552D596C09d18EEF3c6e20bB09B26b",
+      "nonce": "62"
+    }
+  },
+  "mode": "retry",
+  "support": 1,
+  "description": "VoteMirror v4 retry audit-4",
+  "proposalVotes": "0\n3000000000000000000000 [3e21]\n0",
+  "baseFrom": "62856270",
+  "proposalId": "112688493777849622430263842608513889273411563616005158057233641222946667069081",
+  "reactiveEvents": [
+    {
+      "address": "0x81a8a6edf8b2d773ff53dc1450de4822c5756988",
+      "topics": [
+        "0xe5eaeebbae9c16b97d11878fa1bc382428b0e25d21db43f94998b638dc2e6477",
+        "0xf9236d5e5333e0a6638b9fbf7d45f02539b17322ebf0259d6055bf23378f7e99"
+      ],
+      "data": "0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002",
+      "blockHash": "0x6dd2d3e535856072fc83cfc40e92ad9800bfb8628f8d48dbf7d32572a6a95a2c",
+      "blockNumber": "0x8afc0b",
+      "blockTimestamp": "0x0",
+      "transactionHash": "0x73d12f67e88502d779a143990b8af4ce4d4aa3023e4e702a33388d84ed7ca491",
+      "transactionIndex": "0x3",
+      "logIndex": "0x6",
+      "removed": false
+    }
+  ],
+  "hasVoted": "true",
+  "mirrored": [
+    {
+      "address": "0x4a89e26ad48a2729d8d95b3b446dbc1083aef87a",
+      "topics": [
+        "0xb63c3d31ef3ef99ff3a14cca677be785da10f98086635ac9b167ab61f060572a",
+        "0xf9236d5e5333e0a6638b9fbf7d45f02539b17322ebf0259d6055bf23378f7e99"
+      ],
+      "data": "0x000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000003635c9adc5dea00000",
+      "blockHash": "0x79d87e3bb89c32745f24d15455b2cf4e3a0b471518928e65891de7e9ee2a0cfd",
+      "blockNumber": "0x3bf1cf5",
+      "blockTimestamp": "0x6b050d24",
+      "transactionHash": "0x3f58f0058c3d5219f10a4c0b88e036962b9f734efad01683cc98e1eaf342c1be",
+      "transactionIndex": "0x2",
+      "logIndex": "0x1",
+      "removed": false
+    }
+  ]
+}
