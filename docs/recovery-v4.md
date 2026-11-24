@@ -64,6 +64,19 @@ Vòng sender riêng tắt CRON và xác minh giao dịch trực tiếp do ví d�
 v4-sender-audit-service-2.json. Không giả định mọi Mirrored trong vòng Retry đều do retry
 gây ra nếu đường recovery khác cũng đang bật.
 
+## Bằng chứng bổ sung hiện tại
+
+Bộ [tám kịch bản nộp bài](submission-evidence.md) được chạy riêng với sender dự phòng
+tạm dừng và CRON tắt, để xác định rõ đường nguồn → Lasna → callback proxy. Bộ này gồm
+For, Against, Abstain, chia phiếu rồi đạt ngưỡng, owner skip, pause rồi Reactive retry,
+phiếu thứ ba không tạo vote trùng và owner vote trước. Các số liệu ở đoạn kiểm chứng
+phía trên mô tả các vòng baseline trước đó, được giữ làm lịch sử.
+
+[Bằng chứng video](video-evidence.md) xác minh độc lập một proposal mới dùng trong
+[video công khai](https://votemirror-demo.vercel.app/#video). Giao dịch sender khôi phục
+sau khi hết phí Reactive được ghi riêng, không tính là callback Reactive. Manifest
+hiện hành dẫn tới cả báo cáo mới lẫn báo cáo lịch sử.
+
 ## Giới hạn còn lại
 
 Governor có lỗi hoặc bị nâng cấp sai có thể làm API bằng chứng sai. RPC, relay, funding,

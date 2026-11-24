@@ -3,6 +3,18 @@
 Video ngày 24/11/2026 dài **2:45**, 1920×1080, 30 fps, H.264/AAC, có voice-over
 và phụ đề tiếng Anh. Kịch bản đã duyệt ở [video-script.md](video-script.md).
 
+## Xem video công khai
+
+- [Xem video trên frontend demo](https://votemirror-demo.vercel.app/#video).
+- [Tải MP4](https://votemirror-demo.vercel.app/media/votemirror-demo.mp4)
+  và [phụ đề tiếng Anh](https://votemirror-demo.vercel.app/media/votemirror-demo.en.srt).
+- Source frontend và bản MP4 nằm trong
+  [repo demo riêng](https://github.com/duclucky/votemirror-demo).
+
+Frontend công khai chỉ phát lại dữ liệu lịch sử và dẫn tới bằng chứng thật; không
+kết nối ví hay gửi giao dịch. Dashboard có thao tác testnet thực vẫn ở `web/` của
+repo core. Bản ghi thô và lời đọc WAV được giữ cục bộ như mô tả bên dưới.
+
 ## Vòng chạy mới trong video
 
 Run ID: `video-20261124-01`. Proposal:
@@ -51,4 +63,5 @@ Trong `artifacts/video/` (được Git ignore):
 Đã giải mã hết file MP4 không lỗi; ffprobe xác nhận 165 giây, 1080p/30 fps,
 AAC 48 kHz stereo. Âm lượng bản cuối khoảng −16,07 LUFS, true peak −3,84 dBTP.
 Đã kiểm tra khung hình và nhận dạng lời đọc; chưa đánh giá phát âm bằng tai nghe/loa.
-Chưa tải video lên dịch vụ công khai hoặc nộp cuộc thi.
+Video đã được công khai qua Vercel và repo demo riêng. Chưa upload YouTube hoặc nộp
+DoraHacks.

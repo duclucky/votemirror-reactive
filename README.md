@@ -36,6 +36,7 @@ Reactive subscriptions and the Base recovery sender remain the operating paths.
 | MirrorReactive | Lasna | [0x81A8a6edf8B2d773FF53dc1450De4822c5756988](https://lasna.reactscan.net/address/0x81A8a6edf8B2d773FF53dc1450De4822c5756988) |
 
 The deployment manifest is [hardened-testnet-v4.json](deployments/hardened-testnet-v4.json).
+It links the current submission suite, filmed-run proof, public demo and sender setup.
 Current contract sources are verified on Sourcify. Creation bytecode, constructor arguments
 and runtime were checked against the build in [v4-bytecode-check.json](deployments/v4-bytecode-check.json).
 
@@ -109,7 +110,9 @@ retry, reconcile, split, recovery, lostlogs and sender.
 Use a unique RunId for a new scenario; reuse it only to resume that scenario's recorded
 transactions. Some modes temporarily alter subscriptions or recovery settings.
 A fresh deployment needs its own updated sender configuration and deployment wiring.
-See the [sender operations guide](docs/relayer-service.md).
+See the [sender operations guide](docs/relayer-service.md) for the public
+[config example](service/relayer.example.json), local wallet setup and Windows Task
+Scheduler installation. Actual signing keys, passwords and runtime stay outside Git.
 
 ## Verified evidence
 
@@ -125,9 +128,13 @@ transaction, restores the pause control on exit, and restarts the sender if it w
 previously running. From `web/`, independently verify the resulting receipts with
 `node scripts/verify-evidence-suite.mjs <run-id>`. This sends no transactions.
 
-Eight contract scenarios passed on live testnets, with receipts and vote totals read
-back. The [verification summary](deployments/v4-verification.json) links each scenario
-to its result transaction.
+Earlier baseline runs also passed on live testnets, with receipts and vote totals read
+back. Their [historical verification summary](deployments/v4-verification.json) is
+retained separately from the current eight-scenario submission suite above.
+
+The [filmed run evidence](docs/video-evidence.md) independently verifies the exact
+proposal and origin → Lasna → Base callback shown in the
+[public narrated film](https://votemirror-demo.vercel.app/#video).
 
 The dedicated sender was also tested with CRON disabled and a trusted vote absent from
 Lasna. It sent [this direct Base reconciliation](https://sepolia.basescan.org/tx/0xf432d30bfdfeb16d01917383d8e0ba3ee4264a915dcd58517f8767214fcdebe7).
@@ -136,7 +143,7 @@ transaction sender and successful vote. The [restart snapshot](deployments/relay
 is a historical observation, not a live status endpoint.
 
 Read the [security and recovery review](docs/recovery-v4.md) for scope, assumptions and
-remaining risks, and the [video outline](docs/video-script.md) for the current demo.
+remaining risks, and the [completed video script](docs/video-script.md) for the current demo.
 
 ## Boundaries
 

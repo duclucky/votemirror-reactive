@@ -1,8 +1,15 @@
-# VoteMirror dashboard
+# VoteMirror operational dashboard
 
 A static governance workspace for the current VoteMirror v4 testnet deployment.
 UI language is English for the buildathon demo. It uses Vite, vanilla JavaScript
 and viem, without a backend, stored signing keys or a wallet service.
+
+This is the core product's operational dashboard: it reads contracts and can submit
+real testnet actions through a browser wallet. It is distinct from the public,
+read-only [judging demo](https://votemirror-demo.vercel.app), maintained in the
+separate [votemirror-demo repository](https://github.com/duclucky/votemirror-demo).
+That demo contains recorded walkthroughs, the usage guide and the narrated film;
+its playback controls do not connect wallets or send transactions.
 
 ## Run
 
@@ -18,8 +25,9 @@ npm run preview
 
 Vite prints the local URL. `dist/` is the deployable static output and supports
 deep links through query parameters and hash navigation, without server rewrites.
-The hosted Site is owner-private by default; a judging link must allow judges access
-before it is used as a public submission link.
+Use [votemirror-demo.vercel.app](https://votemirror-demo.vercel.app) as the public
+judging link. Running or hosting this operational dashboard is separate and requires
+RPC access for its live features.
 
 ## Product flows
 
@@ -31,7 +39,10 @@ before it is used as a public submission link.
   contract links. Owner configuration changes remain in the existing scripts to
   avoid exposing a partially synchronized cross-chain policy editor.
 - **Execution proofs:** nine recorded scenarios, with source files and transaction
-  links. These are historical executions, not a live replay or uptime guarantee.
+  links from the earlier baseline checks. These are historical executions, not a
+  live replay or uptime guarantee. The newer eight-scenario submission suite is
+  documented in [submission-evidence.md](../docs/submission-evidence.md); the public
+  demo includes that suite, the filmed run, and a separate sender recovery.
 
 A wallet is not needed to inspect the dashboard. A signing action requests Base
 Sepolia, checks the network again, simulates the contract call, and waits for two

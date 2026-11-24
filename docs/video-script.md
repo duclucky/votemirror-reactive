@@ -4,6 +4,9 @@ Trạng thái: đã được người dùng duyệt và thực hiện ngày 24/1
 165 giây, quay Chrome thật, có voice-over và phụ đề tiếng Anh. Bằng chứng và kết quả
 kiểm tra: [video-evidence.md](video-evidence.md).
 
+Bản công khai: [xem video](https://votemirror-demo.vercel.app/#video) trên frontend
+chỉ đọc ở [repo demo riêng](https://github.com/duclucky/votemirror-demo).
+
 ## Định dạng
 
 - Dưới 3 phút; mục tiêu 2 phút 45 giây, tối đa 2 phút 55 giây sau dựng.
@@ -146,4 +149,5 @@ Voice-over:
 Đã kiểm tra các khung hình của bản dựng, định dạng, giải mã toàn bộ MP4, nhận dạng
 lời đọc theo từng cảnh và mức âm lượng. Chưa nghe đánh giá bằng tai nghe/loa;
 nhận dạng giọng nói không thay thế đánh giá phát âm của người xem.
-Chưa upload YouTube hoặc nộp DoraHacks.
+Video đã công khai trên Vercel và repo demo riêng. Chưa upload YouTube hoặc nộp
+DoraHacks.

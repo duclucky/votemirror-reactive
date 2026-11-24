@@ -1,0 +1,19 @@
+{
+  "chain": 84532,
+  "mirror": "0x4a89e26aD48A2729d8D95B3b446DBC1083AEF87a",
+  "governor": "0x04bB46C2E47F640Dd94bCfC0ea2aC9191364fafb",
+  "sender": "0x0000000000000000000000000000000000000000",
+  "cast": "cast",
+  "keystore": "C:/Users/YOUR_USER/.codex/wallets/votemirror-relayer/relayer",
+  "rpcs": [
+    "https://sepolia.base.org",
+    "https://base-sepolia-rpc.publicnode.com"
+  ],
+  "daily_budget_wei": 2000000000000000,
+  "l1_fee_reserve_wei": 1000000000000,
+  "max_gas": 900000,
+  "max_price_wei": 1000000000,
+  "replacement_seconds": 90,
+  "confirmations": 2,
+  "poll_seconds": 5
+}
