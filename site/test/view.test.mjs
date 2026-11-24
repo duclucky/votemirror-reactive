@@ -181,6 +181,22 @@ test("formatting", () => {
   assert.deepEqual([5, 125, 7300, 200000].map((age) => view.timeAgo(1000, 1000 + age)), ["5s ago", "2 min ago", "2 h ago", "2 d ago"]);
 });
 
+test("a removed voter's vote stops counting towards an open proposal", () => {
+  const script = [created, vote(0, 10), observed(0, 10, 1), ["lasna", "TrustedVoterRemoved", 20, { voter: VOTERS[0], proposalId: undefined }]];
+  const state = stateOf(script, { settings: { trustedVoters: VOTERS.slice(1) }, proposals: { 1: { state: 1 } } });
+  assert.deepEqual(only(state).status, { kind: "watching", agreeing: 0, support: null, threshold: 2 });
+  // A removal before the vote was counted (the voter was added back since) does not drop it.
+  const readded = stateOf([created, ["lasna", "TrustedVoterRemoved", 5, { voter: VOTERS[0], proposalId: undefined }], vote(0, 10), observed(0, 10, 1)], {
+    proposals: { 1: { state: 1 } },
+  });
+  assert.equal(only(readded).status.agreeing, 1);
+  // Once voting has closed, a later removal does not rewrite how far the proposal got.
+  const late = stateOf([created, vote(0, 10), observed(0, 10, 1), ["lasna", "TrustedVoterRemoved", 4000, { voter: VOTERS[0], proposalId: undefined }]], {
+    proposals: { 1: { state: 3 } },
+  });
+  assert.deepEqual(only(late).status, { kind: "noAgreement", agreeing: 1, threshold: 2 });
+});
+
 test("a proposal is described by the threshold in force at the time, not today's", () => {
   const rule = (at, threshold) => ["lasna", "ThresholdSet", at, { threshold, proposalId: undefined }];
   const state = stateOf([rule(-100, 2), ...agreed, ["base", "Mirrored", 13, { support: 1, weight: "1000" }], rule(5000, 3)], { settings: { threshold: 3 } });

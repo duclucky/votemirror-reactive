@@ -128,10 +128,15 @@ function buildProposal(created, index, state, now) {
   const lastOutcome = outcomes.at(-1);
   const governorState = live.state ?? null;
   const active = governorState === 1;
+  // Removing a trusted voter drops the votes the contract recorded for them, so they stop counting from then on.
   const timed = created.voteEnd > 1_000_000_000;
   const closedAt = active || governorState === 0 || !timed ? Infinity : created.voteEnd;
+  const removals = state.lasna.events.filter((event) => event.event === "TrustedVoterRemoved" && event.timestamp <= closedAt);
   const agreeing = {};
-  for (const event of observed) agreeing[event.support] = event.agreeing;
+  for (const event of observed) {
+    const dropped = removals.some((removal) => sameAddress(removal.voter, event.voter) && laterOnChain(removal, event));
+    if (!dropped) agreeing[event.support] = (agreeing[event.support] ?? 0) + 1;
+  }
   const leading = Object.entries(agreeing).sort((a, b) => b[1] - a[1])[0];
   const mirroredRequest = mirrored && requests.filter((entry) => items.indexOf(entry) < items.indexOf(mirrored)).at(-1);
 

@@ -155,7 +155,7 @@ reads everything else from public RPC endpoints of Base Sepolia and Reactive Las
 only; it cannot send a transaction). It refreshes every 30 seconds.
 
 ```bash
-node --test "site/test/*.test.mjs"     # 35 tests, Node 22 or newer
+node --test "site/test/*.test.mjs"     # 36 tests, Node 22 or newer
 node site/build.mjs --snapshot         # builds site/dist
 python3 -m http.server -d site/dist    # open http://localhost:8000
 ```
