@@ -1,0 +1,225 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1920px;height:1080px;overflow:hidden;background:#0a0f1e;color:#e8ecf6;font-family:'Liberation Sans',Arial,sans-serif}
+#bg{position:absolute;inset:0;background:radial-gradient(1200px 700px at 20% 0%,#16224a 0%,transparent 60%),radial-gradient(1000px 700px at 100% 100%,#2a1445 0%,transparent 60%),#0a0f1e}
+#grid{position:absolute;inset:0;background-image:linear-gradient(#ffffff08 1px,transparent 1px),linear-gradient(90deg,#ffffff08 1px,transparent 1px);background-size:60px 60px}
+.scene{position:absolute;inset:0;opacity:0}
+.abs{position:absolute}
+.mono{font-family:'JetBrains Mono',monospace}
+h1{font-size:44px;font-weight:700;letter-spacing:.3px}
+.tag{font-size:22px;color:#8ea0c9;letter-spacing:2px;text-transform:uppercase}
+#brand{position:absolute;left:60px;top:28px;font-size:26px;font-weight:700;color:#fff}
+#brand span{color:#7c9cff}
+#net{position:absolute;right:60px;top:32px;font-size:20px;color:#8ea0c9}
+#cap{position:absolute;left:160px;right:160px;top:952px;height:84px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:34px;line-height:1.2;color:#fff;background:#000000a0;border-radius:14px;padding:0 30px}
+#prog{position:absolute;left:0;top:1072px;height:8px;background:linear-gradient(90deg,#7c9cff,#c084fc)}
+.card{position:absolute;background:#111a33;border:1px solid #2a3966;border-radius:20px;padding:34px}
+.term{position:absolute;background:#070b16;border:1px solid #2a3966;border-radius:14px;overflow:hidden;box-shadow:0 20px 60px #0008}
+.term .bar{height:38px;background:#141d38;display:flex;align-items:center;padding-left:16px;gap:9px;font-size:16px;color:#8ea0c9}
+.term .bar i{width:13px;height:13px;border-radius:50%;display:inline-block}
+.term .body{padding:14px 22px;font-family:'JetBrains Mono',monospace;white-space:pre}
+.k{color:#7dd3fc}.g{color:#4ade80}.r{color:#f87171}.y{color:#fbbf24}.dim{color:#8ea0c9}
+.step{position:absolute;text-align:center;width:230px}
+.dot{width:56px;height:56px;border-radius:50%;margin:0 auto 12px;border:3px solid #33437a;background:#111a33;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#8ea0c9}
+.step .t{font-size:23px;font-weight:700}.step .s{font-size:18px;color:#8ea0c9;margin-top:4px}
+.banner{position:absolute;border-radius:16px;padding:20px 34px;font-size:32px;font-weight:700}
+.shot{position:absolute;border-radius:14px;overflow:hidden;border:2px solid #3b4d8a;box-shadow:0 30px 90px #000c;background:#000}
+.shot img{position:absolute;left:0;top:0}
+.shot .lab{position:absolute;left:0;right:0;top:0;height:44px;background:#141d38;font-size:19px;color:#c7d2f0;display:flex;align-items:center;padding-left:18px;z-index:3}
+.hl{position:absolute;border:4px solid #fbbf24;border-radius:10px;box-shadow:0 0 0 2000px #0004,0 0 30px #fbbf2480;z-index:2}
+.box{position:absolute;border-radius:16px;border:2px solid #3b4d8a;background:#131d3a;padding:16px 20px}
+.box .t{font-size:30px;font-weight:700}.box .s{font-size:19px;color:#9fb0d8;margin-top:6px}
+.chip{position:absolute;border-radius:24px;border:2px solid #3b4d8a;background:#131d3a;font-size:20px;display:flex;align-items:center;justify-content:center}
+.panel{position:absolute;border-radius:24px;border:2px dashed #33437a;background:#0d1530a0}
+.panel .pt{position:absolute;left:28px;top:18px;font-size:26px;font-weight:700;letter-spacing:1px}
+.lbl{position:absolute;font-size:21px;color:#fff;background:#0a0f1e;padding:4px 12px;border-radius:8px;border:1px solid #33437a;white-space:nowrap}
+</style></head><body>
+<div id="bg"></div><div id="grid"></div>
+<div id="root"></div>
+<div id="brand">Vote<span>Mirror</span></div><div id="net">Reactive Lasna + Base Sepolia &middot; testnets only</div>
+<div id="cap"></div><div id="prog"></div>
+<script>
+const TL=__TL__, LOGS=__LOGS__, DEP=__DEP__;
+const root=document.getElementById('root');
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const ease=x=>1-Math.pow(1-clamp(x),3);
+const A=(t,s,d=0.5)=>ease((t-s)/d);          // 0..1 starting at s
+const lin=(t,s,d)=>clamp((t-s)/d);
+const el=(tag,cls,html,par)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;(par||root).appendChild(e);return e};
+const css=(e,o)=>{Object.assign(e.style,o);return e};
+const px=v=>v+'px';
+const show=(e,a,dy=18)=>{e.style.opacity=a;e.style.transform=`translateY(${(1-a)*dy}px)`};
+const short=h=>h.slice(0,10)+'…'+h.slice(-8);
+const scenes={};
+function scene(name){const s=el('div','scene');s.id=name;return s}
+const L=(name,i)=>TL.scenes.find(s=>s.name===name).lines[i];
+
+/* ---------- intro ---------- */
+(function(){const s=scene('intro');
+ const title=css(el('div','abs','Vote<span style="color:#7c9cff">Mirror</span>',s),{left:0,right:0,top:px(120),textAlign:'center',fontSize:px(110),fontWeight:700});
+ const sub=css(el('div','abs tag','Reactive Omni Buildathon &middot; cross-chain vote mirroring',s),{left:0,right:0,top:px(262),textAlign:'center'});
+ const c=[0,1,2].map(i=>css(el('div','card','',s),{left:px(90+i*590),top:px(350),width:px(560),height:px(540)}));
+ c[0].innerHTML='<div class="tag">The problem</div><h1 style="margin-top:10px">Most holders never vote</h1><div id="dots" style="margin-top:34px;display:grid;grid-template-columns:repeat(10,1fr);gap:14px"></div><div class="dim" style="font-size:22px;margin-top:30px"><span style="color:#7c9cff">&#9679;</span> votes &nbsp;&nbsp; <span style="color:#33437a">&#9679;</span> stays silent</div>';
+ const dots=[];for(let i=0;i<50;i++)dots.push(css(el('div','','',c[0].querySelector('#dots')),{width:'34px',height:'34px',borderRadius:'50%',background:'#33437a'}));
+ const lit=[3,17,28,41];
+ c[1].innerHTML='<div class="tag">Today</div><h1 style="margin-top:10px">Delegate everything</h1><svg width="490" height="250" style="margin-top:30px"><circle cx="70" cy="120" r="56" fill="#131d3a" stroke="#3b4d8a" stroke-width="3"/><text x="70" y="128" fill="#fff" font-size="26" text-anchor="middle">You</text><circle cx="410" cy="120" r="56" fill="#3a1d1d" stroke="#f87171" stroke-width="3"/><text x="410" y="114" fill="#fff" font-size="22" text-anchor="middle">One</text><text x="410" y="142" fill="#fff" font-size="22" text-anchor="middle">delegate</text><line id="dl" x1="132" y1="120" x2="348" y2="120" stroke="#f87171" stroke-width="10" stroke-dasharray="216" stroke-dashoffset="216"/><text x="240" y="92" fill="#f87171" font-size="26" font-weight="700" text-anchor="middle">100%</text></svg><div class="dim" style="font-size:24px;margin-top:6px">All of your voting power, on every proposal.</div>';
+ c[2].innerHTML='<div class="tag" style="color:#7c9cff">VoteMirror</div><h1 style="margin-top:10px">Follow k of n you trust</h1><svg width="490" height="290" style="margin-top:20px"><g id="tv"></g><path id="mp" d="M190 145 H330" stroke="#4ade80" stroke-width="8" fill="none" stroke-dasharray="140" stroke-dashoffset="140"/><circle id="yv" cx="400" cy="145" r="62" fill="#131d3a" stroke="#3b4d8a" stroke-width="3"/><text x="400" y="139" fill="#fff" font-size="24" text-anchor="middle">Your</text><text x="400" y="169" fill="#fff" font-size="24" text-anchor="middle">vote</text></svg><div id="agree" style="font-size:26px;font-weight:700;color:#4ade80;margin-top:4px">2 of 3 agree &rarr; your vote follows</div>';
+ const tv=c[2].querySelector('#tv');const marks=[];
+ [50,145,240].forEach((y,i)=>{tv.innerHTML+=`<circle cx="90" cy="${y}" r="40" fill="#131d3a" stroke="#3b4d8a" stroke-width="3"/><text x="90" y="${y+8}" fill="#9fb0d8" font-size="20" text-anchor="middle">voter ${i+1}</text><text class="mk" x="150" y="${y+12}" fill="#4ade80" font-size="38" font-weight="700">&#10003;</text>`});
+ scenes.intro=t=>{
+  show(title,A(t,0.05,0.6),-20);show(sub,A(t,0.3,0.6));
+  show(c[0],A(t,L('intro',0).t0-0.2));dots.forEach((d,i)=>{d.style.background=lit.includes(i)&&t>L('intro',0).t0+0.5+0.15*lit.indexOf(i)?'#7c9cff':'#33437a'});
+  show(c[1],A(t,L('intro',1).t0-0.2));c[1].querySelector('#dl').setAttribute('stroke-dashoffset',216*(1-A(t,L('intro',1).t0+0.6,1.2)));
+  show(c[2],A(t,L('intro',2).t0-0.2));
+  const m=c[2].querySelectorAll('.mk');m[0].style.opacity=A(t,L('intro',2).t0+2.2,0.3);m[1].style.opacity=A(t,L('intro',3).t0-0.1,0.3);m[2].style.opacity=0;
+  const g=A(t,L('intro',3).t0+0.5,0.7);c[2].querySelector('#mp').setAttribute('stroke-dashoffset',140*(1-g));
+  c[2].querySelector('#yv').setAttribute('stroke',g>0.9?'#4ade80':'#3b4d8a');c[2].querySelector('#yv').setAttribute('fill',g>0.9?'#12351f':'#131d3a');
+  c[2].querySelector('#agree').style.opacity=A(t,L('intro',3).t0+0.9,0.4);
+ }})();
+
+/* ---------- architecture ---------- */
+(function(){const s=scene('arch');const l=i=>L('arch',i);
+ css(el('h1','abs','How it works',s),{left:px(70),top:px(84)});
+ const pB=css(el('div','panel','<div class="pt" style="color:#7dd3fc">BASE SEPOLIA &middot; chain 84532</div>',s),{left:px(70),top:px(150),width:px(900),height:px(770)});
+ const pR=css(el('div','panel','<div class="pt" style="color:#c084fc">REACTIVE LASNA &middot; chain 5318007</div>',s),{left:px(1090),top:px(150),width:px(760),height:px(770)});
+ const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');css(svg,{position:'absolute',left:0,top:0});svg.setAttribute('width',1920);svg.setAttribute('height',1080);s.appendChild(svg);
+ svg.innerHTML='<defs><marker id="ah" markerUnits="userSpaceOnUse" markerWidth="20" markerHeight="20" refX="15" refY="10" orient="auto"><path d="M0 0 L20 10 L0 20 z" fill="context-stroke"/></marker></defs>';
+ const P=(d,col,dash)=>{const p=document.createElementNS('http://www.w3.org/2000/svg','path');p.setAttribute('d',d);p.setAttribute('stroke',col);p.setAttribute('stroke-width',5);p.setAttribute('fill','none');p.setAttribute('marker-end','url(#ah)');svg.appendChild(p);p.len=p.getTotalLength();p.dash=dash;return p};
+ const draw=(p,a)=>{if(p.dash){p.setAttribute('stroke-dasharray','12 10');p.style.opacity=a}else{p.setAttribute('stroke-dasharray',p.len);p.setAttribute('stroke-dashoffset',p.len*(1-a));p.style.opacity=a>0.01?1:0}};
+ const ball=(col)=>{const c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('r',10);c.setAttribute('fill',col);svg.appendChild(c);return c};
+ const at=(c,p,f)=>{if(f<=0||f>=1){c.style.opacity=0;return}const q=p.getPointAtLength(p.len*f);c.setAttribute('cx',q.x);c.setAttribute('cy',q.y);c.style.opacity=1};
+ const chips=[0,1,2].map(i=>css(el('div','chip','Trusted voter '+(i+1),s),{left:px(100),top:px(232+i*62),width:px(210),height:px(46)}));
+ const gov=css(el('div','box','<div class="t">Governor</div><div class="s">OpenZeppelin Governor (demo)</div><div class="s mono" style="font-size:16px">'+short(DEP.governor)+'</div>',s),{left:px(420),top:px(230),width:px(400),height:px(140)});
+ const vm=css(el('div','box','<div class="t" style="color:#7c9cff">VoteMirror</div><div class="s">receives the callback, checks the Governor, votes</div><div class="s mono" style="font-size:16px">'+short(DEP.voteMirror)+'</div>',s),{left:px(420),top:px(700),width:px(400),height:px(150)});
+ const you=css(el('div','chip','You (token holder)',s),{left:px(100),top:px(752),width:px(230),height:px(50)});
+ const prox=css(el('div','chip','Reactive callback proxy',s),{left:px(680),top:px(560),width:px(270),height:px(50),fontSize:px(19)});
+ const mr=css(el('div','box','<div class="t" style="color:#c084fc">MirrorReactive</div><div class="s">counts trusted votes per proposal</div><div class="s mono" style="font-size:16px">'+short(DEP.mirrorReactive)+'</div><div id="cnt" style="margin-top:18px;font-size:30px;font-weight:700"></div>',s),{left:px(1230),top:px(400),width:px(480),height:px(220)});
+ const pv=[0,1,2].map(i=>P(`M312 ${255+i*62} L412 ${275+i*25}`,'#9fb0d8'));
+ const pe=[0,1,2].map(i=>P(`M822 ${265+i*28} C1000 ${265+i*28}, 1050 ${430+i*30}, 1222 ${440+i*34}`,'#7dd3fc'));
+ const pc1=P('M1222 590 C1100 590, 1040 585, 958 585','#c084fc');
+ const pc2=P('M815 612 C815 650, 760 660, 700 694','#c084fc');
+ const pcast=P('M560 694 L560 380','#4ade80');const pchk=P('M500 694 L500 380','#fbbf24',true);
+ const pdel=P('M332 777 L412 777','#fbbf24',true);
+ const lb=(txt,x,y)=>css(el('div','lbl',txt,s),{left:px(x),top:px(y)});
+ const lE=lb('VoteCast events',930,262),lS=lb('3 subscriptions, one per trusted voter',1180,330),lC=lb('callback: castMirrored()',1000,632),lV=lb('castVoteWithReason()',580,470),lH=lb('hasVoted() &times; trusted voters',165,540),lD=lb('delegate voting power &middot; tokens stay in your wallet',100,860);
+ const b=[ball('#7dd3fc'),ball('#7dd3fc'),ball('#c084fc'),ball('#4ade80')];
+ const cnt=mr.querySelector('#cnt');
+ scenes.arch=t=>{
+  show(pB,A(t,0.1));show(pR,A(t,0.25));[gov,...chips].forEach((e,i)=>show(e,A(t,0.4+0.06*i)));
+  const hi=A(t,l(0).t0,0.4)*(1-A(t,l(1).t0,0.4));
+  show(mr,A(t,l(0).t0));show(vm,A(t,l(0).t0+0.3));
+  mr.style.boxShadow=`0 0 ${40*hi}px #c084fc`;vm.style.boxShadow=`0 0 ${40*hi}px #7c9cff`;
+  pv.forEach((p,i)=>draw(p,A(t,l(1).t0+2.6+0.15*i,0.5)));
+  draw(pe[0],A(t,l(1).t0+3.4,1.0));lE.style.opacity=A(t,l(1).t0+3.6);
+  draw(pe[1],A(t,l(2).t0,0.6));draw(pe[2],A(t,l(2).t0+0.3,0.6));lS.style.opacity=A(t,l(2).t0+0.2);
+  const v1=l(3).t0+0.2,v2=l(3).t0+1.5;
+  at(b[0],pe[0],lin(t,v1,1.0));at(b[1],pe[1],lin(t,v2,1.0));
+  const n=t>v2+1.0?2:t>v1+1.0?1:0;cnt.innerHTML=`agreement <span style="color:${n==2?'#4ade80':'#fbbf24'}">${n} of 3</span> <span class="dim" style="font-size:22px">&nbsp;threshold 2</span>`;
+  chips.forEach((c,i)=>{const on=(i==0&&t>v1)||(i==1&&t>v2);c.style.borderColor=on?'#4ade80':'#3b4d8a';c.style.background=on?'#12351f':'#131d3a'});
+  show(prox,A(t,l(3).t0+2.4));draw(pc1,A(t,l(3).t0+2.8,0.8));lC.style.opacity=A(t,l(3).t0+3.0);
+  draw(pc2,A(t,l(4).t0+0.6,0.6));at(b[2],pc2,lin(t,l(4).t0+1.2,0.6));
+  draw(pchk,A(t,l(5).t0+0.3,0.6));lH.style.opacity=A(t,l(5).t0+0.5);draw(pcast,A(t,l(5).t0+3.2,0.8));lV.style.opacity=A(t,l(5).t0+3.4);at(b[3],pcast,lin(t,l(5).t0+3.6,0.9));
+  const voted=t>l(5).t0+4.5;vm.style.borderColor=voted?'#4ade80':'#3b4d8a';
+  show(you,A(t,l(6).t0));draw(pdel,A(t,l(6).t0+0.5));lD.style.opacity=A(t,l(6).t0+1.6);
+ }})();
+
+/* ---------- loops ---------- */
+function fmt(line){const m=line.match(/^([^:]+:)(\s+)(.*)$/);if(!m)return line;let v=m[3].replace(/(Mirrored|true)/g,'<span class="g">$1</span>').replace(/(Skipped|false)/g,'<span class="y">$1</span>');return `<span class="k">${m[1]}</span>${m[2]}${v}`}
+function terminal(par,x,y,w,h,title,fs,lh){const T=css(el('div','term','',par),{left:px(x),top:px(y),width:px(w),height:px(h)});T.innerHTML=`<div class="bar"><i style="background:#f87171"></i><i style="background:#fbbf24"></i><i style="background:#4ade80"></i>&nbsp; ${title}</div><div class="body" style="font-size:${fs}px;line-height:${lh}px"></div>`;T.bodyEl=T.querySelector('.body');return T}
+function loop(name,o){const s=scene(name);const l=i=>L(name,i);
+ css(el('div','tag abs',o.kicker,s),{left:px(60),top:px(78),color:o.col});
+ css(el('h1','abs',o.title,s),{left:px(60),top:px(104)});
+ const LH=o.lh||33;const TH=38+28+(o.lines.length+1)*LH;const T=terminal(s,60,172,1800,TH,'votemirror-reactive &mdash; run of 24 Nov 2026 &mdash; every hash and result re-read from Base Sepolia and Reactive Lasna',o.fs||20,LH);
+ const cmd=el('div','',null,T.bodyEl);const rows=o.lines.map(x=>{const d=el('div','',fmt(x.text),T.bodyEl);return d});
+ const ty=172+TH+30;
+ const n=o.steps.length,gap=1800/n;
+ const line=css(el('div','abs','',s),{left:px(60+gap/2),top:px(ty+28),width:px(1800-gap),height:'4px',background:'#33437a'});
+ const fill=css(el('div','abs','',s),{left:px(60+gap/2),top:px(ty+28),width:'0px',height:'4px',background:o.col});
+ const st=o.steps.map((x,i)=>{const e=css(el('div','step',`<div class="dot">${i+1}</div><div class="t">${x.t}</div><div class="s">${x.s}</div>`,s),{left:px(60+gap*i+gap/2-115),top:px(ty)});return e});
+ const ban=css(el('div','banner',o.banner,s),{left:px(60),top:px(ty+160),background:o.col+'22',border:'2px solid '+o.col,color:'#fff'});
+ const dim=css(el('div','abs','',s),{inset:0,background:'#050810'});
+ const cards=o.cards.map(c=>{const sc=c.w/c.cw;const e=css(el('div','shot','',s),{left:px(c.x),top:px(c.y),width:px(c.w),height:px(44+c.ch*sc)});
+  e.innerHTML=`<div class="lab">${c.label}</div><img src="${c.img}" style="width:${c.iw*sc}px;left:${-c.cx*sc}px;top:${44-c.cy*sc}px">`;
+  e.hls=c.hl.map(h=>{const d=css(el('div','hl','',e),{left:px((h.x-c.cx)*sc),top:px(44+(h.y-c.cy)*sc),width:px(h.w*sc),height:px(h.h*sc)});return d});return e});
+ const extra=o.extra?o.extra(s):null;
+ scenes[name]=t=>{
+  const full='./script/demo.sh '+o.mode;const k=Math.floor(lin(t,0.25,0.9)*full.length);
+  cmd.innerHTML='<span class="g">$</span> '+full.slice(0,k)+(t<1.3&&Math.floor(t*4)%2==0?'█':'');
+  let last=-1;rows.forEach((r,i)=>{const tt=o.lines[i].at(l);r.style.visibility=t>=tt?'visible':'hidden';r.style.background=(t>=tt&&t<tt+0.6)?'#ffffff14':'transparent'});
+  o.steps.forEach((x,i)=>{const on=t>=x.at(l);if(on)last=i;const d=st[i].querySelector('.dot');d.style.borderColor=on?(x.col||o.col):'#33437a';d.style.background=on?(x.col||o.col)+'33':'#111a33';d.style.color=on?'#fff':'#8ea0c9';st[i].style.opacity=on?1:0.45});
+  fill.style.width=px(Math.max(0,last)*gap);
+  show(ban,A(t,o.bannerAt(l)));
+  let d=0;o.cards.forEach((c,i)=>{const a=A(t,c.tin(l),0.6)*(c.tout?1-A(t,c.tout(l),0.4):1);d=Math.max(d,a);const e=cards[i];e.style.opacity=a;e.style.transform=`translateX(${(1-a)*80}px)`;
+   let act=-1;c.hl.forEach((h,j)=>{if(t>=h.at(l))act=j});e.hls.forEach((h,j)=>{h.style.opacity=j==act?A(t,c.hl[j].at(l),0.3):0})});
+  dim.style.opacity=0.72*d;
+  if(o.hideAt){const h=1-A(t,o.hideAt(l),0.4);st.forEach(e=>e.style.opacity*=h);ban.style.opacity*=h;line.style.opacity=h;fill.style.opacity=h}
+  if(extra)extra(t,l);
+ }}
+const BS={iw:1280,cx:96,cy:112,cw:1164,ch:640};
+const log=n=>LOGS[n];
+const row=(n,key)=>log(n).find(x=>x.startsWith(key));
+const H=(n,key)=>short(row(n,key).match(/0x[0-9a-f]{64}/)[0]);
+loop('for',{mode:'for',lh:46,col:'#4ade80',kicker:'Loop 1 of 4',title:'Two of three trusted voters vote For',
+ lines:log('for').map((x,i)=>({text:x,at:l=>[2.5,2.8,l(1).t0+0.9,l(2).t0+0.8,l(3).t0+0.6,l(4).t0+1.0,l(4).t0+2.4,l(4).t0+2.7][i]})),
+ steps:[{t:'Proposal opens',s:'Base Sepolia',at:l=>2.5},{t:'Trusted voter 1: For',s:'1 of 3, not enough',at:l=>l(1).t0+0.9,col:'#fbbf24'},{t:'Trusted voter 2: For',s:'2 of 3',at:l=>l(2).t0+0.8},{t:'react()',s:'Reactive Lasna',at:l=>l(3).t0+0.6,col:'#c084fc'},{t:'Callback delivered',s:'Base Sepolia',at:l=>l(4).t0+1.0},{t:'VoteMirror votes For',s:'1,000 votes',at:l=>l(4).t0+2.4}],
+ banner:'Result: VoteMirror voted <span class="g">For</span> &middot; tally 3,000 For / 0 Against / 0 Abstain',bannerAt:l=>l(4).t0+2.7,
+ cards:[{img:'ex_react.png',label:'lasna.reactscan.net &middot; react transaction '+H('for','react() tx'),iw:1280,cx:0,cy:180,cw:1280,ch:950,x:860,y:140,w:1000,tin:l=>l(3).t0+1.5,tout:l=>l(4).t0+0.3,hl:[{x:20,y:838,w:1240,h:285,at:l=>l(3).t0+2.3}]},
+  {img:'ex_for.png',label:'base-sepolia.blockscout.com &middot; callback transaction '+H('for','callback tx'),...BS,x:760,y:150,w:1100,tin:l=>l(5).t0+0.2,hl:[{x:140,y:176,w:580,h:42,at:l=>l(5).t0+2.2},{x:372,y:440,w:850,h:256,at:l=>l(6).t0-0.1}]}]});
+loop('against',{mode:'against',lh:46,col:'#f87171',kicker:'Loop 2 of 4',title:'Two of three trusted voters vote Against',
+ lines:log('against').map((x,i)=>({text:x,at:l=>[1.6,1.9,2.6,3.3,l(1).t0-0.2,l(1).t0+0.3,l(1).t0+0.9,l(1).t0+1.2][i]})),
+ steps:[{t:'Proposal opens',s:'Base Sepolia',at:l=>1.6},{t:'Voter 1: Against',s:'trusted, 1 of 3',at:l=>2.6,col:'#fbbf24'},{t:'Voter 2: Against',s:'trusted, 2 of 3',at:l=>3.3},{t:'react()',s:'Reactive Lasna',at:l=>l(1).t0-0.2,col:'#c084fc'},{t:'Callback delivered',s:'Base Sepolia',at:l=>l(1).t0+0.3},{t:'Mirrored: Against',s:'VoteMirror, 1,000 votes',at:l=>l(1).t0+0.9}],
+ banner:'Result: VoteMirror voted <span class="r">Against</span> &middot; tally 3,000 Against / 0 For / 0 Abstain',bannerAt:l=>l(1).t0+1.2,
+ cards:[{img:'ex_against.png',label:'base-sepolia.blockscout.com &middot; callback transaction '+H('against','callback tx'),...BS,x:760,y:150,w:1100,tin:l=>l(2).t0-0.3,hl:[{x:372,y:440,w:850,h:256,at:l=>l(2).t0+0.5}]}]});
+loop('skip',{mode:'skip',lh:42,col:'#fbbf24',kicker:'Loop 3 of 4',title:'The owner skips this proposal',
+ lines:log('skip').map((x,i)=>({text:x,at:l=>[1.6,1.9,3.4,l(1).t0+0.2,l(1).t0+0.8,l(1).t0+1.7,l(1).t0+2.3,l(2).t0+0.2,l(2).t0+0.4][i]})),
+ steps:[{t:'Proposal opens',s:'Base Sepolia',at:l=>1.6},{t:'Owner: setSkipped',s:'VoteMirror',at:l=>3.4},{t:'Trusted voter 1: For',s:'1 of 3',at:l=>l(1).t0+0.2,col:'#4ade80'},{t:'Trusted voter 2: For',s:'2 of 3',at:l=>l(1).t0+0.8,col:'#4ade80'},{t:'react()',s:'Reactive Lasna',at:l=>l(1).t0+1.7,col:'#c084fc'},{t:'Callback delivered',s:'Base Sepolia',at:l=>l(1).t0+2.3,col:'#4ade80'},{t:'Skipped, no vote',s:'owner decides',at:l=>l(2).t0+0.2}],
+ banner:'Result: <span class="y">Skipped(SkippedByOwner)</span> &middot; VoteMirror did not vote &middot; tally 2,000 For',bannerAt:l=>l(2).t0+0.4,
+ cards:[{img:'ex_skip.png',label:'base-sepolia.blockscout.com &middot; callback transaction '+H('skip','callback tx')+' &middot; reason 1 = SkippedByOwner',...BS,ch:520,x:760,y:150,w:1100,tin:l=>l(2).t0+0.9,hl:[{x:372,y:296,w:850,h:322,at:l=>l(2).t0+1.5}]}],
+ hideAt:l=>l(3).t0-0.5,
+ extra:s=>{const c=css(el('div','card','<div class="tag">Owner controls on VoteMirror</div><div class="mono" style="font-size:25px;line-height:48px;margin-top:8px"><div><span class="y">setSkipped</span>(proposalId, true)</div><div><span class="y">setPaused</span>(true)</div><div><span class="y">castVote</span>(proposalId, support, reason)</div></div>',s),{left:px(60),top:px(700),width:px(660),height:px(232),zIndex:5,padding:'24px 30px'});
+  return (t,l)=>show(c,A(t,l(3).t0-0.1))}});
+loop('retry',{mode:'retry',lh:31,col:'#c084fc',kicker:'Loop 4 of 4',title:'Paused, then retried',
+ lines:log('retry').map((x,i)=>({text:x,at:l=>[1.5,1.8,2.5,3.3,3.8,l(1).t0+0.2,l(1).t0+1.0,l(2).t0+1.5,l(2).t0+3.0,l(3).t0+0.6,l(3).t0+2.0,l(3).t0+2.3][i]})),
+ steps:[{t:'Proposal opens',s:'Base Sepolia',at:l=>1.5},{t:'Owner pauses',s:'setPaused(true)',at:l=>2.5,col:'#fbbf24'},{t:'Trusted voters: For',s:'2 of 3',at:l=>3.8,col:'#4ade80'},{t:'Callback 1: Skipped',s:'reason: Paused',at:l=>l(1).t0+1.0,col:'#fbbf24'},{t:'Owner unpauses',s:'setPaused(false)',at:l=>l(2).t0+1.5,col:'#fbbf24'},{t:'retryMirror()',s:'Reactive Lasna',at:l=>l(2).t0+3.0},{t:'Callback 2: Mirrored',s:'VoteMirror votes For',at:l=>l(3).t0+2.0,col:'#4ade80'}],
+ banner:'Result: <span class="y">Skipped(Paused)</span>, then <span class="g">Mirrored</span> after the retry &middot; tally 3,000 For / 0 Against / 0 Abstain',bannerAt:l=>l(3).t0+2.3,
+ cards:[{img:'ex_retry1.png',label:'base-sepolia.blockscout.com &middot; first callback '+H('retry','callback tx:')+' &middot; reason 0 = Paused',...BS,ch:520,x:760,y:150,w:1100,tin:l=>l(1).t0+1.9,tout:l=>l(2).t0+0.1,hl:[{x:372,y:296,w:850,h:322,at:l=>l(1).t0+2.6}]},
+  {img:'ex_retry2.png',label:'base-sepolia.blockscout.com &middot; second callback '+H('retry','callback tx 2'),...BS,x:760,y:150,w:1100,tin:l=>l(3).t0+3.0,hl:[{x:372,y:440,w:850,h:256,at:l=>l(3).t0+3.7}]}]});
+
+/* ---------- tests ---------- */
+(function(){const s=scene('tests');const l=i=>L('tests',i);
+ css(el('h1','abs','Tested and deployed on testnets',s),{left:px(60),top:px(96)});
+ const T=terminal(s,60,172,960,640,'votemirror-reactive &mdash; forge test',18,27);css(T.bodyEl,{height:px(640-38),overflow:'hidden'});
+ T.bodyEl.style.whiteSpace='pre-wrap';const inner=el('div','',null,T.bodyEl);
+ const lines=LOGS.test;const cmd=el('div','','<span class="g">$</span> forge test',inner);
+ const rows=lines.map(x=>el('div','',x.replace('[PASS]','<span class="g">[PASS]</span>').replace(/(\d+ passed|77 tests passed)/,'<span class="g">$1</span>').replace(/\(gas: \d+\)|\(runs: [^)]*\)/,m=>'<span class="dim">'+m+'</span>'),inner));
+ const a=css(el('div','card','<div class="tag">Contracts</div><table class="mono" style="font-size:20px;margin-top:16px;border-spacing:0 10px"><tr><td style="color:#c084fc;padding-right:18px">MirrorReactive</td><td>'+DEP.mirrorReactive+'</td></tr><tr><td></td><td class="dim" style="font-family:Liberation Sans">Reactive Lasna &middot; source verified on Sourcify (exact match)</td></tr><tr><td style="color:#7c9cff">VoteMirror</td><td>'+DEP.voteMirror+'</td></tr><tr><td>DemoGovernor</td><td>'+DEP.governor+'</td></tr><tr><td>DemoToken</td><td>'+DEP.token+'</td></tr><tr><td></td><td class="dim" style="font-family:Liberation Sans">Base Sepolia &middot; source verified on Blockscout</td></tr></table>',s),{left:px(1060),top:px(172),width:px(800),height:px(400)});
+ const b=css(el('div','card','<div class="tag">In the README</div><div style="font-size:28px;line-height:54px;margin-top:10px"><div><span class="g">&#10003;</span> Contract addresses</div><div><span class="g">&#10003;</span> Transaction hashes for every step of the four loops</div><div><span class="g">&#10003;</span> How to rerun the demo</div><div><span class="g">&#10003;</span> Known limitations</div></div>',s),{left:px(1060),top:px(596),width:px(800),height:px(316)});
+ const big=css(el('div','banner','<span class="g">77 tests passed</span>, 0 failed',s),{left:px(60),top:px(836),background:'#12351f',border:'2px solid #4ade80',fontSize:px(34)});
+ scenes.tests=t=>{
+  const f=lin(t,0.9,l(1).t1-0.9);const k=Math.floor(f*rows.length);rows.forEach((r,i)=>r.style.display=i<k?'block':'none');
+  cmd.innerHTML='<span class="g">$</span> forge test';
+  const over=Math.max(0,inner.scrollHeight-(640-38-28));inner.style.transform=`translateY(${-over}px)`;
+  show(big,A(t,l(1).t1));show(a,A(t,l(2).t0-0.2));show(b,A(t,l(4).t0-0.2));
+ }})();
+
+/* ---------- outro ---------- */
+(function(){const s=scene('outro');
+ const a=css(el('div','abs','Vote<span style="color:#7c9cff">Mirror</span>',s),{left:0,right:0,top:px(270),textAlign:'center',fontSize:px(150),fontWeight:700});
+ const b=css(el('div','abs','Stay a voter, without reading every proposal.',s),{left:0,right:0,top:px(470),textAlign:'center',fontSize:px(48),color:'#c7d2f0'});
+ const c=css(el('div','abs mono','github.com/duclucky/votemirror-reactive',s),{left:0,right:0,top:px(620),textAlign:'center',fontSize:px(44),color:'#7dd3fc'});
+ const d=css(el('div','abs tag','Reactive Omni Buildathon &middot; Reactive Lasna + Base Sepolia testnets',s),{left:0,right:0,top:px(730),textAlign:'center'});
+ scenes.outro=t=>{show(a,A(t,0.1,0.7));show(b,A(t,0.7,0.6));show(c,A(t,1.6,0.6));show(d,A(t,2.2,0.6))}})();
+
+const cap=document.getElementById('cap'),prog=document.getElementById('prog');
+window.setT=function(T){
+ for(const sc of TL.scenes){const e=document.getElementById(sc.name);const t=T-sc.start;
+  if(t<0||t>=sc.dur){e.style.opacity=0;e.style.visibility='hidden';continue}
+  e.style.visibility='visible';const last=sc.name==='outro';e.style.opacity=Math.min(lin(t,0,0.35),last?1:1-lin(t,sc.dur-0.3,0.3));scenes[sc.name](t);
+  let c='';sc.lines.forEach((ln,i)=>{const end=i+1<sc.lines.length?sc.lines[i+1].t0-0.12:ln.t1+0.5;if(t>=ln.t0-0.12&&t<end)c=ln.cap});
+  cap.textContent=c;cap.style.opacity=c&&!last?1:0;
+ }
+ prog.style.width=(1920*T/TL.total)+'px';
+ document.body.style.opacity=T>TL.total-0.5?1-lin(T,TL.total-0.5,0.5):1;
+};
+setT(parseFloat(location.hash.slice(1)||'0'));
+</script></body></html>

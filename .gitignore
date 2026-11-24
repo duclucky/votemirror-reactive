@@ -4,3 +4,8 @@ broadcast/
 .env
 .env.*
 !.env.example
+video/video.html
+video/frames/
+video/probe/
+video/audio/*.wav
+video/*.mp4

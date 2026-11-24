@@ -1,0 +1,241 @@
+{
+ "total": 149.486,
+ "scenes": [
+  {
+   "name": "intro",
+   "start": 0.0,
+   "dur": 14.26,
+   "lines": [
+    {
+     "cap": "Most token holders never vote.",
+     "t0": 0.7,
+     "t1": 2.395
+    },
+    {
+     "cap": "Delegating hands one person all of your voting power, on every proposal.",
+     "t0": 2.675,
+     "t1": 6.646
+    },
+    {
+     "cap": "VoteMirror is the middle ground: your votes follow a group of voters you trust,",
+     "t0": 6.926,
+     "t1": 11.198
+    },
+    {
+     "cap": "and only when enough of them agree.",
+     "t0": 11.478,
+     "t1": 13.08
+    }
+   ]
+  },
+  {
+   "name": "arch",
+   "start": 14.26,
+   "dur": 28.556,
+   "lines": [
+    {
+     "cap": "It is two contracts.",
+     "t0": 0.7,
+     "t1": 2.023
+    },
+    {
+     "cap": "MirrorReactive lives on Reactive Network and listens to the Governor's VoteCast events on Base Sepolia,",
+     "t0": 2.303,
+     "t1": 8.526
+    },
+    {
+     "cap": "with one subscription per trusted voter.",
+     "t0": 8.806,
+     "t1": 10.885
+    },
+    {
+     "cap": "When k of n pick the same side, it asks Reactive for a callback.",
+     "t0": 11.165,
+     "t1": 15.553
+    },
+    {
+     "cap": "VoteMirror, on Base Sepolia, receives that callback,",
+     "t0": 15.833,
+     "t1": 19.444
+    },
+    {
+     "cap": "checks on the Governor that enough trusted voters really voted, and casts the vote.",
+     "t0": 19.724,
+     "t1": 23.59
+    },
+    {
+     "cap": "Your tokens never leave your wallet: you only delegate voting power.",
+     "t0": 23.87,
+     "t1": 27.376
+    }
+   ]
+  },
+  {
+   "name": "for",
+   "start": 42.817,
+   "dur": 28.324,
+   "lines": [
+    {
+     "cap": "Loop one, on the public testnets. A proposal opens.",
+     "t0": 0.7,
+     "t1": 4.334
+    },
+    {
+     "cap": "Trusted voter one votes For. Nothing happens: one of three is not enough.",
+     "t0": 4.614,
+     "t1": 8.492
+    },
+    {
+     "cap": "Trusted voter two votes For.",
+     "t0": 8.772,
+     "t1": 10.269
+    },
+    {
+     "cap": "The reactive contract now counts two of three and requests the callback,",
+     "t0": 10.549,
+     "t1": 14.81
+    },
+    {
+     "cap": "and about a second later VoteMirror votes For with the owner's 1,000 tokens.",
+     "t0": 15.09,
+     "t1": 19.699
+    },
+    {
+     "cap": "The explorer shows the callback transaction, sent through Reactive Network's callback proxy,",
+     "t0": 19.979,
+     "t1": 24.844
+    },
+    {
+     "cap": "and the For vote cast by VoteMirror.",
+     "t0": 25.124,
+     "t1": 27.144
+    }
+   ]
+  },
+  {
+   "name": "against",
+   "start": 71.141,
+   "dur": 10.857,
+   "lines": [
+    {
+     "cap": "Loop two. Same flow, but this time the trusted voters vote Against,",
+     "t0": 0.7,
+     "t1": 4.485
+    },
+    {
+     "cap": "so VoteMirror votes Against.",
+     "t0": 4.765,
+     "t1": 6.599
+    },
+    {
+     "cap": "It mirrors the side they agree on, not a fixed answer.",
+     "t0": 6.879,
+     "t1": 9.677
+    }
+   ]
+  },
+  {
+   "name": "skip",
+   "start": 81.998,
+   "dur": 16.443,
+   "lines": [
+    {
+     "cap": "Loop three. The owner wants to judge this proposal personally, and marks it skipped.",
+     "t0": 0.7,
+     "t1": 5.321
+    },
+    {
+     "cap": "Two trusted voters still agree, and the callback still arrives,",
+     "t0": 5.601,
+     "t1": 8.863
+    },
+    {
+     "cap": "but VoteMirror emits Skipped instead of voting.",
+     "t0": 9.143,
+     "t1": 11.535
+    },
+    {
+     "cap": "The owner can also pause everything, or cast the vote directly.",
+     "t0": 11.815,
+     "t1": 15.263
+    }
+   ]
+  },
+  {
+   "name": "retry",
+   "start": 98.441,
+   "dur": 22.307,
+   "lines": [
+    {
+     "cap": "Loop four. VoteMirror is paused when the trusted voters agree.",
+     "t0": 0.7,
+     "t1": 4.032
+    },
+    {
+     "cap": "The callback still arrives, and is answered with Skipped, not a failed transaction.",
+     "t0": 4.312,
+     "t1": 8.677
+    },
+    {
+     "cap": "The vote is not lost. The owner unpauses, and calls retryMirror on Reactive.",
+     "t0": 8.957,
+     "t1": 13.915
+    },
+    {
+     "cap": "A second callback is delivered, and VoteMirror votes For.",
+     "t0": 14.195,
+     "t1": 17.585
+    },
+    {
+     "cap": "A retry only goes through for the side the trusted voters agreed on.",
+     "t0": 17.865,
+     "t1": 21.127
+    }
+   ]
+  },
+  {
+   "name": "tests",
+   "start": 120.748,
+   "dur": 23.294,
+   "lines": [
+    {
+     "cap": "77 Foundry tests cover the k-of-n rule, duplicate votes, owner overrides,",
+     "t0": 0.7,
+     "t1": 6.075
+    },
+    {
+     "cap": "pause, retry, and who is allowed to deliver the callback.",
+     "t0": 6.355,
+     "t1": 10.059
+    },
+    {
+     "cap": "These contracts include the fixes from a security review, and their source code is verified.",
+     "t0": 10.339,
+     "t1": 15.459
+    },
+    {
+     "cap": "Everything runs on testnets only.",
+     "t0": 15.739,
+     "t1": 17.527
+    },
+    {
+     "cap": "Addresses, transaction hashes and known limitations are in the README.",
+     "t0": 17.807,
+     "t1": 22.114
+    }
+   ]
+  },
+  {
+   "name": "outro",
+   "start": 144.042,
+   "dur": 5.444,
+   "lines": [
+    {
+     "cap": "VoteMirror: stay a voter, without reading every proposal.",
+     "t0": 0.7,
+     "t1": 4.264
+    }
+   ]
+  }
+ ]
+}
