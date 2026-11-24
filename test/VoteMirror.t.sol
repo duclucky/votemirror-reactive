@@ -50,7 +50,7 @@ contract VoteMirrorTest is Test {
         trusted[1] = bob;
         trusted[2] = carol;
         reactive = new MirrorReactive(block.chainid, address(governor), trusted, 2);
-        mirror = new VoteMirror(IPayable(payable(address(proxy))), address(reactive), governor, user);
+        mirror = new VoteMirror(IPayable(payable(address(proxy))), address(reactive), governor, user, trusted, 2);
         reactive.setMirror(address(mirror));
 
         // The user keeps the tokens and only delegates voting power to VoteMirror.
@@ -74,6 +74,15 @@ contract VoteMirrorTest is Test {
         calldatas[0] = abi.encodeCall(DemoToken.faucet, (address(governor)));
         proposalId = governor.propose(targets, values, calldatas, description_);
         vm.warp(block.timestamp + VOTING_DELAY + 1);
+    }
+
+    /// @dev Two trusted voters vote on the Governor without anything being relayed, so that a callback
+    ///      delivered by hand with `_deliver` passes VoteMirror's own check.
+    function _trustedVotes(uint256 proposalId_, uint8 support_) internal {
+        vm.prank(alice);
+        governor.castVote(proposalId_, support_);
+        vm.prank(bob);
+        governor.castVote(proposalId_, support_);
     }
 
     function _deliver(uint256 proposalId_, uint8 support_) internal {
@@ -121,7 +130,7 @@ contract VoteMirrorTest is Test {
     }
 
     /// @dev Checks the single event VoteMirror emitted since the last `_voteAndRelay` read the logs.
-    function _assertMirrorEmitted(bytes memory data_, bytes32 topic0_, uint256 proposalId_) internal {
+    function _assertMirrorEmitted(bytes memory data_, bytes32 topic0_, uint256 proposalId_) internal view {
         Vm.Log[] memory logs = vm.getRecordedLogs();
         uint256 found;
         for (uint256 i = 0; i < logs.length; ++i) {
@@ -258,6 +267,7 @@ contract VoteMirrorTest is Test {
 
     function test_PausedMirrorSkips() public {
         uint256 id = _propose("p");
+        _trustedVotes(id, FOR);
         vm.prank(user);
         mirror.setPaused(true);
 
@@ -288,11 +298,112 @@ contract VoteMirrorTest is Test {
 
     function test_UnskipAllowsMirroring() public {
         uint256 id = _propose("p");
+        _trustedVotes(id, FOR);
         vm.startPrank(user);
         mirror.setSkipped(id, true);
         mirror.setSkipped(id, false);
         vm.stopPrank();
         _deliver(id, FOR);
+        assertTrue(governor.hasVoted(id, address(mirror)));
+    }
+
+    // ------------------------------------------------------------------ own check on the Governor
+
+    /// @dev A callback that MirrorReactive never asked for, delivered by the relayer through the real proxy
+    ///      with the right first argument, does not make VoteMirror vote while the trusted voters are silent.
+    function test_CallbackWithoutTrustedVotesIsNotConfirmed() public {
+        uint256 id = _propose("p");
+        assertEq(mirror.confirmations(id), 0);
+        vm.expectEmit(address(mirror));
+        emit VoteMirror.Skipped(id, FOR, VoteMirror.SkipReason.NotConfirmed);
+        _deliver(id, FOR);
+        assertFalse(governor.hasVoted(id, address(mirror)));
+    }
+
+    function test_CallbackNeedsThresholdTrustedVotesOnTheGovernor() public {
+        uint256 id = _propose("p");
+        vm.prank(alice);
+        governor.castVote(id, FOR);
+        vm.prank(stranger);
+        governor.castVote(id, FOR);
+        assertEq(mirror.confirmations(id), 1);
+        vm.expectEmit(address(mirror));
+        emit VoteMirror.Skipped(id, FOR, VoteMirror.SkipReason.NotConfirmed);
+        _deliver(id, FOR);
+
+        vm.prank(bob);
+        governor.castVote(id, FOR);
+        assertEq(mirror.confirmations(id), 2);
+        _deliver(id, FOR);
+        assertTrue(governor.hasVoted(id, address(mirror)));
+    }
+
+    function test_TrustedListStartsEqualToMirrorReactive() public view {
+        assertEq(mirror.trustedVoters(), reactive.trustedVoters());
+        assertEq(mirror.threshold(), reactive.threshold());
+        assertTrue(mirror.isTrusted(carol));
+        assertFalse(mirror.isTrusted(stranger));
+    }
+
+    function test_OwnerChangesTrustedListAndThreshold() public {
+        vm.startPrank(user);
+        mirror.addTrusted(stranger);
+        assertEq(mirror.trustedVoters().length, 4);
+        mirror.setThreshold(4);
+        vm.expectRevert(abi.encodeWithSelector(VoteMirror.InvalidThreshold.selector, 4, 3));
+        mirror.removeTrusted(alice);
+        mirror.setThreshold(1);
+        mirror.removeTrusted(alice);
+        assertFalse(mirror.isTrusted(alice));
+        assertEq(mirror.trustedVoters().length, 3);
+        vm.stopPrank();
+
+        // alice no longer counts, stranger does.
+        uint256 id = _propose("p");
+        vm.prank(alice);
+        governor.castVote(id, FOR);
+        assertEq(mirror.confirmations(id), 0);
+        vm.prank(stranger);
+        governor.castVote(id, FOR);
+        assertEq(mirror.confirmations(id), 1);
+    }
+
+    function test_RevertWhen_TrustedListChangeIsInvalid() public {
+        vm.startPrank(user);
+        vm.expectRevert(abi.encodeWithSelector(VoteMirror.AlreadyTrusted.selector, alice));
+        mirror.addTrusted(alice);
+        vm.expectRevert(VoteMirror.ZeroAddress.selector);
+        mirror.addTrusted(address(0));
+        vm.expectRevert(abi.encodeWithSelector(VoteMirror.NotTrusted.selector, stranger));
+        mirror.removeTrusted(stranger);
+        vm.expectRevert(abi.encodeWithSelector(VoteMirror.InvalidThreshold.selector, 0, 3));
+        mirror.setThreshold(0);
+        vm.expectRevert(abi.encodeWithSelector(VoteMirror.InvalidThreshold.selector, 4, 3));
+        mirror.setThreshold(4);
+        for (uint160 i = 1; i <= 13; ++i) {
+            mirror.addTrusted(address(i + 1000));
+        }
+        vm.expectRevert(VoteMirror.TooManyTrusted.selector);
+        mirror.addTrusted(stranger);
+        vm.stopPrank();
+
+        address[] memory none = new address[](0);
+        vm.expectRevert(abi.encodeWithSelector(VoteMirror.InvalidThreshold.selector, 1, 0));
+        new VoteMirror(IPayable(payable(address(proxy))), address(reactive), governor, user, none, 1);
+    }
+
+    /// @dev The callback with a full trusted list stays far below the gas MirrorReactive asks for.
+    function test_CallbackWithFullTrustedListFitsTheGasLimit() public {
+        vm.startPrank(user);
+        for (uint160 i = 1; i <= 13; ++i) {
+            mirror.addTrusted(address(i + 1000));
+        }
+        vm.stopPrank();
+        uint256 id = _propose("p");
+        _trustedVotes(id, FOR);
+        uint256 gasBefore = gasleft();
+        _deliver(id, FOR);
+        assertLt(gasBefore - gasleft(), reactive.CALLBACK_GAS_LIMIT() / 2);
         assertTrue(governor.hasVoted(id, address(mirror)));
     }
 
@@ -339,6 +450,7 @@ contract VoteMirrorTest is Test {
 
     function test_InvalidSupportSkipsWithoutReverting() public {
         uint256 id = _propose("p");
+        _trustedVotes(id, FOR);
         vm.expectEmit(address(mirror));
         emit VoteMirror.Skipped(id, 9, VoteMirror.SkipReason.CastFailed);
         _deliver(id, 9);
@@ -409,12 +521,13 @@ contract VoteMirrorTest is Test {
 
     function test_RevertWhen_DeployedWithZeroAddress() public {
         IPayable proxy_ = IPayable(payable(address(proxy)));
+        address[] memory trusted = mirror.trustedVoters();
         vm.expectRevert(VoteMirror.ZeroAddress.selector);
-        new VoteMirror(IPayable(payable(address(0))), address(reactive), governor, user);
+        new VoteMirror(IPayable(payable(address(0))), address(reactive), governor, user, trusted, 2);
         vm.expectRevert(VoteMirror.ZeroAddress.selector);
-        new VoteMirror(proxy_, address(0), governor, user);
+        new VoteMirror(proxy_, address(0), governor, user, trusted, 2);
         vm.expectRevert(VoteMirror.ZeroAddress.selector);
-        new VoteMirror(proxy_, address(reactive), DemoGovernor(payable(address(0))), user);
+        new VoteMirror(proxy_, address(reactive), DemoGovernor(payable(address(0))), user, trusted, 2);
     }
 
     function test_OwnershipMovesInTwoSteps() public {

@@ -32,15 +32,15 @@ No critical or high severity issue. One medium, four low, six informational.
 | # | Status | What changed |
 |---|--------|--------------|
 | M-1 | Mitigated, not removable | The charge is made by Reactive's proxy. `retryMirror()` now recovers the votes missed while VoteMirror was in debt |
-| L-1 | Accepted and documented | Trust model of any Reactive callback contract; pause, skip and `castVote` remain the owner's defence |
+| L-1 | Reduced, not removable | VoteMirror now checks on the Governor that `threshold` trusted voters have voted before it casts (`Skipped(NotConfirmed)` otherwise), so a made-up callback cannot vote on a proposal the trusted voters are silent on. The side still comes from the callback: a standard Governor does not expose it |
 | L-2 | Fixed | Owner-only `MirrorReactive.retryMirror(proposalId, support)`; reverts unless `threshold` currently trusted voters agree on that choice (`AgreementNotReached`) and it is the choice requested first (`OtherChoiceRequested`) |
 | L-3 | Accepted and documented | Reactive bills per delivered log; `removeTrusted` stops it |
 | L-4 | Fixed | `trustEpoch[voter]` is raised on removal and votes are recorded per epoch |
 | I-1 | Fixed | `Ownable2Step` on both contracts; `renounceOwnership()` reverts with `RenounceDisabled` |
 | I-2 | Fixed | VoteMirror's constructor reverts with `ZeroAddress` |
 | I-3 | Fixed | `agreement()` returns 0 for a support value above 2 |
-| I-4 | Documented | By design |
-| I-5 | Documented | Testnet demo keys |
+| I-4 | Finality fixed, weight by design | VoteMirror's check reads the Governor when it casts, so votes removed by a reorg no longer count. Counting per address is the product rule |
+| I-5 | Documented | Testnet demo keys. `cast` and `forge create` take a raw key only as an argument; a real setup would use a keystore or a hardware wallet |
 | I-6 | Fixed | `pragma solidity 0.8.30`; CI actions pinned by commit |
 
 ## Second pass
@@ -60,14 +60,20 @@ The second pass read the verified source of Reactive's system contract on Lasna 
   threshold; the first one is mirrored, and `retryMirror()` only repeats that one.
 - **N-4 (info, fixed with L-2).** Lowering the threshold or setting the mirror late does not request a callback for
   a proposal on which the trusted voters have already voted.
-- **N-5 (info).** A vote cast with `castVoteWithReasonAndParams` emits `VoteCastWithParams` and is not followed.
+- **N-5 (info, fixed).** A vote cast with `castVoteWithReasonAndParams` emits `VoteCastWithParams` and was not
+  followed. MirrorReactive now subscribes to both events and reads only the two leading words of the data.
 - **N-6 (info).** A callback that ends in `Skipped` is billed like any other.
 - **N-7 (info, part of L-1).** The system contract and the callback proxy are each upgradeable by one key.
 
-Considered and not done: letting VoteMirror check `hasVoted` of the trusted voters itself (a standard Governor does
-not expose which side a voter chose, so the relayer could still pick the side, and the trusted list would have to
-be kept on two chains), and re-requesting automatically when the owner lifts a pause (more fees and more surface
-than one `retryMirror` transaction).
+Why M-1 cannot be closed in VoteMirror: `CallbackProxy._callback` charges the recipient after every call, and when
+the recipient's reserve is empty it calls `pay(debt)` on it. If VoteMirror refused to pay for callbacks it
+rejected, the unpaid amount would become debt, and `_callback` reverts with `InDebt` for a recipient in debt: one
+foreign callback would then stop mirroring at once instead of after the balance is spent. Paying is the lesser
+harm. A rejected callback costs VoteMirror the proxy's fixed overhead only, because it reverts at the first check.
+
+Considered and not done: re-requesting automatically when the owner lifts a pause (more fees and more surface
+than one `retryMirror` transaction), and requiring `2 × threshold > n` (it would forbid "any one of my three
+delegates", which is a legitimate rule; the first requested choice is now final instead).
 
 ## What was checked
 
@@ -75,7 +81,7 @@ than one `retryMirror` transaction).
   `AbstractPayer`, `AbstractReactive`, `reactive-lib-omni` v0.1.0).
 - The verified source of Reactive's Base Sepolia callback proxy (`0x476F44b1…3585`, implementation
   `0x49E4AC69…E059`), because VoteMirror's authorization and fees depend on it.
-- `forge test` (51 tests after the first pass, 64 after the fixes, all passing), `forge coverage` (VoteMirror 100% lines and branches,
+- `forge test` (51 tests after the first pass, 73 after the fixes, all passing), `forge coverage` (VoteMirror 100% lines and branches,
   MirrorReactive 98% lines, 64% branches), Slither 0.11 (no finding beyond events after external calls to trusted
   contracts and naming).
 - Live state, read only: the runtime bytecode of all four deployed contracts is identical to a build of `main`;

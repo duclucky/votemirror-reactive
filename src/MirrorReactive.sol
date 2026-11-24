@@ -8,13 +8,18 @@ import { IReactive } from "@reactive/src/interfaces/IReactive.sol";
 import { AbstractReactive } from "@reactive/src/base/AbstractReactive.sol";
 
 /// @title MirrorReactive
-/// @notice Lives on Reactive Network. Watches `VoteCast` events of one Governor on an origin chain,
-///         one subscription per trusted voter, and asks the owner's VoteMirror to cast the same vote
+/// @notice Lives on Reactive Network. Watches the `VoteCast` and `VoteCastWithParams` events of one Governor
+///         on an origin chain, subscribed per trusted voter, and asks the owner's VoteMirror to cast the same vote
 ///         once `threshold` trusted voters agree on a choice. A proposal is requested once by `react()`;
 ///         the owner can ask again with `retryMirror()` if that callback was skipped or lost.
 contract MirrorReactive is AbstractReactive, Ownable2Step {
     /// @dev keccak256("VoteCast(address,uint256,uint8,uint256,string)"), the OpenZeppelin Governor event.
     uint256 public constant VOTE_CAST_TOPIC_0 = 0xb8e138887d0aa13bab447e82de9d5c1777041ecd21ca36ba824ff1e6c07ddda4;
+
+    /// @dev keccak256("VoteCastWithParams(address,uint256,uint8,uint256,string,bytes)"), emitted instead of
+    ///      `VoteCast` when a vote carries params. Its data starts with the same `proposalId` and `support`.
+    uint256 public constant VOTE_CAST_WITH_PARAMS_TOPIC_0 =
+        0xe2babfbac5889a709b63bb7f598b324e08bc5a4fb9ec647fb3cbc9ec07eb8712;
 
     /// @dev Highest support value of Governor Bravo style counting (0 Against, 1 For, 2 Abstain).
     uint8 public constant MAX_SUPPORT = 2;
@@ -89,17 +94,19 @@ contract MirrorReactive is AbstractReactive, Ownable2Step {
     function react(LogRecord calldata log_) external onlySystem {
         // Anything unexpected falls through: a revert here is still billed.
         if (
-            log_.topic0 != VOTE_CAST_TOPIC_0 || log_.opCode != 2 || log_.chainId != ORIGIN_CHAIN_ID
-                || log_.contractAddress != GOVERNOR
+            (log_.topic0 != VOTE_CAST_TOPIC_0 && log_.topic0 != VOTE_CAST_WITH_PARAMS_TOPIC_0) || log_.opCode != 2
+                || log_.chainId != ORIGIN_CHAIN_ID || log_.contractAddress != GOVERNOR || log_.data.length < 64
         ) return;
 
         address voter = address(uint160(log_.topic1));
         if (!isTrusted[voter]) return;
 
-        (uint256 proposalId, uint8 support,,) = abi.decode(log_.data, (uint256, uint8, uint256, string));
+        // Only the two leading words are read, so nothing in the rest of the data can make this revert.
+        (uint256 proposalId, uint256 rawSupport) = abi.decode(log_.data[:64], (uint256, uint256));
         uint256 epoch = trustEpoch[voter];
-        if (support > MAX_SUPPORT || _recordedVote[proposalId][voter][epoch] != 0) return;
+        if (rawSupport > MAX_SUPPORT || _recordedVote[proposalId][voter][epoch] != 0) return;
 
+        uint8 support = uint8(rawSupport);
         _recordedVote[proposalId][voter][epoch] = support + 1;
         uint256 agreeing = agreement(proposalId, support);
         emit VoteObserved(proposalId, voter, support, agreeing);
@@ -193,8 +200,10 @@ contract MirrorReactive is AbstractReactive, Ownable2Step {
         }
         isTrusted[voter_] = false;
         ++trustEpoch[voter_];
+        uint256 topic1 = uint256(uint160(voter_));
+        SYSTEM.unsubscribe(ORIGIN_CHAIN_ID, GOVERNOR, VOTE_CAST_TOPIC_0, topic1, REACTIVE_IGNORE, REACTIVE_IGNORE);
         SYSTEM.unsubscribe(
-            ORIGIN_CHAIN_ID, GOVERNOR, VOTE_CAST_TOPIC_0, uint256(uint160(voter_)), REACTIVE_IGNORE, REACTIVE_IGNORE
+            ORIGIN_CHAIN_ID, GOVERNOR, VOTE_CAST_WITH_PARAMS_TOPIC_0, topic1, REACTIVE_IGNORE, REACTIVE_IGNORE
         );
         emit TrustedVoterRemoved(voter_);
     }
@@ -236,8 +245,10 @@ contract MirrorReactive is AbstractReactive, Ownable2Step {
         if (_trusted.length == MAX_TRUSTED) revert TooManyTrusted();
         isTrusted[voter_] = true;
         _trusted.push(voter_);
+        uint256 topic1 = uint256(uint160(voter_));
+        SYSTEM.subscribe(ORIGIN_CHAIN_ID, GOVERNOR, VOTE_CAST_TOPIC_0, topic1, REACTIVE_IGNORE, REACTIVE_IGNORE);
         SYSTEM.subscribe(
-            ORIGIN_CHAIN_ID, GOVERNOR, VOTE_CAST_TOPIC_0, uint256(uint160(voter_)), REACTIVE_IGNORE, REACTIVE_IGNORE
+            ORIGIN_CHAIN_ID, GOVERNOR, VOTE_CAST_WITH_PARAMS_TOPIC_0, topic1, REACTIVE_IGNORE, REACTIVE_IGNORE
         );
         emit TrustedVoterAdded(voter_);
     }

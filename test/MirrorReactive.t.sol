@@ -74,11 +74,15 @@ contract MirrorReactiveTest is Test {
     }
 
     function test_SubscribesOncePerTrustedVoter() public view {
-        assertEq(system.subscriptionCount(), 3);
-        (uint256 chainId, address contractAddress, uint256 topic0, uint256 topic1) = system.subscriptions(1);
+        // Two per voter: `VoteCast` and `VoteCastWithParams`.
+        assertEq(system.subscriptionCount(), 6);
+        (uint256 chainId, address contractAddress, uint256 topic0, uint256 topic1) = system.subscriptions(2);
         assertEq(chainId, ORIGIN);
         assertEq(contractAddress, governor);
         assertEq(topic0, reactive.VOTE_CAST_TOPIC_0());
+        assertEq(topic1, uint256(uint160(bob)));
+        (,, topic0, topic1) = system.subscriptions(3);
+        assertEq(topic0, reactive.VOTE_CAST_WITH_PARAMS_TOPIC_0());
         assertEq(topic1, uint256(uint160(bob)));
     }
 
@@ -208,6 +212,46 @@ contract MirrorReactiveTest is Test {
         assertEq(reactive.recordedVote(7, alice), 0);
     }
 
+    function test_TopicMatchesOpenZeppelinVoteCastWithParams() public view {
+        assertEq(
+            reactive.VOTE_CAST_WITH_PARAMS_TOPIC_0(),
+            uint256(keccak256("VoteCastWithParams(address,uint256,uint8,uint256,string,bytes)"))
+        );
+    }
+
+    /// @dev A vote cast with params is counted like a plain one, once per voter and proposal.
+    function test_VoteCastWithParamsIsCounted() public {
+        IReactive.LogRecord memory log = _log(alice, 7, FOR);
+        log.topic0 = reactive.VOTE_CAST_WITH_PARAMS_TOPIC_0();
+        log.data = abi.encode(uint256(7), FOR, uint256(100e18), "because", hex"1234");
+        vm.prank(SYSTEM);
+        reactive.react(log);
+        assertEq(reactive.agreement(7, FOR), 1);
+
+        _vote(alice, 7, AGAINST);
+        assertEq(reactive.agreement(7, AGAINST), 0);
+        _vote(bob, 7, FOR);
+        assertEq(system.callbackCount(), 1);
+    }
+
+    /// @dev Data that is too short or carries a support value beyond uint8 is ignored without reverting.
+    function test_MalformedVoteDataIgnored() public {
+        IReactive.LogRecord memory log = _log(alice, 7, FOR);
+        log.data = abi.encode(uint256(7));
+        vm.prank(SYSTEM);
+        reactive.react(log);
+        log.data = abi.encode(uint256(7), uint256(257));
+        vm.prank(SYSTEM);
+        reactive.react(log);
+        assertEq(reactive.recordedVote(7, alice), 0);
+
+        // Nothing after the two leading words is read.
+        log.data = abi.encode(uint256(7), uint256(FOR));
+        vm.prank(SYSTEM);
+        reactive.react(log);
+        assertEq(reactive.recordedVote(7, alice), FOR + 1);
+    }
+
     function test_UnknownSupportValueIgnored() public {
         _vote(alice, 7, 3);
         _vote(bob, 7, 3);
@@ -255,7 +299,7 @@ contract MirrorReactiveTest is Test {
     function test_AddTrustedSubscribesAndCounts() public {
         address dave = makeAddr("dave");
         reactive.addTrusted(dave);
-        assertEq(system.subscriptionCount(), 4);
+        assertEq(system.subscriptionCount(), 8);
         _vote(dave, 7, FOR);
         _vote(alice, 7, FOR);
         assertEq(system.callbackCount(), 1);
@@ -265,8 +309,12 @@ contract MirrorReactiveTest is Test {
         _vote(alice, 7, FOR);
         reactive.removeTrusted(alice);
 
-        assertEq(system.unsubscriptionCount(), 1);
-        (,,, uint256 topic1) = system.unsubscriptions(0);
+        assertEq(system.unsubscriptionCount(), 2);
+        (,, uint256 topic0, uint256 topic1) = system.unsubscriptions(0);
+        assertEq(topic0, reactive.VOTE_CAST_TOPIC_0());
+        assertEq(topic1, uint256(uint160(alice)));
+        (,, topic0, topic1) = system.unsubscriptions(1);
+        assertEq(topic0, reactive.VOTE_CAST_WITH_PARAMS_TOPIC_0());
         assertEq(topic1, uint256(uint160(alice)));
         assertEq(reactive.trustedVoters().length, 2);
         assertEq(reactive.agreement(7, FOR), 0);

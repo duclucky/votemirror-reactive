@@ -34,16 +34,20 @@ you can take it back with one transaction.
 
 | Contract | Chain | Role |
 | --- | --- | --- |
-| [`MirrorReactive`](src/MirrorReactive.sol) | Reactive Lasna | Subscribes to `VoteCast(address indexed voter, uint256 proposalId, uint8 support, uint256 weight, string reason)` on the Governor, one subscription per trusted voter (topic 0 and topic 1), so it only pays for votes it cares about. Records each trusted voter once per proposal and requests one callback per proposal when `k` agree. Owner controls: the trusted list, the threshold, and `retryMirror` to ask again for a proposal whose callback was skipped or lost. |
-| [`VoteMirror`](src/VoteMirror.sol) | Base Sepolia | Receives the callback and calls `governor.castVoteWithReason`. Holds the voting power the user delegated to it. Owner controls: `castVote` (override), `setSkipped`, `setPaused`. |
+| [`MirrorReactive`](src/MirrorReactive.sol) | Reactive Lasna | Subscribes to `VoteCast(address indexed voter, uint256 proposalId, uint8 support, uint256 weight, string reason)` and `VoteCastWithParams` on the Governor, per trusted voter (topic 0 and topic 1), so it only pays for votes it cares about. Records each trusted voter once per proposal and requests one callback per proposal when `k` agree. Owner controls: the trusted list, the threshold, and `retryMirror` to ask again for a proposal whose callback was skipped or lost. |
+| [`VoteMirror`](src/VoteMirror.sol) | Base Sepolia | Receives the callback and calls `governor.castVoteWithReason`. Holds the voting power the user delegated to it. Owner controls: `castVote` (override), `setSkipped`, `setPaused`, and its copy of the trusted list and threshold. |
 | [`DemoToken`](src/demo/DemoToken.sol), [`DemoGovernor`](src/demo/DemoGovernor.sol) | Base Sepolia | A standard OpenZeppelin `ERC20Votes` token and `Governor` for the demo. Any OpenZeppelin Governor works. |
 
 Design decisions:
 
 - **Callback authorization is double checked.** `castMirrored` requires `msg.sender` to be the Reactive callback
   proxy and the first argument, which Reactive overwrites with the address of the requesting reactive contract, to be
-  the `MirrorReactive` it was deployed for. No other contract or account can make VoteMirror vote; Reactive's
-  relayer and the owner of the callback proxy are trusted to deliver only what `MirrorReactive` requested.
+  the `MirrorReactive` it was deployed for. No other contract or account can make VoteMirror vote.
+- **The callback is not taken at its word.** VoteMirror keeps its own copy of the trusted list and threshold and,
+  before voting, checks on the Governor (`hasVoted`) that at least `k` trusted voters have voted on the proposal.
+  A callback that Reactive's relayer made up, or one based on votes that a reorg removed, ends in
+  `Skipped(NotConfirmed)`. The Governor does not expose which side a voter chose, so the side is the one part
+  that still rests on Reactive delivering what `MirrorReactive` requested.
 - **The callback never reverts on business conditions.** A failed callback is still charged, so a paused contract, a
   skipped proposal, a closed vote, or an earlier manual vote emit `Skipped(proposalId, support, reason)` instead.
 - **The owner always wins.** A manual `castVote` is final: the Governor allows one vote per account, and the callback
@@ -124,7 +128,7 @@ Requirements: [Foundry](https://getfoundry.sh), Python 3, a testnet key with Bas
 
 ```bash
 git clone --recurse-submodules <this repo> && cd votemirror-reactive
-forge test                       # 64 tests
+forge test                       # 73 tests
 
 cp .env.example .env             # fill in PRIVATE_KEY and three demo VOTER_KEYS, testnet only
 ./script/deploy.sh               # deploys everything, writes deployments/testnet.json
@@ -139,7 +143,7 @@ callback on Base Sepolia.
 
 ## Tests
 
-`forge test` runs 64 tests:
+`forge test` runs 73 tests:
 
 - [`test/MirrorReactive.t.sol`](test/MirrorReactive.t.sol): k of n rule (For, Against, Abstain, split votes,
   threshold of one), duplicate votes, one callback per proposal, untrusted voters and foreign logs ignored, only the
@@ -147,27 +151,31 @@ callback on Base Sepolia.
   ownership, debt payment, and a fuzz test of the agreement rule.
 - [`test/VoteMirror.t.sol`](test/VoteMirror.t.sol): the three demo loops end to end against a real OpenZeppelin
   Governor with a mock of the Reactive relay, pause, skip, a retry after a pause or a skip, owner override, proposals that are pending, closed or
-  unknown, callback authorization (wrong caller, owner calling directly, another reactive contract), and funds.
+  unknown, callback authorization (wrong caller, owner calling directly, another reactive contract), VoteMirror's own check
+  of the trusted votes on the Governor (a made-up callback is not voted), and funds.
 
 ## Known limitations
 
 - **One user per deployment.** Each user deploys their own VoteMirror and MirrorReactive pair. A shared registry
   would cut the cost per user.
-- **The trusted list lives on Lasna.** Changing it is a transaction on Reactive Network, not on the DAO's chain.
+- **The trusted list lives on both chains.** `addTrusted`, `removeTrusted` and `setThreshold` are called on
+  MirrorReactive (Lasna) and on VoteMirror (the DAO's chain). If the two differ, the worst case is a
+  `Skipped(NotConfirmed)`, which `retryMirror()` recovers once they agree again.
 - **Depends on Reactive's relay.** A callback that fails at the callback proxy is not retried by the network (see
   the earlier run above). The owner asks again with `retryMirror()` or votes through `castVote()`. Reactive's
-  relayer and the owners of its upgradeable system contract and callback proxy are trusted: they could deliver a
-  callback that `MirrorReactive` never requested.
+  relayer and the owners of its upgradeable system contract and callback proxy could deliver a callback that
+  `MirrorReactive` never requested: VoteMirror then votes only if `k` trusted voters have voted on that proposal,
+  but the side would be the relayer's.
 - **Delay.** The mirrored vote lands after Reactive has seen the `k`-th vote and delivered the callback. A trusted
   vote cast in the last moments of the voting period can be too late; VoteMirror then emits `Skipped(NotActive)`.
 - **A lowered threshold is not applied to past votes by itself.** `setThreshold` takes effect on the next trusted
   vote; for a proposal whose recorded votes already meet the new threshold the owner calls `retryMirror()`.
 - **First agreement wins.** Votes cannot be changed in OpenZeppelin Governor, so VoteMirror mirrors the first side
   that reaches `k` and ignores later votes, also when `2k` is not more than `n` and the other side reaches `k` later.
-- **Trusted votes count per address, not per weight,** and as soon as Reactive delivers the log, without waiting
-  for finality on the origin chain.
-- **Only standard `VoteCast`.** `VoteCastWithParams` and Governors that are not OpenZeppelin-compatible are not
-  mirrored.
+- **Trusted votes count per address, not per weight.** You follow people, not stake. MirrorReactive counts a vote
+  as soon as Reactive delivers the log; VoteMirror re-checks the votes on the Governor when it casts.
+- **OpenZeppelin-compatible Governors only.** `VoteCast` and `VoteCastWithParams` with support 0, 1 or 2 are
+  followed; VoteMirror itself always votes without params.
 - **Gas must be kept topped up.** Both contracts pay for their own reactions and callbacks and stop being served if
   they run into debt; `coverDebt()` settles it.
 - **Fees can be run up from outside.** Reactive's callback proxy charges VoteMirror for every callback addressed to
