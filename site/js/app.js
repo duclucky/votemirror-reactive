@@ -255,7 +255,7 @@ function render(state, { openIds }) {
     stat(summary.proposals, summary.proposals === 1 ? "proposal seen" : "proposals seen", `since block ${state.base.fromBlock.toLocaleString("en-US")}`),
     stat(summary.observedVotes, summary.observedVotes === 1 ? "trusted vote counted" : "trusted votes counted", "on Reactive Lasna"),
     stat(summary.mirrored, summary.mirrored === 1 ? "vote mirrored" : "votes mirrored", "cast by VoteMirror", "ok"),
-    stat(summary.skipped, summary.skipped === 1 ? "vote skipped" : "votes skipped", "callback arrived, no vote", "warn"),
+    stat(summary.skipped, summary.skipped === 1 ? "proposal skipped" : "proposals skipped", "VoteMirror did not vote", "warn"),
     summary.undelivered > 0 && stat(summary.undelivered, summary.undelivered === 1 ? "callback not delivered" : "callbacks not delivered", "requested, never reached VoteMirror", "bad"),
     summary.retries > 0 && stat(summary.retries, summary.retries === 1 ? "retry by the owner" : "retries by the owner", "callback requested by hand", "info"),
     summary.pending + summary.watching > 0 && stat(summary.pending + summary.watching, "in progress", "open right now", "info"),
