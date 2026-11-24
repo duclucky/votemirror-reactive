@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
-import { Test } from "forge-std/Test.sol";
+import { Test, stdError } from "forge-std/Test.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IReactive } from "@reactive/src/interfaces/IReactive.sol";
 import { ISystemContract } from "@reactive/src/interfaces/ISystemContract.sol";
@@ -275,6 +275,32 @@ contract MirrorReactiveTest is Test {
         assertEq(system.callbackCount(), 0);
         _vote(carol, 7, FOR);
         assertEq(system.callbackCount(), 1);
+    }
+
+    /// @dev Recorded votes are kept on removal, so they count again if the voter is trusted again later.
+    function test_ReAddedVoterBringsBackOldVotes() public {
+        _vote(alice, 7, FOR);
+        reactive.removeTrusted(alice);
+        assertEq(reactive.agreement(7, FOR), 0);
+
+        reactive.addTrusted(alice);
+        assertEq(reactive.agreement(7, FOR), 1);
+        _vote(bob, 7, FOR);
+        assertEq(system.callbackCount(), 1);
+    }
+
+    /// @dev A vote cast while the voter was not trusted is never counted, also after the voter is added.
+    function test_VoteCastBeforeBeingTrustedIsNotCounted() public {
+        address dave = makeAddr("dave");
+        _vote(dave, 7, FOR);
+        reactive.addTrusted(dave);
+        assertEq(reactive.agreement(7, FOR), 0);
+    }
+
+    /// @dev `agreement` computes `support_ + 1` in a uint8, so 255 overflows.
+    function test_RevertWhen_AgreementQueriedWithSupport255() public {
+        vm.expectRevert(stdError.arithmeticError);
+        reactive.agreement(7, 255);
     }
 
     function test_RevertWhen_RemovalWouldBreakThreshold() public {
