@@ -33,7 +33,7 @@ No critical or high severity issue. One medium, four low, six informational.
 |---|--------|--------------|
 | M-1 | Mitigated, not removable | The charge is made by Reactive's proxy. `retryMirror()` now recovers the votes missed while VoteMirror was in debt |
 | L-1 | Accepted and documented | Trust model of any Reactive callback contract; pause, skip and `castVote` remain the owner's defence |
-| L-2 | Fixed | Owner-only `MirrorReactive.retryMirror(proposalId, support)`; reverts with `AgreementNotReached` unless `threshold` currently trusted voters agree on that choice |
+| L-2 | Fixed | Owner-only `MirrorReactive.retryMirror(proposalId, support)`; reverts unless `threshold` currently trusted voters agree on that choice (`AgreementNotReached`) and it is the choice requested first (`OtherChoiceRequested`) |
 | L-3 | Accepted and documented | Reactive bills per delivered log; `removeTrusted` stops it |
 | L-4 | Fixed | `trustEpoch[voter]` is raised on removal and votes are recorded per epoch |
 | I-1 | Fixed | `Ownable2Step` on both contracts; `renounceOwnership()` reverts with `RenounceDisabled` |
@@ -57,7 +57,7 @@ The second pass read the verified source of Reactive's system contract on Lasna 
   that contract's address as first argument (transaction
   `0xfd9046e610948747fc46b3aa274e3e8e6e585895966cea8019a68a15bec24fe0`). `retryMirror()` relies on this.
 - **N-3 (info).** When `2 × threshold` is not more than the number of trusted voters, both sides can reach the
-  threshold; the first one is mirrored.
+  threshold; the first one is mirrored, and `retryMirror()` only repeats that one.
 - **N-4 (info, fixed with L-2).** Lowering the threshold or setting the mirror late does not request a callback for
   a proposal on which the trusted voters have already voted.
 - **N-5 (info).** A vote cast with `castVoteWithReasonAndParams` emits `VoteCastWithParams` and is not followed.
@@ -75,7 +75,7 @@ than one `retryMirror` transaction).
   `AbstractPayer`, `AbstractReactive`, `reactive-lib-omni` v0.1.0).
 - The verified source of Reactive's Base Sepolia callback proxy (`0x476F44b1…3585`, implementation
   `0x49E4AC69…E059`), because VoteMirror's authorization and fees depend on it.
-- `forge test` (51 tests after the first pass, 62 after the fixes, all passing), `forge coverage` (VoteMirror 100% lines and branches,
+- `forge test` (51 tests after the first pass, 64 after the fixes, all passing), `forge coverage` (VoteMirror 100% lines and branches,
   MirrorReactive 98% lines, 64% branches), Slither 0.11 (no finding beyond events after external calls to trusted
   contracts and naming).
 - Live state, read only: the runtime bytecode of all four deployed contracts is identical to a build of `main`;

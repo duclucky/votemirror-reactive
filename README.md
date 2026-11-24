@@ -52,7 +52,8 @@ Design decisions:
   trip is not instant, so the token and Governor use `mode=timestamp` clocks and the voting window is expressed in seconds.
 - **A missed vote can be recovered, but only the agreed one.** `react()` asks once per proposal. If that callback
   was skipped (paused, skipped by the owner) or lost, the owner calls `retryMirror(proposalId, support)` on Lasna;
-  it reverts unless `k` currently trusted voters agree on that choice, and VoteMirror still refuses to vote twice.
+  it reverts unless `k` currently trusted voters agree on that choice and it is the choice of the first request,
+  and VoteMirror still refuses to vote twice.
 - **Ownership cannot be lost by accident.** Both contracts use two-step ownership transfer and `renounceOwnership`
   is disabled.
 - **No custody.** Neither contract can move the user's tokens. They only hold a small gas balance (lREACT on Lasna,
@@ -123,7 +124,7 @@ Requirements: [Foundry](https://getfoundry.sh), Python 3, a testnet key with Bas
 
 ```bash
 git clone --recurse-submodules <this repo> && cd votemirror-reactive
-forge test                       # 62 tests
+forge test                       # 64 tests
 
 cp .env.example .env             # fill in PRIVATE_KEY and three demo VOTER_KEYS, testnet only
 ./script/deploy.sh               # deploys everything, writes deployments/testnet.json
@@ -138,7 +139,7 @@ callback on Base Sepolia.
 
 ## Tests
 
-`forge test` runs 62 tests:
+`forge test` runs 64 tests:
 
 - [`test/MirrorReactive.t.sol`](test/MirrorReactive.t.sol): k of n rule (For, Against, Abstain, split votes,
   threshold of one), duplicate votes, one callback per proposal, untrusted voters and foreign logs ignored, only the

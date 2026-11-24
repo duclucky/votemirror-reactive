@@ -43,8 +43,9 @@ contract MirrorReactive is AbstractReactive, Ownable2Step {
     /// @dev Choice of a voter for a proposal in a trust epoch, stored as `support + 1` (0 means no vote seen).
     mapping(uint256 proposalId => mapping(address voter => mapping(uint256 epoch => uint8))) private _recordedVote;
 
-    /// @notice True once `react()` requested a callback for the proposal.
-    mapping(uint256 proposalId => bool) public mirrorRequested;
+    /// @dev Choice requested for a proposal, stored as `support + 1` (0 means nothing was requested yet).
+    ///      Set by the first request and never changed, so a retry cannot ask for another choice.
+    mapping(uint256 proposalId => uint8) private _requested;
 
     event MirrorSet(address indexed mirror);
     event ThresholdSet(uint256 threshold);
@@ -61,6 +62,7 @@ contract MirrorReactive is AbstractReactive, Ownable2Step {
     error ZeroAddress();
     error MirrorNotSet();
     error AgreementNotReached(uint256 proposalId, uint8 support, uint256 agreeing, uint256 threshold);
+    error OtherChoiceRequested(uint256 proposalId, uint8 requestedSupport);
     error RenounceDisabled();
 
     /// @param originChainId_ Chain of the Governor (84532 for Base Sepolia).
@@ -102,9 +104,9 @@ contract MirrorReactive is AbstractReactive, Ownable2Step {
         uint256 agreeing = agreement(proposalId, support);
         emit VoteObserved(proposalId, voter, support, agreeing);
 
-        if (agreeing < threshold || mirrorRequested[proposalId] || mirror == address(0)) return;
+        if (agreeing < threshold || _requested[proposalId] != 0 || mirror == address(0)) return;
 
-        mirrorRequested[proposalId] = true;
+        _requested[proposalId] = support + 1;
         emit MirrorRequested(proposalId, support, agreeing);
         _requestCallback(proposalId, support);
     }
@@ -119,6 +121,17 @@ contract MirrorReactive is AbstractReactive, Ownable2Step {
             address voter = _trusted[i];
             if (_recordedVote[proposalId_][voter][trustEpoch[voter]] == support_ + 1) ++count_;
         }
+    }
+
+    /// @notice True once a callback was requested for the proposal.
+    function mirrorRequested(uint256 proposalId_) external view returns (bool) {
+        return _requested[proposalId_] != 0;
+    }
+
+    /// @notice Choice that was requested for the proposal; meaningful only if `mirrorRequested` is true.
+    function requestedSupport(uint256 proposalId_) external view returns (uint8) {
+        uint8 requested = _requested[proposalId_];
+        return requested == 0 ? 0 : requested - 1;
     }
 
     /// @notice Recorded choice of a voter for a proposal, stored as `support + 1` (0 means no vote counted).
@@ -151,12 +164,16 @@ contract MirrorReactive is AbstractReactive, Ownable2Step {
     /// @notice Asks VoteMirror again to cast `support_` on `proposalId_`, for a proposal whose callback was
     ///         skipped (paused, skipped by the owner), lost on the way, or never requested because the
     ///         threshold or the mirror was set after the trusted voters had voted.
-    /// @dev Only what the trusted voters agree on right now can be requested. VoteMirror still applies its
-    ///      own checks, so a proposal it has already voted on is not voted twice.
+    /// @dev Only what the trusted voters agree on right now can be requested, and only the choice of the
+    ///      first request: the first agreement wins here as it does in `react()`. VoteMirror still applies
+    ///      its own checks, so a proposal it has already voted on is not voted twice.
     function retryMirror(uint256 proposalId_, uint8 support_) external onlyOwner {
         if (mirror == address(0)) revert MirrorNotSet();
         uint256 agreeing = agreement(proposalId_, support_);
         if (agreeing < threshold) revert AgreementNotReached(proposalId_, support_, agreeing, threshold);
+        uint8 requested = _requested[proposalId_];
+        if (requested == 0) _requested[proposalId_] = support_ + 1;
+        else if (requested != support_ + 1) revert OtherChoiceRequested(proposalId_, requested - 1);
         emit MirrorRetried(proposalId_, support_, agreeing);
         _requestCallback(proposalId_, support_);
     }

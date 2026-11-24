@@ -342,6 +342,39 @@ contract MirrorReactiveTest is Test {
         reactive.retryMirror(7, 9);
     }
 
+    /// @dev With 2k <= n both sides can reach the threshold. The retry stays with the side requested first.
+    function test_RevertWhen_RetryAsksForAnotherChoiceThanTheFirstRequest() public {
+        address dave = makeAddr("dave");
+        reactive.addTrusted(dave);
+        _vote(alice, 7, FOR);
+        _vote(bob, 7, FOR);
+        _vote(carol, 7, AGAINST);
+        _vote(dave, 7, AGAINST);
+        assertEq(reactive.agreement(7, AGAINST), 2);
+        assertEq(reactive.requestedSupport(7), FOR);
+
+        vm.expectRevert(abi.encodeWithSelector(MirrorReactive.OtherChoiceRequested.selector, 7, FOR));
+        reactive.retryMirror(7, AGAINST);
+        reactive.retryMirror(7, FOR);
+        assertEq(system.callbackCount(), 2);
+    }
+
+    /// @dev A first request made by the owner fixes the choice too, for later retries and for `react()`.
+    function test_RetryAsFirstRequestFixesTheChoice() public {
+        _vote(alice, 7, FOR);
+        _vote(bob, 7, AGAINST);
+        reactive.setThreshold(1);
+        assertFalse(reactive.mirrorRequested(7));
+        reactive.retryMirror(7, AGAINST);
+        assertTrue(reactive.mirrorRequested(7));
+        assertEq(reactive.requestedSupport(7), AGAINST);
+
+        vm.expectRevert(abi.encodeWithSelector(MirrorReactive.OtherChoiceRequested.selector, 7, AGAINST));
+        reactive.retryMirror(7, FOR);
+        _vote(carol, 7, FOR);
+        assertEq(system.callbackCount(), 1);
+    }
+
     function test_RevertWhen_RetryAfterAgreeingVoterWasRemoved() public {
         _vote(alice, 7, FOR);
         _vote(bob, 7, FOR);
