@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.29;
+pragma solidity 0.8.30;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import { ISystemContract } from "@reactive/src/interfaces/ISystemContract.sol";
 import { IReactive } from "@reactive/src/interfaces/IReactive.sol";
 import { AbstractReactive } from "@reactive/src/base/AbstractReactive.sol";
@@ -9,8 +10,9 @@ import { AbstractReactive } from "@reactive/src/base/AbstractReactive.sol";
 /// @title MirrorReactive
 /// @notice Lives on Reactive Network. Watches `VoteCast` events of one Governor on an origin chain,
 ///         one subscription per trusted voter, and asks the owner's VoteMirror to cast the same vote
-///         once `threshold` trusted voters agree on a choice. Each proposal is mirrored at most once.
-contract MirrorReactive is AbstractReactive, Ownable {
+///         once `threshold` trusted voters agree on a choice. A proposal is requested once by `react()`;
+///         the owner can ask again with `retryMirror()` if that callback was skipped or lost.
+contract MirrorReactive is AbstractReactive, Ownable2Step {
     /// @dev keccak256("VoteCast(address,uint256,uint8,uint256,string)"), the OpenZeppelin Governor event.
     uint256 public constant VOTE_CAST_TOPIC_0 = 0xb8e138887d0aa13bab447e82de9d5c1777041ecd21ca36ba824ff1e6c07ddda4;
 
@@ -34,10 +36,14 @@ contract MirrorReactive is AbstractReactive, Ownable {
     address[] private _trusted;
     mapping(address voter => bool) public isTrusted;
 
-    /// @notice Recorded choice of a voter for a proposal, stored as `support + 1` (0 means no vote seen).
-    mapping(uint256 proposalId => mapping(address voter => uint8)) public recordedVote;
+    /// @notice Number of times a voter was removed. Votes are recorded per epoch, so the votes seen before a
+    ///         removal stay out of the count if the voter is trusted again later.
+    mapping(address voter => uint256) public trustEpoch;
 
-    /// @notice True once a callback was requested for the proposal.
+    /// @dev Choice of a voter for a proposal in a trust epoch, stored as `support + 1` (0 means no vote seen).
+    mapping(uint256 proposalId => mapping(address voter => mapping(uint256 epoch => uint8))) private _recordedVote;
+
+    /// @notice True once `react()` requested a callback for the proposal.
     mapping(uint256 proposalId => bool) public mirrorRequested;
 
     event MirrorSet(address indexed mirror);
@@ -46,12 +52,16 @@ contract MirrorReactive is AbstractReactive, Ownable {
     event TrustedVoterRemoved(address indexed voter);
     event VoteObserved(uint256 indexed proposalId, address indexed voter, uint8 support, uint256 agreeing);
     event MirrorRequested(uint256 indexed proposalId, uint8 support, uint256 agreeing);
+    event MirrorRetried(uint256 indexed proposalId, uint8 support, uint256 agreeing);
 
     error InvalidThreshold(uint256 threshold, uint256 trustedCount);
     error TooManyTrusted();
     error AlreadyTrusted(address voter);
     error NotTrusted(address voter);
     error ZeroAddress();
+    error MirrorNotSet();
+    error AgreementNotReached(uint256 proposalId, uint8 support, uint256 agreeing, uint256 threshold);
+    error RenounceDisabled();
 
     /// @param originChainId_ Chain of the Governor (84532 for Base Sepolia).
     /// @param governor_ Governor whose `VoteCast` events are followed.
@@ -85,9 +95,10 @@ contract MirrorReactive is AbstractReactive, Ownable {
         if (!isTrusted[voter]) return;
 
         (uint256 proposalId, uint8 support,,) = abi.decode(log_.data, (uint256, uint8, uint256, string));
-        if (support > MAX_SUPPORT || recordedVote[proposalId][voter] != 0) return;
+        uint256 epoch = trustEpoch[voter];
+        if (support > MAX_SUPPORT || _recordedVote[proposalId][voter][epoch] != 0) return;
 
-        recordedVote[proposalId][voter] = support + 1;
+        _recordedVote[proposalId][voter][epoch] = support + 1;
         uint256 agreeing = agreement(proposalId, support);
         emit VoteObserved(proposalId, voter, support, agreeing);
 
@@ -95,25 +106,24 @@ contract MirrorReactive is AbstractReactive, Ownable {
 
         mirrorRequested[proposalId] = true;
         emit MirrorRequested(proposalId, support, agreeing);
-        SYSTEM.requestCallbackV_1_0(
-            ISystemContract.CallbackConfiguration_V_1_0({
-                chainId: ORIGIN_CHAIN_ID,
-                recipient: mirror,
-                gasLimit: CALLBACK_GAS_LIMIT,
-                // The first argument is overwritten by the network with this contract's address.
-                payload: abi.encodeWithSignature("castMirrored(address,uint256,uint8)", address(0), proposalId, support)
-            })
-        );
+        _requestCallback(proposalId, support);
     }
 
     // ------------------------------------------------------------------ views
 
     /// @notice Number of currently trusted voters that chose `support_` on `proposalId_`.
     function agreement(uint256 proposalId_, uint8 support_) public view returns (uint256 count_) {
+        if (support_ > MAX_SUPPORT) return 0;
         uint256 length = _trusted.length;
         for (uint256 i = 0; i < length; ++i) {
-            if (recordedVote[proposalId_][_trusted[i]] == support_ + 1) ++count_;
+            address voter = _trusted[i];
+            if (_recordedVote[proposalId_][voter][trustEpoch[voter]] == support_ + 1) ++count_;
         }
+    }
+
+    /// @notice Recorded choice of a voter for a proposal, stored as `support + 1` (0 means no vote counted).
+    function recordedVote(uint256 proposalId_, address voter_) external view returns (uint8) {
+        return _recordedVote[proposalId_][voter_][trustEpoch[voter_]];
     }
 
     function trustedVoters() external view returns (address[] memory) {
@@ -138,7 +148,21 @@ contract MirrorReactive is AbstractReactive, Ownable {
         _addTrusted(voter_);
     }
 
-    /// @notice Stops following a voter. Their recorded votes no longer count towards agreement.
+    /// @notice Asks VoteMirror again to cast `support_` on `proposalId_`, for a proposal whose callback was
+    ///         skipped (paused, skipped by the owner), lost on the way, or never requested because the
+    ///         threshold or the mirror was set after the trusted voters had voted.
+    /// @dev Only what the trusted voters agree on right now can be requested. VoteMirror still applies its
+    ///      own checks, so a proposal it has already voted on is not voted twice.
+    function retryMirror(uint256 proposalId_, uint8 support_) external onlyOwner {
+        if (mirror == address(0)) revert MirrorNotSet();
+        uint256 agreeing = agreement(proposalId_, support_);
+        if (agreeing < threshold) revert AgreementNotReached(proposalId_, support_, agreeing, threshold);
+        emit MirrorRetried(proposalId_, support_, agreeing);
+        _requestCallback(proposalId_, support_);
+    }
+
+    /// @notice Stops following a voter. Their recorded votes no longer count towards agreement, also if the
+    ///         voter is added again later.
     function removeTrusted(address voter_) external onlyOwner {
         if (!isTrusted[voter_]) revert NotTrusted(voter_);
         uint256 length = _trusted.length;
@@ -151,6 +175,7 @@ contract MirrorReactive is AbstractReactive, Ownable {
             }
         }
         isTrusted[voter_] = false;
+        ++trustEpoch[voter_];
         SYSTEM.unsubscribe(
             ORIGIN_CHAIN_ID, GOVERNOR, VOTE_CAST_TOPIC_0, uint256(uint160(voter_)), REACTIVE_IGNORE, REACTIVE_IGNORE
         );
@@ -167,7 +192,26 @@ contract MirrorReactive is AbstractReactive, Ownable {
         _pay(payable(msg.sender), amount_);
     }
 
+    /// @dev Giving up ownership would freeze the trusted list and strand the balance.
+    function renounceOwnership() public view override onlyOwner {
+        revert RenounceDisabled();
+    }
+
     // ------------------------------------------------------------------ internals
+
+    function _requestCallback(uint256 proposalId_, uint8 support_) internal {
+        SYSTEM.requestCallbackV_1_0(
+            ISystemContract.CallbackConfiguration_V_1_0({
+                chainId: ORIGIN_CHAIN_ID,
+                recipient: mirror,
+                gasLimit: CALLBACK_GAS_LIMIT,
+                // The first argument is overwritten by the network with this contract's address.
+                payload: abi.encodeWithSignature(
+                    "castMirrored(address,uint256,uint8)", address(0), proposalId_, support_
+                )
+            })
+        );
+    }
 
     function _addTrusted(address voter_) internal {
         if (voter_ == address(0)) revert ZeroAddress();

@@ -34,7 +34,7 @@ you can take it back with one transaction.
 
 | Contract | Chain | Role |
 | --- | --- | --- |
-| [`MirrorReactive`](src/MirrorReactive.sol) | Reactive Lasna | Subscribes to `VoteCast(address indexed voter, uint256 proposalId, uint8 support, uint256 weight, string reason)` on the Governor, one subscription per trusted voter (topic 0 and topic 1), so it only pays for votes it cares about. Records each trusted voter once per proposal and requests one callback per proposal when `k` agree. |
+| [`MirrorReactive`](src/MirrorReactive.sol) | Reactive Lasna | Subscribes to `VoteCast(address indexed voter, uint256 proposalId, uint8 support, uint256 weight, string reason)` on the Governor, one subscription per trusted voter (topic 0 and topic 1), so it only pays for votes it cares about. Records each trusted voter once per proposal and requests one callback per proposal when `k` agree. Owner controls: the trusted list, the threshold, and `retryMirror` to ask again for a proposal whose callback was skipped or lost. |
 | [`VoteMirror`](src/VoteMirror.sol) | Base Sepolia | Receives the callback and calls `governor.castVoteWithReason`. Holds the voting power the user delegated to it. Owner controls: `castVote` (override), `setSkipped`, `setPaused`. |
 | [`DemoToken`](src/demo/DemoToken.sol), [`DemoGovernor`](src/demo/DemoGovernor.sol) | Base Sepolia | A standard OpenZeppelin `ERC20Votes` token and `Governor` for the demo. Any OpenZeppelin Governor works. |
 
@@ -50,6 +50,11 @@ Design decisions:
   checks `hasVoted` first.
 - **Timestamps, not block numbers.** Block times differ between chains and change over time, and the cross-chain round
   trip is not instant, so the token and Governor use `mode=timestamp` clocks and the voting window is expressed in seconds.
+- **A missed vote can be recovered, but only the agreed one.** `react()` asks once per proposal. If that callback
+  was skipped (paused, skipped by the owner) or lost, the owner calls `retryMirror(proposalId, support)` on Lasna;
+  it reverts unless `k` currently trusted voters agree on that choice, and VoteMirror still refuses to vote twice.
+- **Ownership cannot be lost by accident.** Both contracts use two-step ownership transfer and `renounceOwnership`
+  is disabled.
 - **No custody.** Neither contract can move the user's tokens. They only hold a small gas balance (lREACT on Lasna,
   ETH on Base Sepolia) that the owner can withdraw.
 
@@ -118,13 +123,14 @@ Requirements: [Foundry](https://getfoundry.sh), Python 3, a testnet key with Bas
 
 ```bash
 git clone --recurse-submodules <this repo> && cd votemirror-reactive
-forge test                       # 46 tests
+forge test                       # 62 tests
 
 cp .env.example .env             # fill in PRIVATE_KEY and three demo VOTER_KEYS, testnet only
 ./script/deploy.sh               # deploys everything, writes deployments/testnet.json
 ./script/demo.sh for             # 2 of 3 vote For      -> VoteMirror votes For
 ./script/demo.sh against         # 2 of 3 vote Against  -> VoteMirror votes Against
 ./script/demo.sh skip            # owner skips proposal -> Skipped, no vote
+./script/demo.sh retry           # paused during the votes -> Skipped; unpause + retryMirror -> votes For
 ```
 
 `demo.sh` prints the hash of every step: the proposal, each `VoteCast`, the `react()` transaction on Lasna, and the
@@ -132,14 +138,14 @@ callback on Base Sepolia.
 
 ## Tests
 
-`forge test` runs 51 tests:
+`forge test` runs 62 tests:
 
 - [`test/MirrorReactive.t.sol`](test/MirrorReactive.t.sol): k of n rule (For, Against, Abstain, split votes,
   threshold of one), duplicate votes, one callback per proposal, untrusted voters and foreign logs ignored, only the
-  system contract may call `react()`, adding and removing trusted voters, debt payment, and a fuzz test of the
-  agreement rule.
+  system contract may call `react()`, adding and removing trusted voters (a removed voter's old votes never count again), `retryMirror`, two-step
+  ownership, debt payment, and a fuzz test of the agreement rule.
 - [`test/VoteMirror.t.sol`](test/VoteMirror.t.sol): the three demo loops end to end against a real OpenZeppelin
-  Governor with a mock of the Reactive relay, pause, skip, owner override, proposals that are pending, closed or
+  Governor with a mock of the Reactive relay, pause, skip, a retry after a pause or a skip, owner override, proposals that are pending, closed or
   unknown, callback authorization (wrong caller, owner calling directly, another reactive contract), and funds.
 
 ## Known limitations
@@ -147,24 +153,28 @@ callback on Base Sepolia.
 - **One user per deployment.** Each user deploys their own VoteMirror and MirrorReactive pair. A shared registry
   would cut the cost per user.
 - **The trusted list lives on Lasna.** Changing it is a transaction on Reactive Network, not on the DAO's chain.
-- **Depends on Reactive's relay.** A callback that fails at the callback proxy is not retried (see the earlier run
-  above), so that proposal is not mirrored; the owner can still vote through `castVote()`.
+- **Depends on Reactive's relay.** A callback that fails at the callback proxy is not retried by the network (see
+  the earlier run above). The owner asks again with `retryMirror()` or votes through `castVote()`. Reactive's
+  relayer and the owners of its upgradeable system contract and callback proxy are trusted: they could deliver a
+  callback that `MirrorReactive` never requested.
 - **Delay.** The mirrored vote lands after Reactive has seen the `k`-th vote and delivered the callback. A trusted
   vote cast in the last moments of the voting period can be too late; VoteMirror then emits `Skipped(NotActive)`.
-- **A lowered threshold is not applied to past votes.** `setThreshold` takes effect on the next trusted vote; a
-  proposal whose recorded votes already meet the new threshold is mirrored only if another trusted voter votes the
-  same way. The owner can vote on it directly with `castVote()`.
+- **A lowered threshold is not applied to past votes by itself.** `setThreshold` takes effect on the next trusted
+  vote; for a proposal whose recorded votes already meet the new threshold the owner calls `retryMirror()`.
 - **First agreement wins.** Votes cannot be changed in OpenZeppelin Governor, so VoteMirror mirrors the first side
-  that reaches `k` and ignores later votes.
+  that reaches `k` and ignores later votes, also when `2k` is not more than `n` and the other side reaches `k` later.
+- **Trusted votes count per address, not per weight,** and as soon as Reactive delivers the log, without waiting
+  for finality on the origin chain.
 - **Only standard `VoteCast`.** `VoteCastWithParams` and Governors that are not OpenZeppelin-compatible are not
   mirrored.
 - **Gas must be kept topped up.** Both contracts pay for their own reactions and callbacks and stop being served if
   they run into debt; `coverDebt()` settles it.
-- **One callback per proposal.** If that callback is skipped (paused, skipped by the owner) or lost, lifting the
-  pause or the skip does not bring the vote back; the owner votes with `castVote()`.
-- **Rejected callbacks are still billed.** Reactive's callback proxy charges VoteMirror for a callback requested by
-  somebody else's reactive contract even though VoteMirror rejects it, so its balance can be run down from outside.
-- **Re-adding a trusted voter brings back their recorded votes** on proposals that are still open.
+- **Fees can be run up from outside.** Reactive's callback proxy charges VoteMirror for every callback addressed to
+  it, also one that VoteMirror rejects, and anyone can request such a callback from Lasna. A trusted voter can
+  likewise make MirrorReactive pay for a `react()` per proposal they vote on. Keep the balances small and watched;
+  after a top-up, `retryMirror()` recovers the votes missed while a contract was in debt.
+- **Demo keys.** The scripts pass keys on the command line and one `.env` holds the owner and every trusted voter
+  key. That is fine for a testnet demo and must not be copied to a real setup.
 - **Not audited.** Demo code for a hackathon, testnet only. Our own review of the contracts, which is not an
   independent audit, is in [`docs/security-review.md`](docs/security-review.md).
 

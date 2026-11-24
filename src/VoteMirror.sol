@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.29;
+pragma solidity 0.8.30;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import { IGovernor } from "@openzeppelin/contracts/governance/IGovernor.sol";
 import { IPayable } from "@reactive/src/interfaces/IPayable.sol";
 import { AbstractCallback } from "@reactive/src/base/AbstractCallback.sol";
@@ -12,7 +13,7 @@ import { AbstractCallback } from "@reactive/src/base/AbstractCallback.sol";
 ///         directly, skip single proposals, or pause mirroring at any time.
 /// @dev Business conditions that are not met emit `Skipped` instead of reverting, because a
 ///      reverting callback is still charged by the callback proxy.
-contract VoteMirror is AbstractCallback, Ownable {
+contract VoteMirror is AbstractCallback, Ownable2Step {
     enum SkipReason {
         Paused,
         SkippedByOwner,
@@ -36,6 +37,9 @@ contract VoteMirror is AbstractCallback, Ownable {
     event PausedSet(bool paused);
     event SkipSet(uint256 indexed proposalId, bool skipped);
 
+    error ZeroAddress();
+    error RenounceDisabled();
+
     /// @param callbackProxy_ Reactive callback proxy of this chain.
     /// @param reactive_ MirrorReactive on Reactive Network allowed to trigger `castMirrored`. Immutable.
     /// @param governor_ Governor to vote on.
@@ -46,6 +50,9 @@ contract VoteMirror is AbstractCallback, Ownable {
         AbstractCallback(callbackProxy_, reactive_)
         Ownable(owner_)
     {
+        if (address(callbackProxy_) == address(0) || reactive_ == address(0) || address(governor_) == address(0)) {
+            revert ZeroAddress();
+        }
         GOVERNOR = governor_;
     }
 
@@ -110,6 +117,11 @@ contract VoteMirror is AbstractCallback, Ownable {
     /// @notice Returns unused callback fee funds to the owner.
     function withdraw(uint256 amount_) external onlyOwner {
         _pay(payable(msg.sender), amount_);
+    }
+
+    /// @dev Giving up ownership would leave the contract voting with no pause, skip, override or withdrawal.
+    function renounceOwnership() public view override onlyOwner {
+        revert RenounceDisabled();
     }
 
     // ------------------------------------------------------------------ internals

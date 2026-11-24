@@ -177,9 +177,17 @@ contract VoteMirrorTest is Test {
         assertEq(forVotes, 2_000e18);
     }
 
-    /// @dev MirrorReactive asks once per proposal. A callback that was skipped is not requested again when the
-    ///      owner lifts the skip, even if more trusted voters agree afterwards.
-    function test_Loop_UnskippedProposalIsNotMirroredLater() public {
+    /// @dev Relays the callbacks requested since `from_`, as `_voteAndRelay` does for a vote.
+    function _relayFrom(uint256 from_) internal {
+        for (uint256 i = from_; i < system.callbackCount(); ++i) {
+            ISystemContract.CallbackConfiguration_V_1_0 memory config = system.callbackAt(i);
+            proxy.deliver(address(reactive), config.recipient, config.payload);
+        }
+    }
+
+    /// @dev `react()` asks once per proposal, so lifting a skip does not bring the vote back by itself.
+    ///      The owner asks again with `retryMirror()`.
+    function test_Loop_UnskippedProposalIsMirroredAfterRetry() public {
         uint256 id = _propose("Skipped first, wanted after all");
         vm.prank(user);
         mirror.setSkipped(id, true);
@@ -189,25 +197,45 @@ contract VoteMirrorTest is Test {
         vm.prank(user);
         mirror.setSkipped(id, false);
         _voteAndRelay(carol, id, FOR);
-
         assertEq(system.callbackCount(), 1);
         assertFalse(governor.hasVoted(id, address(mirror)));
+
+        reactive.retryMirror(id, FOR);
+        _relayFrom(1);
+        assertTrue(governor.hasVoted(id, address(mirror)));
+        (, uint256 forVotes,) = _votes(id);
+        assertEq(forVotes, 4_000e18);
     }
 
-    /// @dev Same for a pause: the callback that arrived while paused is the only one for that proposal.
-    function test_Loop_ProposalMirroredWhilePausedIsNotMirroredLater() public {
+    function test_Loop_ProposalSkippedWhilePausedIsMirroredAfterRetry() public {
         uint256 id = _propose("Voted on while paused");
         vm.prank(user);
         mirror.setPaused(true);
-        _voteAndRelay(alice, id, FOR);
-        _voteAndRelay(bob, id, FOR);
+        _voteAndRelay(alice, id, AGAINST);
+        _voteAndRelay(bob, id, AGAINST);
+        assertFalse(governor.hasVoted(id, address(mirror)));
 
         vm.prank(user);
         mirror.setPaused(false);
-        _voteAndRelay(carol, id, FOR);
+        reactive.retryMirror(id, AGAINST);
+        _relayFrom(1);
+        (uint256 againstVotes,,) = _votes(id);
+        assertEq(againstVotes, 3_000e18);
+    }
 
-        assertEq(system.callbackCount(), 1);
-        assertFalse(governor.hasVoted(id, address(mirror)));
+    /// @dev A retry cannot make VoteMirror vote twice or override the owner's own vote.
+    function test_Loop_RetryAfterMirroredVoteIsSkipped() public {
+        uint256 id = _propose("Already mirrored");
+        _voteAndRelay(alice, id, FOR);
+        _voteAndRelay(bob, id, FOR);
+        assertTrue(governor.hasVoted(id, address(mirror)));
+
+        vm.recordLogs();
+        reactive.retryMirror(id, FOR);
+        _relayFrom(1);
+        _assertMirrorEmitted(abi.encode(FOR, VoteMirror.SkipReason.AlreadyVoted), VoteMirror.Skipped.selector, id);
+        (, uint256 forVotes,) = _votes(id);
+        assertEq(forVotes, 3_000e18);
     }
 
     function test_Loop_ThirdAgreeingVoteDoesNotVoteTwice() public {
@@ -378,6 +406,32 @@ contract VoteMirrorTest is Test {
     }
 
     // ------------------------------------------------------------------ funds
+
+    function test_RevertWhen_DeployedWithZeroAddress() public {
+        IPayable proxy_ = IPayable(payable(address(proxy)));
+        vm.expectRevert(VoteMirror.ZeroAddress.selector);
+        new VoteMirror(IPayable(payable(address(0))), address(reactive), governor, user);
+        vm.expectRevert(VoteMirror.ZeroAddress.selector);
+        new VoteMirror(proxy_, address(0), governor, user);
+        vm.expectRevert(VoteMirror.ZeroAddress.selector);
+        new VoteMirror(proxy_, address(reactive), DemoGovernor(payable(address(0))), user);
+    }
+
+    function test_OwnershipMovesInTwoSteps() public {
+        vm.prank(user);
+        mirror.transferOwnership(stranger);
+        assertEq(mirror.owner(), user);
+        vm.prank(stranger);
+        mirror.acceptOwnership();
+        assertEq(mirror.owner(), stranger);
+    }
+
+    function test_RevertWhen_OwnershipIsRenounced() public {
+        vm.prank(user);
+        vm.expectRevert(VoteMirror.RenounceDisabled.selector);
+        mirror.renounceOwnership();
+        assertEq(mirror.owner(), user);
+    }
 
     function test_CoverDebtPaysProxy() public {
         vm.deal(address(mirror), 1 ether);
