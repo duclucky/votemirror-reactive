@@ -836,7 +836,7 @@ contract VoteMirrorTest is Test {
         new VoteMirror(IPayable(payable(address(proxy))), address(reactive), governor, user, none, 1);
     }
 
-    /// @dev The callback with a full trusted list stays far below the gas MirrorReactive asks for.
+    /// @dev Enforce the callback budget directly, with cold storage and 20% headroom.
     function test_CallbackWithFullTrustedListFitsTheGasLimit() public {
         vm.startPrank(user);
         for (uint160 i = 1; i <= 13; ++i) {
@@ -848,9 +848,15 @@ contract VoteMirrorTest is Test {
         }
         uint256 id = _propose("p");
         _trustedVotes(id, FOR);
-        uint256 gasBefore = gasleft();
-        _deliver(id, FOR);
-        assertLt(gasBefore - gasleft(), reactive.CALLBACK_GAS_LIMIT() / 2);
+        bytes32 policy = reactive.policyHash();
+        uint256 callbackBudget = uint256(reactive.CALLBACK_GAS_LIMIT()) * 4 / 5;
+        vm.cool(address(governor));
+        vm.cool(address(mirror));
+        vm.prank(address(proxy));
+        (bool ok,) = address(mirror).call{ gas: callbackBudget }(
+            abi.encodeCall(VoteMirror.castMirrored, (address(reactive), id, FOR, policy))
+        );
+        assertTrue(ok);
         assertTrue(governor.hasVoted(id, address(mirror)));
     }
 
