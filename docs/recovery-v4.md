@@ -55,7 +55,10 @@ không phải trần phí token.
   quyền gọi batch và Governor tin cậy. Vòng lặp bị chặn ở 16 voter, 32 proposal và hai
   mục mỗi batch.
 - Bytecode tạo, constructor và runtime của deployment v4 đã đối chiếu bản build.
-  Các source hiện hành có xác minh Sourcify; biên bản ở v4-bytecode-check.json.
+  Cả bốn source có xác minh Sourcify exact match. Ngày 25/11/2026, ba contract Base
+  đã xác minh thành công trên BaseScan và MirrorReactive hiển thị Verified (Exact Match)
+  trên Reactscan. Xem [biên bản explorer](../deployments/v4-source-verification.json)
+  và [biên bản bytecode](../deployments/v4-bytecode-check.json).
 
 Tám vòng testnet gồm For, Against, Skip, Retry, Reconcile, Split, scheduled recovery và
 missing-log recovery đã đọc lại receipt và tổng phiếu trong v4-verification.json.

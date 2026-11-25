@@ -83,6 +83,7 @@
   "voteMirror": "0x4a89e26aD48A2729d8D95B3b446DBC1083AEF87a",
   "policyHash": "0xbafee2b90147efd6ff3569bb9b2b3d570b54ef12b66b3a6fcfe9a670d28cca7b",
   "status": "deployed-and-live-verified",
+  "sourceVerificationReport": "deployments/v4-source-verification.json",
   "verificationReport": "deployments/submission-evidence-submission-20261124-01.json",
   "historicalVerificationReport": "deployments/v4-verification.json",
   "submissionEvidenceIndex": "docs/submission-evidence.md",

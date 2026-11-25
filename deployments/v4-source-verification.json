@@ -1,0 +1,66 @@
+{
+  "observedDate": "2026-11-25",
+  "observationMethod": "Explorer UI inspected in Chrome. BaseScan Standard JSON verification result pages and the Reactscan Code tab displayed the results below.",
+  "compilerVersion": "0.8.30+commit.73712a01",
+  "optimizer": {
+    "enabled": true,
+    "runs": 200
+  },
+  "evmVersion": "cancun",
+  "license": "MIT",
+  "scope": "Source verification only; not an independent security audit.",
+  "contracts": [
+    {
+      "contract": "DemoToken",
+      "address": "0x1c1000C7d8Ee05b97F5FF7bfCbA7c04aC9e58515",
+      "chainId": 84532,
+      "explorer": "BaseScan",
+      "explorerUrl": "https://sepolia.basescan.org/address/0x1c1000C7d8Ee05b97F5FF7bfCbA7c04aC9e58515#code",
+      "observedResult": "Successfully generated matching Bytecode and ABI for Contract Address",
+      "sourcify": {
+        "creationMatch": "exact_match",
+        "runtimeMatch": "exact_match",
+        "url": "https://repo.sourcify.dev/84532/0x1c1000C7d8Ee05b97F5FF7bfCbA7c04aC9e58515"
+      }
+    },
+    {
+      "contract": "DemoGovernor",
+      "address": "0x04bB46C2E47F640Dd94bCfC0ea2aC9191364fafb",
+      "chainId": 84532,
+      "explorer": "BaseScan",
+      "explorerUrl": "https://sepolia.basescan.org/address/0x04bB46C2E47F640Dd94bCfC0ea2aC9191364fafb#code",
+      "observedResult": "Successfully generated matching Bytecode and ABI for Contract Address",
+      "sourcify": {
+        "creationMatch": "exact_match",
+        "runtimeMatch": "exact_match",
+        "url": "https://repo.sourcify.dev/84532/0x04bB46C2E47F640Dd94bCfC0ea2aC9191364fafb"
+      }
+    },
+    {
+      "contract": "VoteMirror",
+      "address": "0x4a89e26aD48A2729d8D95B3b446DBC1083AEF87a",
+      "chainId": 84532,
+      "explorer": "BaseScan",
+      "explorerUrl": "https://sepolia.basescan.org/address/0x4a89e26aD48A2729d8D95B3b446DBC1083AEF87a#code",
+      "observedResult": "Successfully generated matching Bytecode and ABI for Contract Address",
+      "sourcify": {
+        "creationMatch": "exact_match",
+        "runtimeMatch": "exact_match",
+        "url": "https://repo.sourcify.dev/84532/0x4a89e26aD48A2729d8D95B3b446DBC1083AEF87a"
+      }
+    },
+    {
+      "contract": "MirrorReactive",
+      "address": "0x81A8a6edf8B2d773FF53dc1450De4822c5756988",
+      "chainId": 5318007,
+      "explorer": "Reactscan",
+      "explorerUrl": "https://lasna.reactscan.net/address/0x81A8a6edf8B2d773FF53dc1450De4822c5756988?screen=verification",
+      "observedResult": "CONTRACT SOURCE CODE VERIFIED (EXACT MATCH)",
+      "sourcify": {
+        "creationMatch": "exact_match",
+        "runtimeMatch": "exact_match",
+        "url": "https://repo.sourcify.dev/5318007/0x81A8a6edf8B2d773FF53dc1450De4822c5756988"
+      }
+    }
+  ]
+}

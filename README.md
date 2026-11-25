@@ -28,17 +28,22 @@ Reactive subscriptions and the Base recovery sender remain the operating paths.
 
 ## Current contracts
 
-| Contract | Network | Address |
-|---|---|---|
-| DemoToken | Base Sepolia | [0x1c1000C7d8Ee05b97F5FF7bfCbA7c04aC9e58515](https://sepolia.basescan.org/address/0x1c1000C7d8Ee05b97F5FF7bfCbA7c04aC9e58515) |
-| DemoGovernor | Base Sepolia | [0x04bB46C2E47F640Dd94bCfC0ea2aC9191364fafb](https://sepolia.basescan.org/address/0x04bB46C2E47F640Dd94bCfC0ea2aC9191364fafb) |
-| VoteMirror | Base Sepolia | [0x4a89e26aD48A2729d8D95B3b446DBC1083AEF87a](https://sepolia.basescan.org/address/0x4a89e26aD48A2729d8D95B3b446DBC1083AEF87a) |
-| MirrorReactive | Lasna | [0x81A8a6edf8B2d773FF53dc1450De4822c5756988](https://lasna.reactscan.net/address/0x81A8a6edf8B2d773FF53dc1450De4822c5756988) |
+| Contract | Network | Verified source | Status |
+|---|---|---|---|
+| DemoToken | Base Sepolia | [0x1c1000C7d8Ee05b97F5FF7bfCbA7c04aC9e58515](https://sepolia.basescan.org/address/0x1c1000C7d8Ee05b97F5FF7bfCbA7c04aC9e58515#code) | Verified on BaseScan |
+| DemoGovernor | Base Sepolia | [0x04bB46C2E47F640Dd94bCfC0ea2aC9191364fafb](https://sepolia.basescan.org/address/0x04bB46C2E47F640Dd94bCfC0ea2aC9191364fafb#code) | Verified on BaseScan |
+| VoteMirror | Base Sepolia | [0x4a89e26aD48A2729d8D95B3b446DBC1083AEF87a](https://sepolia.basescan.org/address/0x4a89e26aD48A2729d8D95B3b446DBC1083AEF87a#code) | Verified on BaseScan |
+| MirrorReactive | Lasna | [0x81A8a6edf8B2d773FF53dc1450De4822c5756988](https://lasna.reactscan.net/address/0x81A8a6edf8B2d773FF53dc1450De4822c5756988?screen=verification) | Verified (Exact Match) on Reactscan |
 
 The deployment manifest is [hardened-testnet-v4.json](deployments/hardened-testnet-v4.json).
 It links the current submission suite, filmed-run proof, public demo and sender setup.
-Current contract sources are verified on Sourcify. Creation bytecode, constructor arguments
-and runtime were checked against the build in [v4-bytecode-check.json](deployments/v4-bytecode-check.json).
+All four contracts are also verified on Sourcify with exact creation and runtime matches.
+On 25 November 2026, the BaseScan verification result pages confirmed matching bytecode
+and ABI for all three Base contracts; Reactscan displayed Verified (Exact Match) for
+MirrorReactive. See [explorer verification records](deployments/v4-source-verification.json).
+Source verification establishes a source-to-bytecode match, not a security audit.
+Creation bytecode, constructor arguments and runtime were additionally checked against
+the build in [v4-bytecode-check.json](deployments/v4-bytecode-check.json).
 
 ## Frontend dashboard
 
